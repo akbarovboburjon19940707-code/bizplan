@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Biznes reja yaratish platformasi — korxona ma'lumotlarini kiriting va professional biznes reja yaratishni boshlang">
+    <title>Korxona ma'lumotlari | Biznes Reja Platformasi</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📊</text></svg>">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/register.css">
+</head>
+<body>
+    <!-- Header -->
+    <header class="reg-header">
+        <div class="container header-flex">
+            <a href="/" class="logo" id="reg-logo">
+                <div class="logo-icon">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                </div>
+                <span>UzBizness</span>
+            </a>
+            <div class="header-steps">
+                <div class="h-step active" id="h-step-1">
+                    <span class="h-step-num">1</span>
+                    <span class="h-step-label">Korxona ma'lumotlari</span>
+                </div>
+                <div class="h-step-line"></div>
+                <div class="h-step" id="h-step-2">
+                    <span class="h-step-num">2</span>
+                    <span class="h-step-label">Biznes loyiha</span>
+                </div>
+                <div class="h-step-line"></div>
+                <div class="h-step" id="h-step-3">
+                    <span class="h-step-num">3</span>
+                    <span class="h-step-label">Tayyor reja</span>
+                </div>
+            </div>
+            <a href="/" class="header-back" id="reg-back-btn">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+                Bosh sahifa
+            </a>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="reg-main">
+        <div class="container">
+
+            <!-- Page Title -->
+            <div class="page-title-section">
+                <div class="page-icon">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <path d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+                    </svg>
+                </div>
+                <div>
+                    <h1 class="page-title">Korxona ma'lumotlari</h1>
+                    <p class="page-subtitle">Biznes reja yaratish uchun korxona yoki tadbirkor haqida asosiy ma'lumotlarni kiriting</p>
+                </div>
+            </div>
+
+            <!-- Form Container -->
+            <div class="form-layout">
+                <form id="registerForm" class="reg-form" autocomplete="off">
+
+                    <!-- ===== STEP 1: Mulkchilik shakli ===== -->
+                    <div class="form-section" id="section-mulk">
+                        <div class="section-label">
+                            <span class="section-num">1</span>
+                            <div>
+                                <h2 class="section-title">Mulkchilik shaklini tanlang</h2>
+                                <p class="section-desc">Korxona yoki tadbirkor turini belgilang</p>
+                            </div>
+                        </div>
+                        <div class="mulk-grid" id="mulkGrid">
+                            <div class="mulk-card" data-mulk="YTT" id="mulk-ytt">
+                                <div class="mulk-icon">👤</div>
+                                <div class="mulk-info">
+                                    <span class="mulk-name">YTT</span>
+                                    <span class="mulk-full">Yakka tartibdagi tadbirkor</span>
+                                </div>
+                                <div class="mulk-check">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+                                </div>
+                            </div>
+                            <div class="mulk-card" data-mulk="MCHJ" id="mulk-mchj">
+                                <div class="mulk-icon">🏢</div>
+                                <div class="mulk-info">
+                                    <span class="mulk-name">MChJ</span>
+                                    <span class="mulk-full">Mas'uliyati cheklangan jamiyat</span>
+                                </div>
+                                <div class="mulk-check">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+                                </div>
+                            </div>
+                            <div class="mulk-card" data-mulk="F/X" id="mulk-fx">
+                                <div class="mulk-icon">🌾</div>
+                                <div class="mulk-info">
+                                    <span class="mulk-name">Fermer xo'jaligi</span>
+                                    <span class="mulk-full">Qishloq xo'jaligi korxonasi</span>
+                                </div>
+                                <div class="mulk-check">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+                                </div>
+                            </div>
+                            <div class="mulk-card" data-mulk="XK" id="mulk-xk">
+                                <div class="mulk-icon">🏭</div>
+                                <div class="mulk-info">
+                                    <span class="mulk-name">XK</span>
+                                    <span class="mulk-full">Xususiy korxona</span>
+                                </div>
+                                <div class="mulk-check">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+                                </div>
+                            </div>
+                            <div class="mulk-card" data-mulk="JISMONIY" id="mulk-jismoniy">
+                                <div class="mulk-icon">🧑‍💼</div>
+                                <div class="mulk-info">
+                                    <span class="mulk-name">O'zini o'zi band qilgan</span>
+                                    <span class="mulk-full">Jismoniy shaxs / frilanser</span>
+                                </div>
+                                <div class="mulk-check">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+                                </div>
+                            </div>
+                        </div>
+                        <input type="hidden" name="mulk_shakli" id="mulk_hidden" value="">
+                    </div>
+
+                    <!-- ===== STEP 2: STIR Kiritish ===== -->
+                    <div class="form-section hidden" id="section-stir">
+                        <div class="section-label">
+                            <span class="section-num">2</span>
+                            <div>
+                                <h2 class="section-title">STIR (INN) raqamini kiriting</h2>
+                                <p class="section-desc">9 xonali STIR raqamini kiritganingizda tizim avtomatik ravishda ma'lumotlarni tekshiradi</p>
+                            </div>
+                        </div>
+                        <div class="stir-input-wrap">
+                            <div class="stir-field">
+                                <div class="stir-prefix">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+                                </div>
+                                <input type="text" id="stir_input" name="stir" class="stir-input" placeholder="000 000 000" maxlength="9" inputmode="numeric" pattern="[0-9]*">
+                                <div class="stir-status" id="stirStatus">
+                                    <div class="stir-loader hidden" id="stirLoader">
+                                        <div class="mini-spinner"></div>
+                                        <span>Tekshirilmoqda...</span>
+                                    </div>
+                                    <div class="stir-success hidden" id="stirSuccess">
+                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+                                        <span>Ma'lumot topildi</span>
+                                    </div>
+                                    <div class="stir-notfound hidden" id="stirNotFound">
+                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+                                        <span>Topilmadi — qo'lda kiriting</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <p class="stir-hint">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+                                STIR topilmasa, ma'lumotlarni qo'lda kiritishingiz mumkin
+                            </p>
+                            <button type="button" class="btn-skip hidden" id="btnSkipStir">
+                                STIRsiz davom etish →
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- ===== STEP 3: Auto-filled / Manual Data ===== -->
+                    <div class="form-section hidden" id="section-data">
+                        <div class="section-label">
+                            <span class="section-num">3</span>
+                            <div>
+                                <h2 class="section-title" id="dataTitle">Korxona ma'lumotlari</h2>
+                                <p class="section-desc" id="dataDesc">Ma'lumotlarni tekshiring yoki to'ldiring</p>
+                            </div>
+                        </div>
+
+                        <!-- Auto-filled banner -->
+                        <div class="autofill-banner hidden" id="autofillBanner">
+                            <div class="ab-icon">
+                                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                            </div>
+                            <div class="ab-text">
+                                <strong>Ma'lumotlar avtomatik to'ldirildi</strong>
+                                <span>STIR bo'yicha topilgan ma'lumotlar. Kerak bo'lsa tahrirlashingiz mumkin.</span>
+                            </div>
+                        </div>
+
+                        <!-- Manual entry banner -->
+                        <div class="manual-banner hidden" id="manualBanner">
+                            <div class="ab-icon ab-icon-yellow">
+                                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                            </div>
+                            <div class="ab-text">
+                                <strong>Qo'lda kiritish rejimi</strong>
+                                <span>Ma'lumotlarni qo'lda to'ldiring</span>
+                            </div>
+                        </div>
+
+                        <div class="data-grid">
+                            <div class="field-group field-full">
+                                <label class="field-label" for="korxona_nomi">
+                                    Korxona nomi
+                                    <span class="field-req">*</span>
+                                </label>
+                                <input type="text" id="korxona_nomi" name="korxona_nomi" class="field-input" placeholder="Masalan: \"Orzu\" MChJ yoki YTT Karimov Azizbek" required>
+                            </div>
+
+                            <div class="field-group">
+                                <label class="field-label" for="faoliyat_turi">
+                                    Faoliyat turi (OKED)
+                                    <span class="field-req">*</span>
+                                </label>
+                                <input type="text" id="faoliyat_turi" name="faoliyat_turi" class="field-input" placeholder="Masalan: Savdo, Ishlab chiqarish, IT" required>
+                            </div>
+
+                            <div class="field-group">
+                                <label class="field-label" for="manzil">
+                                    Manzil
+                                </label>
+                                <input type="text" id="manzil" name="manzil" class="field-input" placeholder="Viloyat, tuman, ko'cha">
+                            </div>
+
+                            <div class="field-group">
+                                <label class="field-label" for="rahbar_fio">
+                                    Rahbar / Egasi
+                                    <span class="field-req">*</span>
+                                </label>
+                                <input type="text" id="rahbar_fio" name="rahbar_fio" class="field-input" placeholder="To'liq ism-sharif" required>
+                            </div>
+
+                            <div class="field-group">
+                                <label class="field-label" for="reg_sana">
+                                    <span id="sanaLabel">Ro'yxatdan o'tgan sana</span>
+                                </label>
+                                <input type="text" id="reg_sana" name="reg_sana" class="field-input" placeholder="KK.OO.YYYY">
+                            </div>
+
+                            <div class="field-group hidden" id="bankField">
+                                <label class="field-label" for="bank_nomi">
+                                    Xizmat ko'rsatuvchi bank
+                                </label>
+                                <input type="text" id="bank_nomi" name="bank_nomi" class="field-input" placeholder="Masalan: Hamkorbank ATB">
+                            </div>
+
+                            <div class="field-group hidden" id="soliqField">
+                                <label class="field-label" for="soliq_turi">
+                                    Soliq turi
+                                </label>
+                                <select id="soliq_turi" name="soliq_turi" class="field-input field-select">
+                                    <option value="ytt">Aylanmadan olinadigan soliq (4%)</option>
+                                    <option value="mchj">QQS (12%) va Foyda solig'i</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ===== Submit Area ===== -->
+                    <div class="form-section hidden" id="section-submit">
+                        <div class="submit-area">
+                            <div class="submit-summary" id="submitSummary">
+                                <!-- Filled by JS -->
+                            </div>
+                            <div class="submit-actions">
+                                <button type="submit" class="btn btn-submit" id="btnSubmit">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+                                    Keyingi bosqich — Biznes loyiha
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Error Alert -->
+                    <div class="form-alert hidden" id="formAlert">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                        <span id="alertText"></span>
+                    </div>
+
+                </form>
+
+                <!-- Right Sidebar -->
+                <aside class="reg-sidebar">
+                    <div class="sidebar-card">
+                        <div class="sc-header">
+                            <div class="sc-icon">📋</div>
+                            <h3 class="sc-title">Ma'lumotlar holati</h3>
+                        </div>
+                        <div class="sc-checklist">
+                            <div class="sc-item" id="check-mulk">
+                                <div class="sc-dot"></div>
+                                <span>Mulkchilik shakli</span>
+                                <span class="sc-value" id="check-mulk-val">—</span>
+                            </div>
+                            <div class="sc-item" id="check-stir">
+                                <div class="sc-dot"></div>
+                                <span>STIR</span>
+                                <span class="sc-value" id="check-stir-val">—</span>
+                            </div>
+                            <div class="sc-item" id="check-name">
+                                <div class="sc-dot"></div>
+                                <span>Korxona nomi</span>
+                                <span class="sc-value" id="check-name-val">—</span>
+                            </div>
+                            <div class="sc-item" id="check-faoliyat">
+                                <div class="sc-dot"></div>
+                                <span>Faoliyat turi</span>
+                                <span class="sc-value" id="check-faoliyat-val">—</span>
+                            </div>
+                            <div class="sc-item" id="check-rahbar">
+                                <div class="sc-dot"></div>
+                                <span>Rahbar</span>
+                                <span class="sc-value" id="check-rahbar-val">—</span>
+                            </div>
+                        </div>
+                        <div class="sc-progress">
+                            <div class="sc-progress-bar" id="progressBar" style="width: 0%"></div>
+                        </div>
+                        <p class="sc-progress-label"><span id="progressPercent">0</span>% to'ldirildi</p>
+                    </div>
+
+                    <div class="sidebar-card sidebar-help">
+                        <div class="sc-header">
+                            <div class="sc-icon">💡</div>
+                            <h3 class="sc-title">Yordam</h3>
+                        </div>
+                        <div class="help-items">
+                            <div class="help-item" id="help-default">
+                                <p>Avval mulkchilik shaklini tanlang, keyin STIR kiritib korxona ma'lumotlarini avtomatik yuklang.</p>
+                            </div>
+                            <div class="help-item hidden" id="help-stir">
+                                <p><strong>STIR nima?</strong></p>
+                                <p>Soliq to'lovchining identifikatsion raqami — 9 xonali raqam. Uni soliq inspeksiyasi tomonidan berilgan guvohnomada topishingiz mumkin.</p>
+                            </div>
+                            <div class="help-item hidden" id="help-manual">
+                                <p><strong>Qo'lda kiritish</strong></p>
+                                <p>STIR topilmasa tashvishlanmang! Ma'lumotlarni qo'lda ham kiritishingiz mumkin. Faqat majburiy maydonlarni to'ldiring.</p>
+                            </div>
+                            <div class="help-item hidden" id="help-selfemployed">
+                                <p><strong>O'zini o'zi band qilgan</strong></p>
+                                <p>Korxona nomi o'rniga to'liq ism-sharifingizni, faoliyat turi o'rniga xizmat turini yozing.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="sidebar-card sidebar-contact">
+                        <p class="contact-label">Savollaringiz bormi?</p>
+                        <a href="https://t.me/BoBuRo7o7" target="_blank" class="contact-link">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69a.2.2 0 00-.05-.18c-.06-.05-.14-.03-.21-.02-.09.02-1.49.95-4.22 2.79-.4.27-.76.41-1.08.4-.36-.01-1.04-.2-1.55-.37-.63-.2-1.12-.31-1.08-.66.02-.18.27-.36.74-.55 2.92-1.27 4.86-2.11 5.83-2.51 2.78-1.16 3.35-1.36 3.73-1.36.08 0 .27.02.39.12.1.08.13.19.14.27-.01.06.01.24 0 .33z"/></svg>
+                            Telegram orqali bog'laning
+                        </a>
+                        <a href="tel:+998947214242" class="contact-phone">+998 94 721 42 42</a>
+                    </div>
+                </aside>
+            </div>
+        </div>
+    </main>
+
+    <script src="/static/js/register.js"></script>
+</body>
+</html>

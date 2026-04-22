@@ -1,0 +1,200 @@
+[{
+  "_id": {
+    "$oid": "6745b4d459a994b390421efd"
+  },
+  "title": "Enterprise Commerce",
+  "category": "Books",
+  "price": 100000,
+  "description": "The Saleor Guide to Enterprise Commerce is an essential read for businesses aiming to thrive in the dynamic world of digital commerce.",
+  "image": "https://utfs.io/f/mMbSyFqocdYGum9IkLlw32ShZLOavzytcQulCmd8ogs7R0e4",
+  "imageKey": "mMbSyFqocdYGum9IkLlw32ShZLOavzytcQulCmd8ogs7R0e4",
+  "createdAt": {
+    "$date": "2024-11-26T11:45:24.597Z"
+  },
+  "updatedAt": {
+    "$date": "2024-11-26T11:45:25.080Z"
+  },
+  "__v": 0,
+  "stripePriceId": "price_1QPNCq4IqGSzSUOJSamP2XJ0",
+  "stripeProductId": "prod_RHx7HIFVodTdwl"
+},
+{
+  "_id": {
+    "$oid": "6745b4f259a994b390421f0b"
+  },
+  "title": "White Sunglasses",
+  "category": "Accessories",
+  "price": 400000,
+  "description": "Saleor White Sunglasses combine sleek design with practicality, making them the ultimate accessory for sunny days. Featuring a clean white frame and subtle Saleor branding, these sunglasses offer 100% UV protection while exuding a modern, minimalist aesthetic",
+  "image": "https://utfs.io/f/mMbSyFqocdYGBIJjctkAu95UwSsfJNa2jmrPcWleCbv4QXzK",
+  "imageKey": "mMbSyFqocdYGBIJjctkAu95UwSsfJNa2jmrPcWleCbv4QXzK",
+  "createdAt": {
+    "$date": "2024-11-26T11:45:54.520Z"
+  },
+  "updatedAt": {
+    "$date": "2024-11-26T11:45:55.013Z"
+  },
+  "__v": 0,
+  "stripePriceId": "price_1QPNDK4IqGSzSUOJ5p57EU62",
+  "stripeProductId": "prod_RHx7JMwo6CF9Tw"
+},
+{
+  "_id": {
+    "$oid": "6745b52559a994b390421f1b"
+  },
+  "title": "Dash Shoes",
+  "category": "Shoes",
+  "price": 800000,
+  "description": "Step into summer with the right balance. Every time your head goes down, you see these beauties, and your mood bounces right back up.",
+  "image": "https://utfs.io/f/mMbSyFqocdYGeCrAVs6FVXZWzSr6K7vwlf9g1m3TQyiJ8kEs",
+  "imageKey": "mMbSyFqocdYGeCrAVs6FVXZWzSr6K7vwlf9g1m3TQyiJ8kEs",
+  "createdAt": {
+    "$date": "2024-11-26T11:46:45.554Z"
+  },
+  "updatedAt": {
+    "$date": "2024-11-26T11:46:46.036Z"
+  },
+  "__v": 0,
+  "stripePriceId": "price_1QPNE94IqGSzSUOJXNinUjsk",
+  "stripeProductId": "prod_RHx8eqrSdOqp2e"
+},
+{
+  "_id": {
+    "$oid": "6745b53f59a994b390421f29"
+  },
+  "title": "Dark T-Shirts",
+  "category": "T-Shirts",
+  "price": 300000,
+  "description": "Ever have those days where you feel a bit geometric? Can't quite shape yourself up right? Show your different sides with a Saleor styles.",
+  "image": "https://utfs.io/f/mMbSyFqocdYGWT7FzHaqK4HPYSDjFoUBIObx6Adn0Vh81T7m",
+  "imageKey": "mMbSyFqocdYGWT7FzHaqK4HPYSDjFoUBIObx6Adn0Vh81T7m",
+  "createdAt": {
+    "$date": "2024-11-26T11:47:11.953Z"
+  },
+  "updatedAt": {
+    "$date": "2024-11-26T11:47:12.425Z"
+  },
+  "__v": 0,
+  "stripePriceId": "price_1QPNEa4IqGSzSUOJrWr3FPJv",
+  "stripeProductId": "prod_RHx8Ahe5uY12Ug"
+},
+{
+  "_id": {
+    "$oid": "6745b55c59a994b390421f38"
+  },
+  "title": "Dark Polo Shirt",
+  "category": "T-Shirts",
+  "price": 200000,
+  "description": "Ever have those days where you feel a bit geometric? Can't quite shape yourself up right? Show your different sides with a Saleor styles.",
+  "image": "https://utfs.io/f/mMbSyFqocdYGX0ESUieD3tNIpR1O75WfngBAxMhKU6iazGFY",
+  "imageKey": "mMbSyFqocdYGX0ESUieD3tNIpR1O75WfngBAxMhKU6iazGFY",
+  "createdAt": {
+    "$date": "2024-11-26T11:47:40.586Z"
+  },
+  "updatedAt": {
+    "$date": "2024-11-26T11:47:41.043Z"
+  },
+  "__v": 0,
+  "stripePriceId": "price_1QPNF24IqGSzSUOJGd5u7MxB",
+  "stripeProductId": "prod_RHx9WFUVohmffF"
+},
+{
+  "_id": {
+    "$oid": "6745b57e59a994b390421f46"
+  },
+  "title": "White T-Shirt",
+  "category": "T-Shirts",
+  "price": 550000,
+  "description": "There is life in outer space. This vibrant light speed cubes brings life to any surface. Goes on easy and dries at light speed.",
+  "image": "https://utfs.io/f/mMbSyFqocdYGhx9PXPCXyIjVP02BbDeRkcxZuEHpmsCLvTW6",
+  "imageKey": "mMbSyFqocdYGhx9PXPCXyIjVP02BbDeRkcxZuEHpmsCLvTW6",
+  "createdAt": {
+    "$date": "2024-11-26T11:48:14.739Z"
+  },
+  "updatedAt": {
+    "$date": "2024-11-26T11:48:15.204Z"
+  },
+  "__v": 0,
+  "stripePriceId": "price_1QPNFb4IqGSzSUOJoUPURrw9",
+  "stripeProductId": "prod_RHx96y61ihwmOc"
+},
+{
+  "_id": {
+    "$oid": "6745b59d59a994b390421f54"
+  },
+  "title": "Polygon T-Shirt",
+  "category": "T-Shirts",
+  "price": 1000000,
+  "description": "Ever have those days where you feel a bit geometric? Can't quite shape yourself up right? Show your different sides with a Saleor styles.",
+  "image": "https://utfs.io/f/mMbSyFqocdYGhKDGl1CXyIjVP02BbDeRkcxZuEHpmsCLvTW6",
+  "imageKey": "mMbSyFqocdYGhKDGl1CXyIjVP02BbDeRkcxZuEHpmsCLvTW6",
+  "createdAt": {
+    "$date": "2024-11-26T11:48:45.692Z"
+  },
+  "updatedAt": {
+    "$date": "2024-11-26T11:48:46.142Z"
+  },
+  "__v": 0,
+  "stripePriceId": "price_1QPNG64IqGSzSUOJ7Q4hIAyt",
+  "stripeProductId": "prod_RHxA3MznSmzdaU"
+},
+{
+  "_id": {
+    "$oid": "6745b5bc59a994b390421f63"
+  },
+  "title": "Plimsolls Shoes",
+  "category": "Shoes",
+  "price": 800000,
+  "description": "Step into summer with Saleor. Every time your head goes down, you see these beauties, and your mood bounces right back up.",
+  "image": "https://utfs.io/f/mMbSyFqocdYG2i4nw1DKPktFWnpGrIYxLD4UTCAgdvh3iR2j",
+  "imageKey": "mMbSyFqocdYG2i4nw1DKPktFWnpGrIYxLD4UTCAgdvh3iR2j",
+  "createdAt": {
+    "$date": "2024-11-26T11:49:16.506Z"
+  },
+  "updatedAt": {
+    "$date": "2024-11-26T11:49:16.965Z"
+  },
+  "__v": 0,
+  "stripePriceId": "price_1QPNGa4IqGSzSUOJAEXcFNR4",
+  "stripeProductId": "prod_RHxAj8IdFgOg3E"
+},
+{
+  "_id": {
+    "$oid": "6745b5fe59a994b390421f72"
+  },
+  "title": "Blue Hoodie",
+  "category": "Clothes",
+  "price": 900000,
+  "description": "Saleor Blue Hoodie is a perfect blend of comfort and style, designed for fans of the Saleor platform and anyone who loves sleek, modern apparel. Made from high-quality, soft fabric, this hoodie features a minimalist design with Saleor branding in a striking blue hue",
+  "image": "https://utfs.io/f/mMbSyFqocdYG7Yx9lT4RWGPSHvkEihfngzs9LBmyQr4jtoZT",
+  "imageKey": "mMbSyFqocdYG7Yx9lT4RWGPSHvkEihfngzs9LBmyQr4jtoZT",
+  "createdAt": {
+    "$date": "2024-11-26T11:50:22.953Z"
+  },
+  "updatedAt": {
+    "$date": "2024-11-26T11:50:23.417Z"
+  },
+  "__v": 0,
+  "stripePriceId": "price_1QPNHf4IqGSzSUOJn6etUWmP",
+  "stripeProductId": "prod_RHxCbZJYVHhK6R"
+},
+{
+  "_id": {
+    "$oid": "6745b61d59a994b390421f81"
+  },
+  "title": "Balance 420 Shoes",
+  "category": "Shoes",
+  "price": 1200000,
+  "description": "Step into summer with the right balance. Every time your head goes down, you see these beauties, and your mood bounces right back up.",
+  "image": "https://utfs.io/f/mMbSyFqocdYGabrTq5xnv5C0liQXSYmsgPRhW2ZE1z9xJF8w",
+  "imageKey": "mMbSyFqocdYGabrTq5xnv5C0liQXSYmsgPRhW2ZE1z9xJF8w",
+  "createdAt": {
+    "$date": "2024-11-26T11:50:53.338Z"
+  },
+  "updatedAt": {
+    "$date": "2024-11-26T11:50:53.819Z"
+  },
+  "__v": 0,
+  "stripePriceId": "price_1QPNI94IqGSzSUOJGaWmXlEi",
+  "stripeProductId": "prod_RHxChSH8PJUyTv"
+}]

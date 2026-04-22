@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel — To'lovlar | UzBizness</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --blue-50: #eff6ff; --blue-100: #dbeafe; --blue-200: #bfdbfe;
+            --blue-500: #3b82f6; --blue-600: #2563eb; --blue-700: #1d4ed8;
+            --green-50: #f0fdf4; --green-100: #dcfce7; --green-500: #22c55e; --green-600: #16a34a;
+            --red-50: #fef2f2; --red-100: #fecaca; --red-400: #f87171; --red-500: #ef4444;
+            --yellow-50: #fffbeb; --yellow-100: #fef3c7; --yellow-500: #f59e0b;
+            --gray-50: #f8fafc; --gray-100: #f1f5f9; --gray-200: #e2e8f0;
+            --gray-300: #cbd5e1; --gray-400: #94a3b8; --gray-500: #64748b;
+            --gray-600: #475569; --gray-700: #334155; --gray-800: #1e293b; --gray-900: #0f172a;
+            --shadow-sm: 0 1px 2px rgba(0,0,0,0.04);
+            --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.06), 0 2px 4px rgba(0,0,0,0.04);
+            --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.06);
+            --shadow-xl: 0 20px 25px -5px rgba(0,0,0,0.06);
+            --radius-sm: 8px; --radius-md: 12px; --radius-lg: 16px; --radius-xl: 20px; --radius-full: 9999px;
+            --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        html { scroll-behavior: smooth; }
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--gray-50);
+            color: var(--gray-800);
+            min-height: 100vh;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* ── Header ── */
+        .admin-header {
+            background: #fff;
+            border-bottom: 1px solid var(--gray-100);
+            position: sticky; top: 0; z-index: 100;
+        }
+        .admin-header-inner {
+            max-width: 1280px; margin: 0 auto; padding: 0 24px;
+            display: flex; align-items: center; justify-content: space-between;
+            height: 64px; gap: 24px;
+        }
+        .admin-logo {
+            display: flex; align-items: center; gap: 10px;
+            font-family: 'Outfit', sans-serif; font-weight: 800; font-size: 20px;
+            color: var(--gray-900); text-decoration: none;
+        }
+        .admin-logo-icon {
+            width: 36px; height: 36px; border-radius: 8px;
+            background: linear-gradient(135deg, #4f46e5, #7c3aed);
+            display: flex; align-items: center; justify-content: center; color: #fff;
+        }
+        .admin-badge {
+            display: inline-flex; align-items: center; gap: 6px;
+            background: var(--blue-50); color: var(--blue-600); border: 1px solid var(--blue-100);
+            padding: 4px 14px; border-radius: var(--radius-full); font-size: 12px; font-weight: 700;
+        }
+        .logout-btn {
+            display: inline-flex; align-items: center; gap: 6px;
+            font-size: 14px; font-weight: 600; color: var(--red-500); text-decoration: none;
+            border: 1px solid var(--red-100); padding: 8px 16px; border-radius: var(--radius-full);
+            transition: var(--transition); background: transparent;
+        }
+        .logout-btn:hover { background: var(--red-50); }
+
+        /* ── Layout ── */
+        .admin-main { max-width: 1280px; margin: 0 auto; padding: 32px 24px; }
+
+        /* ── Stats Cards ── */
+        .stats-grid {
+            display: grid; grid-template-columns: repeat(4, 1fr);
+            gap: 16px; margin-bottom: 32px;
+        }
+        .stat-card {
+            background: #fff; border: 1px solid var(--gray-100); border-radius: var(--radius-lg);
+            padding: 20px; box-shadow: var(--shadow-sm); text-align: center;
+        }
+        .stat-num {
+            font-family: 'Outfit', sans-serif; font-size: 32px;
+            font-weight: 800; line-height: 1; margin-bottom: 4px;
+        }
+        .stat-label { font-size: 12px; font-weight: 600; color: var(--gray-400); }
+        .stat-total .stat-num { color: var(--gray-800); }
+        .stat-reviewing .stat-num { color: var(--blue-600); }
+        .stat-approved .stat-num { color: var(--green-600); }
+        .stat-rejected .stat-num { color: var(--red-500); }
+
+        /* ── Table Card ── */
+        .table-card {
+            background: #fff; border: 1px solid var(--gray-100);
+            border-radius: var(--radius-xl); box-shadow: var(--shadow-sm);
+            overflow: hidden;
+        }
+        .table-card-header {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 20px 24px; border-bottom: 1px solid var(--gray-100);
+        }
+        .table-card-title {
+            font-family: 'Outfit', sans-serif; font-size: 18px;
+            font-weight: 700; color: var(--gray-900);
+        }
+        .refresh-btn {
+            display: inline-flex; align-items: center; gap: 6px;
+            font-size: 13px; font-weight: 600; color: var(--blue-600);
+            border: 1px solid var(--blue-200); background: var(--blue-50);
+            padding: 7px 16px; border-radius: var(--radius-full);
+            cursor: pointer; transition: var(--transition); font-family: 'Inter', sans-serif;
+        }
+        .refresh-btn:hover { background: var(--blue-100); }
+
+        /* ── Table ── */
+        table { width: 100%; border-collapse: collapse; }
+        th {
+            text-align: left; padding: 12px 20px;
+            font-size: 11px; font-weight: 700; color: var(--gray-400);
+            text-transform: uppercase; letter-spacing: 0.5px;
+            background: var(--gray-50); border-bottom: 1px solid var(--gray-100);
+        }
+        td {
+            padding: 16px 20px; border-bottom: 1px solid var(--gray-50);
+            font-size: 14px; color: var(--gray-700);
+            vertical-align: middle;
+        }
+        tr:last-child td { border-bottom: none; }
+        tbody tr { transition: var(--transition); }
+        tbody tr:hover { background: var(--gray-50); }
+
+        /* ── Status badges ── */
+        .badge {
+            display: inline-flex; align-items: center; gap: 5px;
+            padding: 3px 10px; border-radius: var(--radius-full);
+            font-size: 12px; font-weight: 600;
+        }
+        .badge::before {
+            content: ''; width: 6px; height: 6px;
+            border-radius: 50%; flex-shrink: 0;
+        }
+        .badge.pending { background: var(--gray-100); color: var(--gray-500); }
+        .badge.pending::before { background: var(--gray-400); }
+        .badge.reviewing { background: var(--blue-50); color: var(--blue-600); border: 1px solid var(--blue-100); }
+        .badge.reviewing::before { background: var(--blue-500); animation: blink 1.5s ease-in-out infinite; }
+        .badge.approved { background: var(--green-50); color: var(--green-600); border: 1px solid var(--green-100); }
+        .badge.approved::before { background: var(--green-500); }
+        .badge.rejected { background: var(--red-50); color: var(--red-500); border: 1px solid var(--red-100); }
+        .badge.rejected::before { background: var(--red-400); }
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; } 50% { opacity: 0.3; }
+        }
+
+        /* ── Action buttons ── */
+        .actions { display: flex; gap: 8px; align-items: center; }
+        .btn { padding: 6px 14px; border-radius: var(--radius-sm); font-size: 12px; font-weight: 600; cursor: pointer; border: 1px solid transparent; transition: var(--transition); font-family: 'Inter', sans-serif; }
+        .btn-view { color: var(--blue-600); border-color: var(--blue-200); background: #fff; text-decoration: none; display: inline-block; }
+        .btn-view:hover { background: var(--blue-50); }
+        .btn-approve { background: var(--green-600); color: #fff; border-color: var(--green-600); }
+        .btn-approve:hover { background: var(--green-500); }
+        .btn-reject { color: var(--red-500); border-color: var(--red-200, #fecaca); background: #fff; }
+        .btn-reject:hover { background: var(--red-50); }
+
+        /* ── User cell ── */
+        .user-name { font-weight: 600; color: var(--gray-900); margin-bottom: 2px; }
+        .user-project { font-size: 12px; color: var(--gray-400); }
+        .amount { font-family: 'Outfit', sans-serif; font-weight: 700; color: var(--gray-800); }
+        .date { font-size: 12px; color: var(--gray-500); }
+
+        /* ── Empty state ── */
+        .empty-state {
+            text-align: center; padding: 60px 24px;
+            color: var(--gray-400); font-size: 14px;
+        }
+        .empty-icon { font-size: 48px; margin-bottom: 16px; }
+
+        /* ── Modal ── */
+        .modal-overlay {
+            display: none; position: fixed; inset: 0; z-index: 1000;
+            align-items: center; justify-content: center; padding: 24px;
+            background: rgba(15, 23, 42, 0.5); backdrop-filter: blur(4px);
+        }
+        .modal-overlay.open { display: flex; }
+        .modal {
+            background: #fff; border-radius: var(--radius-xl); max-width: 480px; width: 100%;
+            box-shadow: var(--shadow-xl); animation: modalIn 0.25s ease;
+        }
+        @keyframes modalIn { from { opacity: 0; transform: scale(0.95) translateY(8px); } to { opacity: 1; transform: scale(1) translateY(0); } }
+        .modal-header {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 20px 24px; border-bottom: 1px solid var(--gray-100);
+        }
+        .modal-title { font-family: 'Outfit', sans-serif; font-size: 18px; font-weight: 700; color: var(--gray-900); }
+        .modal-close {
+            width: 32px; height: 32px; border-radius: 50%; border: none;
+            background: var(--gray-100); color: var(--gray-500); cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            transition: var(--transition); font-size: 18px;
+        }
+        .modal-close:hover { background: var(--gray-200); color: var(--gray-800); }
+        .modal-body { padding: 24px; }
+        .modal-label { font-size: 13px; font-weight: 600; color: var(--gray-600); margin-bottom: 8px; }
+        .modal-input {
+            width: 100%; padding: 11px 16px; border: 2px solid var(--gray-200);
+            border-radius: var(--radius-md); font-size: 14px; color: var(--gray-900);
+            outline: none; font-family: 'Inter', sans-serif; transition: var(--transition);
+        }
+        .modal-input:focus { border-color: #4f46e5; box-shadow: 0 0 0 4px rgba(79,70,229,0.08); }
+        .modal-actions { display: flex; gap: 12px; justify-content: flex-end; padding: 16px 24px 24px; }
+        .btn-cancel {
+            background: transparent; border: 1px solid var(--gray-200); color: var(--gray-600);
+            padding: 10px 20px; border-radius: var(--radius-md); font-weight: 600;
+            cursor: pointer; font-family: 'Inter', sans-serif; transition: var(--transition);
+        }
+        .btn-cancel:hover { background: var(--gray-50); }
+        .btn-confirm {
+            padding: 10px 24px; border-radius: var(--radius-md); border: none;
+            font-weight: 700; cursor: pointer; font-family: 'Inter', sans-serif;
+            transition: var(--transition); font-size: 14px;
+        }
+        .btn-confirm.approve { background: var(--green-600); color: #fff; }
+        .btn-confirm.approve:hover { background: var(--green-500); }
+        .btn-confirm.reject { background: var(--red-500); color: #fff; }
+        .btn-confirm.reject:hover { background: #dc2626; }
+
+        /* ── Login ── */
+        .login-wrap {
+            min-height: 100vh; display: flex;
+            align-items: center; justify-content: center;
+            background: linear-gradient(135deg, #f8fafc 0%, #eef2ff 100%);
+        }
+        .login-card {
+            background: #fff; border-radius: var(--radius-xl);
+            padding: 40px; width: 100%; max-width: 420px;
+            box-shadow: var(--shadow-xl); border: 1px solid var(--gray-100);
+        }
+        .login-icon {
+            width: 56px; height: 56px; border-radius: var(--radius-lg);
+            background: linear-gradient(135deg, #4f46e5, #7c3aed);
+            display: flex; align-items: center; justify-content: center;
+            color: #fff; font-size: 24px; margin-bottom: 20px;
+        }
+        .login-title {
+            font-family: 'Outfit', sans-serif; font-size: 24px;
+            font-weight: 800; color: var(--gray-900); margin-bottom: 6px;
+        }
+        .login-sub { font-size: 14px; color: var(--gray-500); margin-bottom: 28px; }
+        .login-label { font-size: 13px; font-weight: 600; color: var(--gray-700); margin-bottom: 8px; display: block; }
+        .login-input {
+            width: 100%; padding: 13px 16px; border: 2px solid var(--gray-200);
+            border-radius: var(--radius-md); font-size: 15px; color: var(--gray-900);
+            outline: none; font-family: 'Inter', sans-serif; transition: var(--transition);
+            margin-bottom: 20px;
+        }
+        .login-input:focus { border-color: #4f46e5; box-shadow: 0 0 0 4px rgba(79,70,229,0.08); }
+        .login-btn {
+            width: 100%; background: linear-gradient(135deg, #4f46e5, #7c3aed);
+            color: #fff; padding: 14px; border: none; border-radius: var(--radius-md);
+            font-size: 16px; font-weight: 700; cursor: pointer;
+            font-family: 'Inter', sans-serif; transition: var(--transition);
+        }
+        .login-btn:hover { filter: brightness(1.08); transform: translateY(-1px); }
+        .login-error {
+            background: var(--red-50); border: 1px solid var(--red-100); color: var(--red-500);
+            padding: 11px 16px; border-radius: var(--radius-md); font-size: 14px;
+            font-weight: 500; margin-bottom: 16px;
+        }
+
+        @media (max-width: 768px) {
+            .stats-grid { grid-template-columns: repeat(2, 1fr); }
+            th:nth-child(3), td:nth-child(3),
+            th:nth-child(6), td:nth-child(6) { display: none; }
+        }
+    </style>
+</head>
+<body>
+
+{% if require_login %}
+<div class="login-wrap">
+    <div class="login-card">
+        <div class="login-icon">🔐</div>
+        <h1 class="login-title">Admin Panel</h1>
+        <p class="login-sub">To'lovlarni boshqarish tizimiga kiring</p>
+        {% if error %}
+        <div class="login-error">⚠️ {{ error }}</div>
+        {% endif %}
+        <form method="POST" action="/admin/payments">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <label class="login-label" for="adm-pass">Parol</label>
+            <input class="login-input" type="password" id="adm-pass" name="password" placeholder="Parolni kiriting..." required autofocus>
+            <button class="login-btn" type="submit">Kirish →</button>
+        </form>
+    </div>
+</div>
+
+{% else %}
+
+<!-- Header -->
+<header class="admin-header">
+    <div class="admin-header-inner">
+        <div style="display:flex;align-items:center;gap:16px;">
+            <a href="/" class="admin-logo">
+                <div class="admin-logo-icon">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                </div>
+                UzBizness
+            </a>
+            <span class="admin-badge">🛡️ Admin Panel</span>
+        </div>
+        <a href="/admin/logout" class="logout-btn">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+            Chiqish
+        </a>
+    </div>
+</header>
+
+<main class="admin-main">
+
+    <!-- Stats -->
+    {% set total = payments | length %}
+    {% set reviewing = payments | selectattr('status', 'in', ['pending', 'reviewing']) | list | length %}
+    {% set approved = payments | selectattr('status', 'equalto', 'approved') | list | length %}
+    {% set rejected = payments | selectattr('status', 'equalto', 'rejected') | list | length %}
+    <div class="stats-grid">
+        <div class="stat-card stat-total">
+            <div class="stat-num">{{ total }}</div>
+            <div class="stat-label">Jami</div>
+        </div>
+        <div class="stat-card stat-reviewing">
+            <div class="stat-num">{{ reviewing }}</div>
+            <div class="stat-label">Kutilmoqda</div>
+        </div>
+        <div class="stat-card stat-approved">
+            <div class="stat-num">{{ approved }}</div>
+            <div class="stat-label">Tasdiqlangan</div>
+        </div>
+        <div class="stat-card stat-rejected">
+            <div class="stat-num">{{ rejected }}</div>
+            <div class="stat-label">Rad etilgan</div>
+        </div>
+    </div>
+
+    <!-- Table -->
+    <div class="table-card">
+        <div class="table-card-header">
+            <h2 class="table-card-title">To'lovlar Ro'yxati</h2>
+            <button class="refresh-btn" onclick="window.location.href = window.location.pathname + '?t=' + new Date().getTime()">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>
+                Yangilash
+            </button>
+        </div>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Mijoz / Loyiha</th>
+                    <th>Summa</th>
+                    <th>Sana</th>
+                    <th>Holat</th>
+                    <th>Chek</th>
+                    <th>Amallar</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for p in payments %}
+                <tr id="row-{{ p.id }}">
+                    <td>
+                        <div class="user-name">{{ p.user_name }}</div>
+                        <div class="user-project">{{ p.loyiha_nomi }}</div>
+                        <div style="font-family:monospace;font-size:11px;color:#94a3b8;margin-top:2px">{{ p.id }}</div>
+                    </td>
+                    <td><span class="amount">{{ "{:,}".format(p.amount).replace(",", " ") }} so'm</span></td>
+                    <td><span class="date">{{ p.created_at }}</span></td>
+                    <td>
+                        <span class="badge {{ p.status }}">
+                            {% if p.status == 'pending' %}Kutilmoqda
+                            {% elif p.status == 'reviewing' %}Tekshirilmoqda
+                            {% elif p.status == 'approved' %}Tasdiqlandi
+                            {% elif p.status == 'rejected' %}Rad etildi
+                            {% else %}{{ p.status }}{% endif %}
+                        </span>
+                    </td>
+                    <td>
+                        {% if p.receipt_file %}
+                            <a href="/receipts/{{ p.receipt_file }}" target="_blank" class="btn btn-view">📎 Ko'rish</a>
+                        {% else %}
+                            <span style="color:#94a3b8;font-size:12px;">—</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if p.status in ['pending', 'reviewing'] %}
+                        <div class="actions">
+                            <button class="btn btn-approve" onclick="openModal('approve','{{ p.id }}')">✓ Tasdiqlash</button>
+                            <button class="btn btn-reject" onclick="openModal('reject','{{ p.id }}')">✕ Rad</button>
+                        </div>
+                        {% else %}
+                        <span style="color:#94a3b8;font-size:12px;">{{ p.admin_note or '—' }}</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+                {% if not payments %}
+                <tr>
+                    <td colspan="6">
+                        <div class="empty-state">
+                            <div class="empty-icon">📭</div>
+                            <p>Hozircha hech qanday to'lov mavjud emas</p>
+                        </div>
+                    </td>
+                </tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+</main>
+
+<!-- Modal -->
+<div class="modal-overlay" id="actionModal">
+    <div class="modal">
+        <div class="modal-header">
+            <span class="modal-title" id="modalTitle">Harakat</span>
+            <button class="modal-close" onclick="closeModal()">×</button>
+        </div>
+        <div class="modal-body">
+            <div class="modal-label">Izoh (ixtiyoriy)</div>
+            <input type="text" class="modal-input" id="adminNote" placeholder="Foydalanuvchiga xabar...">
+        </div>
+        <div class="modal-actions">
+            <button class="btn-cancel" onclick="closeModal()">Bekor</button>
+            <button class="btn-confirm" id="modalConfirm" onclick="submitAction()">Bajarish</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Yangilanganda (refresh) scroll qayerda turgan bo'lsa, o'sha joyda qolishi uchun:
+    document.addEventListener("DOMContentLoaded", function() {
+        const scrollpos = sessionStorage.getItem('admin_scrollpos');
+        if (scrollpos) {
+            window.scrollTo(0, parseInt(scrollpos));
+            sessionStorage.removeItem('admin_scrollpos');
+        }
+    });
+
+    window.addEventListener("beforeunload", function() {
+        sessionStorage.setItem('admin_scrollpos', window.scrollY);
+    });
+
+    let _action = null, _pid = null;
+
+    function openModal(type, pid) {
+        _action = type; _pid = pid;
+        const m = document.getElementById('actionModal');
+        const title = document.getElementById('modalTitle');
+        const btn = document.getElementById('modalConfirm');
+        if (type === 'approve') {
+            title.textContent = "To'lovni tasdiqlash";
+            btn.textContent = "✓ Tasdiqlash";
+            btn.className = 'btn-confirm approve';
+        } else {
+            title.textContent = "To'lovni rad etish";
+            btn.textContent = "✕ Rad etish";
+            btn.className = 'btn-confirm reject';
+        }
+        document.getElementById('adminNote').value = '';
+        m.classList.add('open');
+    }
+
+    function closeModal() {
+        document.getElementById('actionModal').classList.remove('open');
+        _action = null; _pid = null;
+    }
+
+    async function submitAction() {
+        if (!_action || !_pid) return;
+        const note = document.getElementById('adminNote').value;
+        const url = _action === 'approve' ? '/api/admin/approve' : '/api/admin/reject';
+        const btn = document.getElementById('modalConfirm');
+        btn.disabled = true;
+        btn.textContent = '...';
+        try {
+            const resp = await fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ payment_id: _pid, note: note })
+            });
+            const res = await resp.json();
+            if (res.success) {
+                closeModal();
+                window.location.href = window.location.pathname + '?t=' + new Date().getTime();
+            } else {
+                alert(res.error || "Xatolik yuz berdi");
+                btn.disabled = false;
+            }
+        } catch (e) {
+            alert("Tarmoq xatosi!");
+            btn.disabled = false;
+        }
+    }
+
+    // Close modal on overlay click
+    document.getElementById('actionModal').addEventListener('click', function(e) {
+        if (e.target === this) closeModal();
+    });
+
+    // Auto-refresh every 30 seconds (cache buster)
+    setInterval(() => window.location.href = window.location.pathname + '?t=' + new Date().getTime(), 30000);
+</script>
+
+{% endif %}
+</body>
+</html>

@@ -1,0 +1,13 @@
+.env
+*.pyc
+__pycache__/
+temp_sessions/
+payments_data/
+static/uploads/
+*.docx
+*.pdf
+!template.docx
+.vscode/
+tmp/
+node_modules/
+.DS_Store

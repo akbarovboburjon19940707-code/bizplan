@@ -1,0 +1,662 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="500 dan ortiq biznes yo'nalishlari uchun professional biznes reja yarating. Avtomatik moliyaviy hisob-kitoblar, NPV, ROI tahlili va PDF eksport.">
+    <meta name="keywords" content="biznes reja, biznes plan, moliyaviy reja, bozor tahlili, startap, investitsiya, NPV, ROI, O'zbekiston">
+    <meta name="author" content="UzBizness">
+    <meta property="og:title" content="Professional Biznes Reja Platformasi | UzBizness">
+    <meta property="og:description" content="500 dan ortiq biznes yo'nalishlari uchun professional biznes reja yarating">
+    <meta property="og:type" content="website">
+    <title>UzBizness — Professional Biznes Reja Platformasi</title>
+    <link rel="icon" href="/static/img/logo_transparent.png" type="image/png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Outfit:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/landing.css">
+</head>
+<body>
+    <!-- ========== HEADER ========== -->
+    <header class="site-header" id="siteHeader">
+        <div class="container header-inner">
+            <a href="/" class="logo" id="logo">
+                <div class="logo-icon" style="background: transparent; padding: 0; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center;">
+                    <img src="/static/img/logo_transparent.png" alt="UzBizness Logo" style="max-width: 100%; max-height: 100%; object-fit: contain;">
+                </div>
+                <span class="logo-text">UzBizness</span>
+            </a>
+
+            <nav class="main-nav" id="mainNav">
+                <a href="#hero" class="nav-link active" id="nav-home">Bosh sahifa</a>
+                <a href="#catalog" class="nav-link" id="nav-catalog">Biznes reja katalogi</a>
+                <a href="#pricing" class="nav-link" id="nav-pricing">Tariflar</a>
+                <a href="#about" class="nav-link" id="nav-about">Biznes reja haqida</a>
+                <a href="#blog" class="nav-link" id="nav-blog">Blog</a>
+                <a href="#contact" class="nav-link" id="nav-contact">Aloqa</a>
+            </nav>
+
+            <a href="/register" class="btn-cta-header" id="header-cta-btn">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M12 5v14M5 12h14"/>
+                </svg>
+                Biznes reja yaratish
+            </a>
+
+            <button class="mobile-toggle" id="mobileToggle" aria-label="Menyuni ochish">
+                <span></span><span></span><span></span>
+            </button>
+        </div>
+    </header>
+
+    <!-- ========== HERO SECTION ========== -->
+    <section class="hero-section" id="hero">
+        <div class="hero-bg-shapes">
+            <div class="hero-shape shape-1"></div>
+            <div class="hero-shape shape-2"></div>
+            <div class="hero-shape shape-3"></div>
+        </div>
+        <div class="container hero-inner">
+            <div class="hero-content">
+                <div class="hero-badge">
+                    <span class="badge-dot"></span>
+                    500+ biznes yo'nalishlari
+                </div>
+                <h1 class="hero-title">
+                    <span class="title-line">500 dan ortiq biznes</span>
+                    <span class="title-line">yo'nalishlari uchun</span>
+                    <span class="title-line gradient-text">professional biznes reja</span>
+                    <span class="title-line">yarating</span>
+                </h1>
+                <p class="hero-subtitle">
+                    Biznes reja tuzishni o'rganing va avtomatik moliyaviy hisob-kitoblar bilan professional biznes reja yarating. NPV, ROI, IRR tahlillari bilan to'liq moliyaviy model.
+                </p>
+                <div class="hero-buttons">
+                    <a href="/register" class="btn btn-primary btn-lg" id="hero-cta-btn">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                            <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
+                        </svg>
+                        Biznes reja yaratish
+                    </a>
+                    <a href="#about" class="btn btn-outline-white btn-lg" id="hero-learn-btn">
+                        Biznes reja haqida o'rganish
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M7 17l9.2-9.2M17 17V7.8H7.8"/>
+                        </svg>
+                    </a>
+                </div>
+                <div class="hero-stats">
+                    <div class="hero-stat">
+                        <span class="stat-number" data-count="500">0</span>+
+                        <span class="stat-label">Yo'nalishlar</span>
+                    </div>
+                    <div class="stat-divider"></div>
+                    <div class="hero-stat">
+                        <span class="stat-number" data-count="1200">0</span>+
+                        <span class="stat-label">Yaratilgan rejalar</span>
+                    </div>
+                    <div class="stat-divider"></div>
+                    <div class="hero-stat">
+                        <span class="stat-number" data-count="98">0</span>%
+                        <span class="stat-label">Mijozlar mamnuniyati</span>
+                    </div>
+                </div>
+            </div>
+            <div class="hero-visual">
+                <div class="hero-image-wrapper">
+                    <img src="/static/img/hero-dashboard.png" alt="Biznes reja platformasi dashboard" class="hero-image" id="hero-dashboard-img">
+                    <div class="floating-card card-revenue">
+                        <div class="fc-icon fc-green">📈</div>
+                        <div>
+                            <span class="fc-label">Daromad o'sishi</span>
+                            <span class="fc-value">+127%</span>
+                        </div>
+                    </div>
+                    <div class="floating-card card-roi">
+                        <div class="fc-icon fc-blue">💰</div>
+                        <div>
+                            <span class="fc-label">ROI</span>
+                            <span class="fc-value">245%</span>
+                        </div>
+                    </div>
+                    <div class="floating-card card-users">
+                        <div class="fc-icon fc-purple">👥</div>
+                        <div>
+                            <span class="fc-label">Foydalanuvchilar</span>
+                            <span class="fc-value">1,200+</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="hero-wave">
+            <svg viewBox="0 0 1440 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M0 60L48 52C96 44 192 28 288 24C384 20 480 28 576 40C672 52 768 68 864 72C960 76 1056 68 1152 56C1248 44 1344 28 1392 20L1440 12V120H1392C1344 120 1248 120 1152 120C1056 120 960 120 864 120C768 120 672 120 576 120C480 120 384 120 288 120C192 120 96 120 48 120H0V60Z" fill="white"/>
+            </svg>
+        </div>
+    </section>
+
+    <!-- ========== TRUSTED BY ========== -->
+    <section class="trusted-section">
+        <div class="container">
+            <p class="trusted-label">Ishonchli platforma</p>
+            <div class="trusted-logos">
+                <div class="trust-item">🏛️ Banklar</div>
+                <div class="trust-item">🏢 Korxonalar</div>
+                <div class="trust-item">🌱 Startaplar</div>
+                <div class="trust-item">👨‍💼 Tadbirkorlar</div>
+                <div class="trust-item">📊 Konsultantlar</div>
+                <div class="trust-item">🎓 Talabalar</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ========== CATALOG SECTION ========== -->
+    <section class="catalog-section" id="catalog" style="padding: 100px 0; background: var(--color-bg);">
+        <div class="container">
+            <div class="section-header">
+                <span class="section-badge">🗂️ Katalog</span>
+                <h2 class="section-title">Tayyor Biznes Rejalar</h2>
+                <p class="section-desc">Biznes rejalarimizning birinchi betini ko'rishingiz va to'liq formatini PDF da o'qishingiz mumkin</p>
+            </div>
+            
+            <style>
+                .catalog-card:hover { transform: translateY(-5px); box-shadow: 0 20px 40px rgba(0,0,0,0.08)!important; }
+                .catalog-card:hover .catalog-img-wrap img { transform: scale(1.05); }
+            </style>
+            
+            <div class="catalog-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 30px; margin-top: 40px;">
+                <!-- Catalog Item -->
+                <div class="catalog-card" style="background: white; border-radius: 16px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.05); transition: all 0.3s ease; display:flex; flex-direction:column; border: 1px solid #f1f5f9;">
+                    <div class="catalog-img-wrap" style="height: 380px; overflow: hidden; background: #e2e8f0; position: relative; border-bottom: 1px solid #f1f5f9;">
+                        <img src="/static/img/catalog-howo.png" alt="HOWO biznes reja" style="width: 100%; height: 100%; object-fit: cover; object-position: top; transition: transform 0.5s ease;">
+                        <div style="position: absolute; bottom:0; left:0; right:0; height:80px; background: linear-gradient(to top, rgba(0,0,0,0.4), transparent);"></div>
+                    </div>
+                    <div class="catalog-info" style="padding: 24px; display:flex; flex-direction:column; flex:1;">
+                        <span style="display:inline-block; padding:6px 12px; background:rgba(37,99,235,0.1); color:#2563eb; font-size:12px; font-weight:600; border-radius:20px; margin-bottom:12px; align-self:flex-start;">Transport / Lizing</span>
+                        <h3 style="font-size: 1.15rem; color: #1e293b; margin-bottom: 20px; font-weight: 700; line-height:1.4;">HOWO avtomobil sotib olish biznes rejasi</h3>
+                        <div style="flex:1"></div>
+                        <a href="/static/uploads/HOWO avtomobil sotib olish biznes rejasi.pdf" target="_blank" class="btn btn-outline" style="width:100%; display:flex; align-items:center; justify-content:center; gap:8px;">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+                            PDF hujjatni ochish
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+
+    <!-- ========== KNOWLEDGE / ABOUT ========== -->
+    <section class="knowledge-section" id="about">
+        <div class="container">
+            <div class="section-header">
+                <span class="section-badge">📚 Bilimlar bazasi</span>
+                <h2 class="section-title">Biznes reja haqida bilimlar</h2>
+                <p class="section-desc">Biznes reja tuzish bo'yicha asosiy tushunchalar va muhim ma'lumotlar</p>
+            </div>
+            <div class="knowledge-grid">
+                <div class="knowledge-card" id="card-what-is">
+                    <div class="kc-icon">
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+                    </div>
+                    <h3 class="kc-title">Biznes reja nima?</h3>
+                    <p class="kc-text">Biznes reja — bu korxona faoliyatini batafsil tavsiflovchi, moliyaviy prognozlar va strategik maqsadlarni belgilovchi professional hujjat.</p>
+                    <a href="#" class="kc-link">Batafsil →</a>
+                </div>
+                <div class="knowledge-card" id="card-why-needed">
+                    <div class="kc-icon kc-icon-green">
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                    </div>
+                    <h3 class="kc-title">Biznes reja nima uchun kerak?</h3>
+                    <p class="kc-text">Kredit olish, investor jalb qilish, strategik rejalashtirish va biznesni tizimli boshqarish uchun biznes reja zarur hisoblanadi.</p>
+                    <a href="#" class="kc-link">Batafsil →</a>
+                </div>
+                <div class="knowledge-card" id="card-main-parts">
+                    <div class="kc-icon kc-icon-purple">
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+                    </div>
+                    <h3 class="kc-title">Biznes rejaning asosiy qismlari</h3>
+                    <p class="kc-text">Loyiha tavsifi, bozor tahlili, marketing strategiyasi, tashkiliy tuzilma, moliyaviy reja va investitsiya tahlili asosiy bo'limlardir.</p>
+                    <a href="#" class="kc-link">Batafsil →</a>
+                </div>
+                <div class="knowledge-card" id="card-financial">
+                    <div class="kc-icon kc-icon-orange">
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                    </div>
+                    <h3 class="kc-title">Moliyaviy reja nima?</h3>
+                    <p class="kc-text">Moliyaviy reja — daromad va xarajatlar prognozi, kredit qaytarish grafigi, NPV, IRR va ROI ko'rsatkichlarini o'z ichiga olgan hujjat.</p>
+                    <a href="#" class="kc-link">Batafsil →</a>
+                </div>
+                <div class="knowledge-card" id="card-market">
+                    <div class="kc-icon kc-icon-teal">
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+                    </div>
+                    <h3 class="kc-title">Bozor tahlili nima?</h3>
+                    <p class="kc-text">Bozor tahlili — maqsadli bozor hajmi, raqobatchilar, mijozlar segmenti va bozor tendensiyalarini o'rganish jarayoni.</p>
+                    <a href="#" class="kc-link">Batafsil →</a>
+                </div>
+                <div class="knowledge-card" id="card-startup">
+                    <div class="kc-icon kc-icon-pink">
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                    </div>
+                    <h3 class="kc-title">Startap biznesni qanday boshlash?</h3>
+                    <p class="kc-text">G'oyani aniqlash, bozor tahlili, biznes reja tuzish, moliya manbalarini topish va MVP yaratish — startap boshlashning asosiy bosqichlari.</p>
+                    <a href="#" class="kc-link">Batafsil →</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ========== HOW IT WORKS ========== -->
+    <section class="how-section" id="knowledge">
+        <div class="container">
+            <div class="section-header">
+                <span class="section-badge">⚙️ Qanday ishlaydi</span>
+                <h2 class="section-title">3 oddiy bosqichda biznes reja yarating</h2>
+                <p class="section-desc">Professional biznes reja yaratish hech qachon bu qadar oson bo'lmagan</p>
+            </div>
+            <div class="steps-grid">
+                <div class="step-card" id="step-1-card">
+                    <div class="step-number">01</div>
+                    <div class="step-icon-wrap">
+                        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+                    </div>
+                    <h3 class="step-title">Biznes yo'nalishini tanlang</h3>
+                    <p class="step-text">500+ dan ortiq biznes yo'nalishlar orasidan o'zingizga mos yo'nalishni tanlang</p>
+                </div>
+                <div class="step-connector">
+                    <svg width="60" height="24" viewBox="0 0 60 24" fill="none">
+                        <path d="M0 12H52M52 12L42 4M52 12L42 20" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    </svg>
+                </div>
+                <div class="step-card" id="step-2-card">
+                    <div class="step-number">02</div>
+                    <div class="step-icon-wrap">
+                        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                    </div>
+                    <h3 class="step-title">Loyiha ma'lumotlarini kiriting</h3>
+                    <p class="step-text">Investitsiya hajmi, xodimlar soni va boshqa asosiy ma'lumotlarni kiriting</p>
+                </div>
+                <div class="step-connector">
+                    <svg width="60" height="24" viewBox="0 0 60 24" fill="none">
+                        <path d="M0 12H52M52 12L42 4M52 12L42 20" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    </svg>
+                </div>
+                <div class="step-card step-card-highlight" id="step-3-card">
+                    <div class="step-number">03</div>
+                    <div class="step-icon-wrap">
+                        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+                    </div>
+                    <h3 class="step-title">Avtomatik professional biznes reja yarating</h3>
+                    <p class="step-text">Tizim avtomatik ravishda to'liq moliyaviy hisob-kitoblar bilan professional biznes reja yaratadi</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ========== PLATFORM FEATURES ========== -->
+    <section class="features-section" id="features">
+        <div class="container">
+            <div class="section-header">
+                <span class="section-badge">🚀 Platforma imkoniyatlari</span>
+                <h2 class="section-title">Kuchli vositalar to'plami</h2>
+                <p class="section-desc">Biznes rejangizni professional darajada tayyorlash uchun barcha zarur vositalar</p>
+            </div>
+            <div class="features-grid">
+                <div class="feature-card feature-card-lg" id="feature-generator">
+                    <div class="fc-glow"></div>
+                    <div class="feature-icon fi-blue">
+                        <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+                    </div>
+                    <h3 class="feature-title">Biznes reja generatori</h3>
+                    <p class="feature-text">500+ dan ortiq biznes yo'nalishlari uchun avtomatik professional biznes reja generatsiya qiling. AI texnologiyasi yordamida to'liq hujjat tayyorlang.</p>
+                    <div class="feature-tag">Asosiy funksiya</div>
+                </div>
+                <div class="feature-card" id="feature-calculator">
+                    <div class="feature-icon fi-green">
+                        <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="6" x2="16" y2="6"/><line x1="8" y1="10" x2="10" y2="10"/><line x1="14" y1="10" x2="16" y2="10"/><line x1="8" y1="14" x2="10" y2="14"/><line x1="14" y1="14" x2="16" y2="14"/><line x1="8" y1="18" x2="10" y2="18"/><line x1="14" y1="18" x2="16" y2="18"/></svg>
+                    </div>
+                    <h3 class="feature-title">Moliyaviy model kalkulyatori</h3>
+                    <p class="feature-text">Annuitet va differentsial kredit hisoblash, daromad-xarajat prognozi, foyda va zarar hisoboti.</p>
+                </div>
+                <div class="feature-card" id="feature-market">
+                    <div class="feature-icon fi-purple">
+                        <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+                    </div>
+                    <h3 class="feature-title">Bozor tahlili moduli</h3>
+                    <p class="feature-text">Maqsadli bozor, raqobatchilar tahlili va strategik pozitsiyalash bo'yicha batafsil tahlil.</p>
+                </div>
+                <div class="feature-card" id="feature-investment">
+                    <div class="feature-icon fi-orange">
+                        <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+                    </div>
+                    <h3 class="feature-title">Investitsiya tahlili (NPV / ROI)</h3>
+                    <p class="feature-text">Net Present Value, Return on Investment, Internal Rate of Return va payback period avtomatik hisoblash.</p>
+                </div>
+                <div class="feature-card" id="feature-export">
+                    <div class="feature-icon fi-teal">
+                        <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                    </div>
+                    <h3 class="feature-title">PDF va Word formatida eksport</h3>
+                    <p class="feature-text">Professional formatda tayyor biznes rejani PDF va Word hujjat sifatida yuklab oling.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ========== PRICING ========== -->
+    <section class="pricing-section" id="pricing">
+        <div class="container">
+            <div class="section-header">
+                <span class="section-badge">💎 Tariflar</span>
+                <h2 class="section-title">Sizga mos tarifni tanlang</h2>
+                <p class="section-desc">Har bir tarif biznesingizning ehtiyojiga mos keladigan imkoniyatlarni taqdim etadi</p>
+            </div>
+            <div class="pricing-grid">
+                <!-- Demo -->
+                <div class="pricing-card" id="plan-demo">
+                    <div class="pc-header">
+                        <span class="pc-badge pc-badge-free">Bepul</span>
+                        <h3 class="pc-name">Demo</h3>
+                        <p class="pc-desc">Platformani sinab ko'ring</p>
+                        <div class="pc-price">
+                            <span class="price-amount">0</span>
+                            <span class="price-currency">so'm</span>
+                        </div>
+                    </div>
+                    <ul class="pc-features">
+                        <li class="pc-feature">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+                            Biznes reja preview ko'rish
+                        </li>
+                        <li class="pc-feature">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+                            Moliyaviy ko'rsatkichlar tahlili
+                        </li>
+                        <li class="pc-feature">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+                            Kredit grafigi hisoblash
+                        </li>
+                        <li class="pc-feature disabled">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                            PDF yuklab olish
+                        </li>
+                        <li class="pc-feature disabled">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                            Word yuklab olish
+                        </li>
+                    </ul>
+                    <a href="/register" class="btn btn-outline btn-pricing" id="btn-demo">Biznes reja yaratish</a>
+                </div>
+
+                <!-- Standart -->
+                <div class="pricing-card pricing-card-popular" id="plan-standard">
+                    <div class="popular-badge">⭐ Eng ommabop</div>
+                    <div class="pc-header">
+                        <span class="pc-badge pc-badge-standard">Standart</span>
+                        <h3 class="pc-name">Standart</h3>
+                        <p class="pc-desc">Biznes reja generatsiya qilish</p>
+                        <div class="pc-price">
+                            <span class="price-amount">80,000</span>
+                            <span class="price-currency">so'm</span>
+                        </div>
+                    </div>
+                    <ul class="pc-features">
+                        <li class="pc-feature">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+                            To'liq biznes reja generatsiyasi
+                        </li>
+                        <li class="pc-feature">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+                            Moliyaviy hisob-kitoblar
+                        </li>
+                        <li class="pc-feature">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+                            PDF formatda yuklab olish
+                        </li>
+                        <li class="pc-feature">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+                            Word formatda yuklab olish
+                        </li>
+                        <li class="pc-feature disabled">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                            To'liq moliyaviy model
+                        </li>
+                    </ul>
+                    <a href="/register" class="btn btn-primary btn-pricing" id="btn-standard">Biznes reja yaratish</a>
+                </div>
+
+                <!-- Premium -->
+                <div class="pricing-card" id="plan-premium">
+                    <div class="pc-header">
+                        <span class="pc-badge pc-badge-premium">Premium</span>
+                        <h3 class="pc-name">Premium</h3>
+                        <p class="pc-desc">To'liq moliyaviy model va eksport</p>
+                        <div class="pc-price">
+                            <span class="price-amount">150,000</span>
+                            <span class="price-currency">so'm</span>
+                        </div>
+                    </div>
+                    <ul class="pc-features">
+                        <li class="pc-feature">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+                            Barcha Standart imkoniyatlar
+                        </li>
+                        <li class="pc-feature">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+                            To'liq moliyaviy model
+                        </li>
+                        <li class="pc-feature">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+                            NPV, IRR, ROI tahlili
+                        </li>
+                        <li class="pc-feature">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+                            Investitsiya tahlili
+                        </li>
+                        <li class="pc-feature">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+                            Ustuvor texnik yordam
+                        </li>
+                    </ul>
+                    <a href="/register" class="btn btn-outline btn-pricing" id="btn-premium">Biznes reja yaratish</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ========== CTA SECTION ========== -->
+    <section class="cta-section" id="cta">
+        <div class="cta-bg-shapes">
+            <div class="cta-shape cta-s1"></div>
+            <div class="cta-shape cta-s2"></div>
+        </div>
+        <div class="container cta-inner">
+            <h2 class="cta-title">Bugunoq biznes rejangizni yaratishni boshlang</h2>
+            <p class="cta-text">Professional biznes reja bilan investorlar va banklar e'tiborini qozoning. 500+ biznes yo'nalish, avtomatik moliyaviy hisob-kitoblar va tayyor hujjat.</p>
+            <a href="/register" class="btn btn-white btn-xl" id="cta-main-btn">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
+                </svg>
+                Biznes reja platformasini ochish
+            </a>
+            <p class="cta-note">✓ Ro'yxatdan o'tish shart emas &nbsp; ✓ Demo bepul &nbsp; ✓ 5 daqiqada tayyor</p>
+        </div>
+    </section>
+
+    <!-- ========== BLOG ========== -->
+    <section class="blog-section" id="blog">
+        <div class="container">
+            <div class="section-header">
+                <span class="section-badge">📝 Blog & Bilimlar bazasi</span>
+                <h2 class="section-title">Foydali maqolalar</h2>
+                <p class="section-desc">Biznes reja va tadbirkorlik haqida eng so'nggi maqolalar</p>
+            </div>
+            <div class="blog-grid">
+                <article class="blog-card" id="blog-1">
+                    <div class="bc-image bc-img-1">
+                        <span class="bc-category">Qo'llanma</span>
+                    </div>
+                    <div class="bc-body">
+                        <h3 class="bc-title">Biznes reja qanday yoziladi?</h3>
+                        <p class="bc-excerpt">Professional biznes reja yozishning bosqichma-bosqich qo'llanmasi. Asosiy bo'limlar va ularning mazmuni haqida batafsil.</p>
+                        <div class="bc-meta">
+                            <span class="bc-date">📅 2026-yil, Aprel</span>
+                            <a href="#" class="bc-read">O'qish →</a>
+                        </div>
+                    </div>
+                </article>
+                <article class="blog-card" id="blog-2">
+                    <div class="bc-image bc-img-2">
+                        <span class="bc-category">Namuna</span>
+                    </div>
+                    <div class="bc-body">
+                        <h3 class="bc-title">Biznes reja namunasi</h3>
+                        <p class="bc-excerpt">Turli sohalardagi tayyor biznes reja namunalari va ularning tuzilishi. Amaliy misollar va tavsiyalar.</p>
+                        <div class="bc-meta">
+                            <span class="bc-date">📅 2026-yil, Mart</span>
+                            <a href="#" class="bc-read">O'qish →</a>
+                        </div>
+                    </div>
+                </article>
+                <article class="blog-card" id="blog-3">
+                    <div class="bc-image bc-img-3">
+                        <span class="bc-category">G'oyalar</span>
+                    </div>
+                    <div class="bc-body">
+                        <h3 class="bc-title">Startap biznes g'oyalari</h3>
+                        <p class="bc-excerpt">O'zbekistonda eng istiqbolli startap biznes g'oyalari. Kam sarmoya bilan boshlasa bo'ladigan yo'nalishlar.</p>
+                        <div class="bc-meta">
+                            <span class="bc-date">📅 2026-yil, Fevral</span>
+                            <a href="#" class="bc-read">O'qish →</a>
+                        </div>
+                    </div>
+                </article>
+                <article class="blog-card" id="blog-4">
+                    <div class="bc-image bc-img-4">
+                        <span class="bc-category">Tahlil</span>
+                    </div>
+                    <div class="bc-body">
+                        <h3 class="bc-title">Investitsiya tahlili</h3>
+                        <p class="bc-excerpt">NPV, IRR, ROI va Payback period tushunchalari. Investitsiya loyihalarini baholash usullari haqida.</p>
+                        <div class="bc-meta">
+                            <span class="bc-date">📅 2026-yil, Yanvar</span>
+                            <a href="#" class="bc-read">O'qish →</a>
+                        </div>
+                    </div>
+                </article>
+                <article class="blog-card" id="blog-5">
+                    <div class="bc-image bc-img-5">
+                        <span class="bc-category">Qo'llanma</span>
+                    </div>
+                    <div class="bc-body">
+                        <h3 class="bc-title">Kichik biznesni boshlash</h3>
+                        <p class="bc-excerpt">Kichik biznes boshlash uchun to'liq qo'llanma: ro'yxatdan o'tish, moliyalashtirish va birinchi qadamlar.</p>
+                        <div class="bc-meta">
+                            <span class="bc-date">📅 2025-yil, Dekabr</span>
+                            <a href="#" class="bc-read">O'qish →</a>
+                        </div>
+                    </div>
+                </article>
+            </div>
+        </div>
+    </section>
+
+    <!-- ========== FOOTER ========== -->
+    <footer class="site-footer" id="contact">
+        <div class="footer-wave">
+            <svg viewBox="0 0 1440 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M0 40L48 44C96 48 192 56 288 60C384 64 480 64 576 56C672 48 768 32 864 28C960 24 1056 32 1152 44C1248 56 1344 72 1392 80L1440 88V120H0V40Z" fill="currentColor"/>
+            </svg>
+        </div>
+        <div class="container footer-inner">
+            <div class="footer-grid">
+                <div class="footer-brand">
+                    <div class="footer-logo">
+                        <div class="logo-icon" style="background: transparent; padding: 0; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; margin-right: 12px;">
+                            <img src="/static/img/logo_transparent.png" alt="UzBizness Logo" style="max-width: 100%; max-height: 100%; object-fit: contain;">
+                        </div>
+                        <span>UzBizness</span>
+                    </div>
+                    <p class="footer-about">Professional biznes reja platformasi. 500+ biznes yo'nalishlari uchun avtomatik moliyaviy hisob-kitoblar va tayyor biznes reja yaratish.</p>
+                    <div class="footer-socials">
+                        <a href="https://t.me/uzbiznesss" target="_blank" class="social-link" title="Telegram" id="social-telegram">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69a.2.2 0 00-.05-.18c-.06-.05-.14-.03-.21-.02-.09.02-1.49.95-4.22 2.79-.4.27-.76.41-1.08.4-.36-.01-1.04-.2-1.55-.37-.63-.2-1.12-.31-1.08-.66.02-.18.27-.36.74-.55 2.92-1.27 4.86-2.11 5.83-2.51 2.78-1.16 3.35-1.36 3.73-1.36.08 0 .27.02.39.12.1.08.13.19.14.27-.01.06.01.24 0 .33z"/></svg>
+                        </a>
+                        <a href="#" target="_blank" class="social-link" title="Instagram" id="social-instagram">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
+                        </a>
+                        <a href="#" target="_blank" class="social-link" title="YouTube" id="social-youtube">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
+                        </a>
+                        <a href="#" target="_blank" class="social-link" title="Facebook" id="social-facebook">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+                        </a>
+                    </div>
+                </div>
+
+                <div class="footer-links-group">
+                    <h4 class="footer-heading">Platforma</h4>
+                    <ul class="footer-links">
+                        <li><a href="/dashboard">Biznes reja yaratish</a></li>
+                        <li><a href="#features">Imkoniyatlar</a></li>
+                        <li><a href="#pricing">Tariflar</a></li>
+                        <li><a href="#knowledge">Qanday ishlaydi</a></li>
+                    </ul>
+                </div>
+
+                <div class="footer-links-group">
+                    <h4 class="footer-heading">Bilimlar</h4>
+                    <ul class="footer-links">
+                        <li><a href="#about">Biznes reja haqida</a></li>
+                        <li><a href="#blog">Blog</a></li>
+                        <li><a href="#">Biznes reja namunasi</a></li>
+                        <li><a href="#">Startap g'oyalari</a></li>
+                    </ul>
+                </div>
+
+                <div class="footer-links-group">
+                    <h4 class="footer-heading">Aloqa</h4>
+                    <ul class="footer-links">
+                        <li>
+                            <a href="tel:+998947214242">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+                                +998 94 721 42 42
+                            </a>
+                        </li>
+                        <li>
+                            <a href="https://t.me/BoBuRo7o7" target="_blank">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69a.2.2 0 00-.05-.18c-.06-.05-.14-.03-.21-.02-.09.02-1.49.95-4.22 2.79-.4.27-.76.41-1.08.4-.36-.01-1.04-.2-1.55-.37-.63-.2-1.12-.31-1.08-.66.02-.18.27-.36.74-.55 2.92-1.27 4.86-2.11 5.83-2.51 2.78-1.16 3.35-1.36 3.73-1.36.08 0 .27.02.39.12.1.08.13.19.14.27-.01.06.01.24 0 .33z"/></svg>
+                                Telegram: @BoBuRo7o7
+                            </a>
+                        </li>
+                        <li>
+                            <a href="mailto:info@uzbizness.uz">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                                info@uzbizness.uz
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="footer-bottom">
+                <p>&copy; 2026 UzBizness. Barcha huquqlar himoyalangan.</p>
+                <div class="footer-bottom-links">
+                    <a href="#">Maxfiylik siyosati</a>
+                    <a href="#">Foydalanish shartlari</a>
+                    <a href="/dashboard">Biznes Reja Platformasi</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Back to top -->
+    <button class="back-to-top" id="backToTop" aria-label="Yuqoriga">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M18 15l-6-6-6 6"/></svg>
+    </button>
+
+    <script src="/static/js/landing.js"></script>
+</body>
+</html>
