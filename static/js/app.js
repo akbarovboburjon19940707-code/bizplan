@@ -701,7 +701,7 @@ async function fetchAIImage(type) {
         });
         const res = await resp.json();
         if (res.success) {
-            previewBox.innerHTML = `<div class="ai-img-wrap"><img src="${res.image_url}" alt="AI Preview"><div class="ai-img-badge">AI/Cloud</div><button type="button" class="ai-img-remove" onclick="removeAIImage('${type}')">&times;</button></div>`;
+            previewBox.innerHTML = `<div class="ai-img-wrap"><img src="${res.image_url}" alt="AI Preview"><div class="ai-img-badge">Grok AI</div><button type="button" class="ai-img-remove" onclick="removeAIImage('${type}')">&times;</button></div>`;
             previewBox.classList.remove('hidden');
             hiddenInput.value = res.local_path;
             const fileInput = document.getElementById(type === 'project' ? 'business_image_file' : 'product_photo_file');
