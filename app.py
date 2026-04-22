@@ -643,7 +643,24 @@ def api_ai_fetch_image():
         image_url = None
         
         # 2. AI ёки Internetдан расм олиш
-        if openai_client:
+        from modules.ai_engine import get_grok_client
+        grok_client = get_grok_client()
+        
+        # 2.1 Grok (xAI) orqali urinish
+        if grok_client and not image_url:
+            try:
+                response = grok_client.images.generate(
+                    model="grok-imagine-image",
+                    prompt=prompt,
+                    size="1024x1024"
+                )
+                image_url = response.data[0].url
+                logger.info(f"Grok orqali AI rasmi olindi: {query}")
+            except Exception as e:
+                logger.warning(f"Grok Image error: {e}. Keyingi APIga o'tilmoqda.")
+
+        # 2.2 DALL-E (OpenAI) orqali urinish
+        if openai_client and not image_url:
             try:
                 response = openai_client.images.generate(
                     model="dall-e-3",
@@ -653,11 +670,11 @@ def api_ai_fetch_image():
                     n=1,
                 )
                 image_url = response.data[0].url
-                logger.info(f"AI Image generated for: {query}")
+                logger.info(f"OpenAI (DALL-E) orqali AI rasmi olindi: {query}")
             except Exception as e:
                 logger.error(f"DALL-E error: {e}")
         
-        # AI бўлмаса ёки ишламаса, Stock Photo (Cloud) - Unsplash Source / LoremFlickr
+        # 2.3 AI бўлмаса ёки ишламаса, Stock Photo (Cloud) - Unsplash Source / LoremFlickr
         if not image_url:
             # Бизнес соҳасига мос сўзларни танлаш
             keywords = f"{activity_type},{query.split()[0]}".replace(" ", ",")
