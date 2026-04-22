@@ -194,7 +194,7 @@ def create_word_document(template_path: str, output_path: str, context: dict = N
                 val = "" if v is None else str(v)
             data[key] = val
 
-    # 2. AI mayn kontentning bo'sh emasligini tekshirish
+    # 2. AI matn kontentning bo'sh emasligini tekshirish
     ai_text_keys = ['loyiha_maqsadi', 'bozor_tahlili', 'marketing_rejasi',
                     'swot_tahlili', 'risk_tahlili', 'texnik_tahlil']
     
@@ -204,10 +204,24 @@ def create_word_document(template_path: str, output_path: str, context: dict = N
         if context and context.get(k):
             ai_texts[k] = context[k]
             # Placeholder uchun data dagi qiymatni bo'sh qoldiramiz
-            # (chunki biz bu matnni maxsus paragraf formatida yozamiz)
+            data["{{" + k + "}}"] = ""
 
-    # 3. Paragraflarni almashtirish
+    # 3. Paragraflarni almashtirish va AI matnlarini maxsus joylashtirish
     for p in doc.paragraphs:
+        for k in ai_text_keys:
+            placeholder = "{{" + k + "}}"
+            if placeholder in p.text and k in ai_texts:
+                parent = p._element.getparent()
+                current_idx = parent.index(p._element)
+                _format_ai_text_to_paragraphs(doc, ai_texts[k], parent, current_idx)
+                
+                # Placeholder o'rniga hech narsa qoldirmaymiz (XML da)
+                for r in p.runs:
+                    if placeholder in r.text:
+                        r.text = r.text.replace(placeholder, "")
+                if placeholder in p.text:
+                    p.text = p.text.replace(placeholder, "")
+
         _replace_in_paragraph(p, data, images)
 
     # 4. Jadvallar ichidagi placeholderlar
@@ -215,6 +229,18 @@ def create_word_document(template_path: str, output_path: str, context: dict = N
         for row in table.rows:
             for cell in row.cells:
                 for p in cell.paragraphs:
+                    for k in ai_text_keys:
+                        placeholder = "{{" + k + "}}"
+                        if placeholder in p.text and k in ai_texts:
+                            parent = p._element.getparent()
+                            current_idx = parent.index(p._element)
+                            _format_ai_text_to_paragraphs(doc, ai_texts[k], parent, current_idx)
+                            for r in p.runs:
+                                if placeholder in r.text:
+                                    r.text = r.text.replace(placeholder, "")
+                            if placeholder in p.text:
+                                p.text = p.text.replace(placeholder, "")
+
                     _replace_in_paragraph(p, data, images)
 
     # 5. Header/Footer
