@@ -55,6 +55,12 @@ def calculate_npv(discount_rate_pct: float, cash_flows: List[float]) -> float:
 def calculate_irr(cash_flows: List[float], max_iter: int = 1000) -> Optional[float]:
     if not cash_flows or len(cash_flows) < 2:
         return None
+        
+    has_positive = any(cf > 0 for cf in cash_flows)
+    has_negative = any(cf < 0 for cf in cash_flows)
+    if not (has_positive and has_negative):
+        return 0.0
+
     guess = 0.1
     for _ in range(max_iter):
         npv_val = sum(cf / ((1 + guess) ** t) for t, cf in enumerate(cash_flows))
@@ -233,7 +239,7 @@ class FinancialEngine:
             ["JAMI ASOSIY KAPITAL", oz + max(jami - oz - kredit, 0), kredit, jami],
         ]
         return {
-            "title": "LOYIHA ISHTIROKCHILARI HISSASI",
+            "title": "Loyiha ishtirokchilari hissasi",
             "ilova": "3-ILOVA",
             "headers": ["Ko'rsatkich", "O'z mablag' (so'm)", "Kredit (so'm)", "Jami (so'm)"],
             "rows": rows,
@@ -256,7 +262,7 @@ class FinancialEngine:
             ["JAMI moliyalashtirish", jami, "100%"],
         ]
         return {
-            "title": "MOLIYALASHTIRISH REJASI",
+            "title": "Moliyalashtirish rejasi",
             "ilova": "2-ILOVA",
             "headers": ["Manba", "Summa (so'm)", "Ulush"],
             "rows": rows,
