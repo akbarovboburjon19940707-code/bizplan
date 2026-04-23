@@ -63,7 +63,7 @@ def get_gemini_model():
             try:
                 import google.generativeai as genai
                 genai.configure(api_key=key)
-                _gemini_model = genai.GenerativeModel('gemini-1.5-flash')
+                _gemini_model = genai.GenerativeModel('gemini-2.0-flash')
                 logger.info("✅ Gemini (Google) model tayyor.")
             except ImportError:
                 logger.error("Google GenerativeAI kutubxonasi o'rnatilmagan. 'pip install google-generativeai' qiling.")
@@ -103,7 +103,7 @@ def get_groq_client():
 # ============================================================
 # SO'Z SONI TEKSHIRUVI
 # ============================================================
-MIN_WORD_COUNT = 450  # Minimal qabul qilinadigan so'z soni
+MIN_WORD_COUNT = 200  # Minimal qabul qilinadigan so'z soni
 TARGET_WORD_COUNT = 600  # Maqsadli so'z soni
 
 
@@ -144,14 +144,37 @@ def validate_ai_response(text: str, section_name: str) -> str:
 def safe_generate(prompt: str, section_name: str, retry_count: int = 1) -> str:
     """
     Universal generatsiya funksiyasi.
-    Tartib: Claude → Grok → Gemini → ChatGPT → Groq → Static
+    Tartib: Groq → Claude → Gemini → ChatGPT → Grok → Static
 
     Har bir provider ishlamasa keyingisiga o'tadi.
     So'z soni yetarli bo'lmasa qayta urinadi (retry).
     """
     result = None
 
-    # ─── 1. CLAUDE (Anthropic) — Eng Sifatli ───
+    # ─── 1. GROQ (Llama) — Eng Tezkor va Ishonchli ───
+    gr_client = get_groq_client()
+    if gr_client:
+        try:
+            logger.info(f"  ⚪ [GROQ] {section_name} generatsiya qilmoqda...")
+            response = gr_client.chat.completions.create(
+                model="llama-3.3-70b-versatile",
+                messages=[
+                    {"role": "system", "content": "Siz professional biznes-reja yozuvchi mutaxassisiz. O'zbek tilida (lotin alifbosida) yozing. Har bir javob kamida 500-700 so'z bo'lishi shart."},
+                    {"role": "user", "content": prompt}
+                ],
+                max_tokens=4096,
+                temperature=0.7
+            )
+            result = validate_ai_response(response.choices[0].message.content, section_name)
+            if result and count_words(result) >= MIN_WORD_COUNT:
+                logger.info(f"  ✅ [GROQ] {section_name} — muvaffaqiyatli!")
+                return result
+            else:
+                logger.warning(f"  ⚠️ [GROQ] {section_name} — so'z soni yetarli emas.")
+        except Exception as e:
+            logger.warning(f"  ❌ [GROQ] Xato: {e}")
+
+    # ─── 2. CLAUDE (Anthropic) ───
     a_client = get_anthropic_client()
     if a_client:
         try:
@@ -166,34 +189,11 @@ def safe_generate(prompt: str, section_name: str, retry_count: int = 1) -> str:
                 logger.info(f"  ✅ [CLAUDE] {section_name} — muvaffaqiyatli!")
                 return result
             else:
-                logger.warning(f"  ⚠️ [CLAUDE] {section_name} — so'z soni yetarli emas, keyingi providerga o'tilmoqda.")
+                logger.warning(f"  ⚠️ [CLAUDE] {section_name} — so'z soni yetarli emas.")
         except Exception as e:
             logger.warning(f"  ❌ [CLAUDE] Xato: {e}")
 
-    # ─── 2. GROK (xAI) — Ikkinchi Tanlov ───
-    g_client = get_grok_client()
-    if g_client:
-        try:
-            logger.info(f"  🔵 [GROK] {section_name} generatsiya qilmoqda...")
-            response = g_client.chat.completions.create(
-                model="grok-3",
-                messages=[
-                    {"role": "system", "content": "Siz professional biznes-reja yozuvchi mutaxassisiz. O'zbek tilida (lotin alifbosida) yozing. Har bir javob kamida 500-700 so'z bo'lishi shart."},
-                    {"role": "user", "content": prompt}
-                ],
-                max_tokens=4096,
-                temperature=0.7
-            )
-            result = validate_ai_response(response.choices[0].message.content, section_name)
-            if result and count_words(result) >= MIN_WORD_COUNT:
-                logger.info(f"  ✅ [GROK] {section_name} — muvaffaqiyatli!")
-                return result
-            else:
-                logger.warning(f"  ⚠️ [GROK] {section_name} — so'z soni yetarli emas.")
-        except Exception as e:
-            logger.warning(f"  ❌ [GROK] Xato: {e}")
-
-    # ─── 3. GEMINI (Google) — Uchinchi Tanlov ───
+    # ─── 3. GEMINI (Google) ───
     g_model = get_gemini_model()
     if g_model:
         try:
@@ -208,7 +208,7 @@ def safe_generate(prompt: str, section_name: str, retry_count: int = 1) -> str:
         except Exception as e:
             logger.warning(f"  ❌ [GEMINI] Xato: {e}")
 
-    # ─── 4. CHATGPT (OpenAI) — To'rtinchi Tanlov ───
+    # ─── 4. CHATGPT (OpenAI) ───
     o_client = get_openai_client()
     if o_client:
         try:
@@ -231,13 +231,13 @@ def safe_generate(prompt: str, section_name: str, retry_count: int = 1) -> str:
         except Exception as e:
             logger.warning(f"  ❌ [CHATGPT] Xato: {e}")
 
-    # ─── 5. GROQ (Qwen/Llama) — Oxirgi Fallback ───
-    gr_client = get_groq_client()
-    if gr_client:
+    # ─── 5. GROK (xAI) ───
+    g_client = get_grok_client()
+    if g_client:
         try:
-            logger.info(f"  ⚪ [GROQ] {section_name} generatsiya qilmoqda...")
-            response = gr_client.chat.completions.create(
-                model="llama-3.3-70b-versatile",
+            logger.info(f"  🔵 [GROK] {section_name} generatsiya qilmoqda...")
+            response = g_client.chat.completions.create(
+                model="grok-3",
                 messages=[
                     {"role": "system", "content": "Siz professional biznes-reja yozuvchi mutaxassisiz. O'zbek tilida (lotin alifbosida) yozing. Har bir javob kamida 500-700 so'z bo'lishi shart."},
                     {"role": "user", "content": prompt}
@@ -247,10 +247,10 @@ def safe_generate(prompt: str, section_name: str, retry_count: int = 1) -> str:
             )
             result = validate_ai_response(response.choices[0].message.content, section_name)
             if result and count_words(result) >= MIN_WORD_COUNT:
-                logger.info(f"  ✅ [GROQ] {section_name} — muvaffaqiyatli!")
+                logger.info(f"  ✅ [GROK] {section_name} — muvaffaqiyatli!")
                 return result
         except Exception as e:
-            logger.warning(f"  ❌ [GROQ] Xato: {e}")
+            logger.warning(f"  ❌ [GROK] Xato: {e}")
 
     # Agar hech biri ishlamasa, qisqa javob qaytgan bo'lsa ham uni qaytarish
     if result:
@@ -493,7 +493,7 @@ def generate_pro_business_text(context: dict) -> dict:
 
     logger.info("=" * 60)
     logger.info(f"🚀 AI ENGINE: '{loyiha}' uchun matn generatsiyasi boshlandi")
-    logger.info(f"📋 Provider tartibi: Claude → Grok → Gemini → ChatGPT → Groq")
+    logger.info(f"📋 Provider tartibi: Groq → Claude → Gemini → ChatGPT → Grok")
     logger.info("=" * 60)
 
     section_prompts = [

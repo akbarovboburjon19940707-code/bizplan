@@ -1133,6 +1133,11 @@ mark.ac-highlight { background: #fef08a; color: inherit; border-radius: 2px; pad
   font-size: 0.8rem;
 }
 
+.doc-table th:first-child,
+.doc-table td:first-child {
+  width: 45%; /* Ilovalarda 1-ustunni kengroq qilish */
+}
+
 .doc-table th {
   background: var(--doc-border-light);
   color: #1f2937;
