@@ -1187,5 +1187,41 @@ mark.ac-highlight { background: #fef08a; color: inherit; border-radius: 2px; pad
 
 @media (max-width: 480px) {
   .mulk-grid { grid-template-columns: 1fr; }
-  .topbar-right { display: none; }
+  .topbar-right { display: flex; }
+  .topbar-link { display: none; }
+}
+
+/* ═══════════════════════════════════════════════════════
+   NEW ARIZA BUTTON
+   ═══════════════════════════════════════════════════════ */
+.btn-new-ariza {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  background: var(--primary-light);
+  color: var(--primary);
+  border: 1.5px solid var(--primary);
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all var(--transition);
+  margin-right: 15px;
+}
+
+.btn-new-ariza:hover {
+  background: var(--primary);
+  color: white;
+  box-shadow: 0 4px 12px var(--primary-ring);
+  transform: translateY(-1px);
+}
+
+.btn-new-ariza svg {
+  flex-shrink: 0;
+}
+
+@media (max-width: 500px) {
+  .btn-new-ariza span { display: none; }
+  .btn-new-ariza { padding: 8px; margin-right: 8px; }
 }

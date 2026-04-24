@@ -419,6 +419,43 @@ function loadFormData() {
     } catch (e) { console.error("Form restore error:", e); }
 }
 
+// ============================================================
+// FORM RESET
+// ============================================================
+function resetFormData() {
+    if (confirm("Haqiqatan ham barcha ma'lumotlarni o'chirib, yangi loyiha boshlamoqchimisiz?")) {
+        localStorage.removeItem('biznesRejaFormData');
+        sessionStorage.removeItem('currentBiznesPanel');
+        
+        // Formani bo'shatish
+        const form = document.getElementById('biznesForm');
+        if (form) form.reset();
+        
+        // Maxsus o'zgaruvchilarni tozalash
+        selectedMulk = '';
+        selectedFaoliyat = '';
+        currentPanel = 1;
+        
+        // UI elementlarini tozalash
+        document.querySelectorAll('.money-input').forEach(el => el.value = '');
+        document.querySelectorAll('.input-ctrl').forEach(el => {
+            el.classList.remove('error');
+            el.style.borderColor = '';
+            el.style.background = '';
+        });
+        
+        // Status panel va sidebarScorecardni yangilash
+        updateStatusPanel();
+        updateSidebarScorecard(null);
+        
+        // Birinchi panelga qaytish
+        switchPanel(1);
+        
+        // Sahifani yangilash (to'liq tozalash uchun eng ishonchli yo'l)
+        window.location.reload();
+    }
+}
+
 async function restorePaymentSession(paymentId) {
     if (!paymentId) return;
     try {
