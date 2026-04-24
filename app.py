@@ -613,6 +613,17 @@ def payme_callback():
 # ============================================================
 # ROUTES — AI & IMAGE FETCHING
 # ============================================================
+@app.route("/api/temp-file/<sid>/<path:filename>")
+def serve_temp_file(sid, filename):
+    """Vaqtinchalik sessiya ichidagi fayllarni brauzerda ko'rsatish."""
+    if ".." in sid or ".." in filename:
+        return "Xavfsizlik xatosi", 400
+    file_path = os.path.join(TEMP_BASE, sid, filename)
+    if os.path.exists(file_path):
+        return send_file(file_path)
+    return "Fayl topilmadi", 404
+
+
 @app.route("/api/ai/fetch-image", methods=["POST"])
 @csrf.exempt
 @rate_limit(max_req=10, window=60)
@@ -625,6 +636,7 @@ def api_ai_fetch_image():
         query = d.get("query", "business")
         activity_type = d.get("activity_type", "Business")
         img_type = d.get("type", "project") 
+        session_id = d.get("session_id", "default")
         
         # 1. Qidiruv so'zini inglizchaga o'tkazish
         search_term = query
@@ -642,12 +654,14 @@ def api_ai_fetch_image():
             except:
                 pass
 
-        session_dir = os.path.join(TEMP_BASE, d.get("session_id", "default"))
-        if not os.path.exists(session_dir): session_dir, _ = create_session()
+        session_dir = os.path.join(TEMP_BASE, session_id)
+        if not os.path.exists(session_dir): 
+            session_dir, session_id = create_session()
+            
         target_dir = os.path.join(session_dir, "uploads")
         os.makedirs(target_dir, exist_ok=True)
         
-        # 2. Image Fetch
+        # 2. Image Fetch (LoremFlickr is very stable)
         image_url = f"https://loremflickr.com/1024/768/{search_term.replace(' ', ',')},professional/all"
         
         img_response = requests.get(image_url, timeout=10)
@@ -657,7 +671,16 @@ def api_ai_fetch_image():
         
         with open(save_path, "wb") as f: f.write(img_data)
         
-        return jsonify({"success": True, "filename": filename, "local_path": save_path})
+        # Brauzer uchun URL (Static emas, API orqali)
+        browser_url = f"/api/temp-file/{session_id}/uploads/{filename}"
+        
+        return jsonify({
+            "success": True, 
+            "filename": filename, 
+            "local_path": save_path,
+            "image_url": browser_url,
+            "session_id": session_id
+        })
 
     except Exception as e:
         logger.error(f"Image fetch error: {e}")
