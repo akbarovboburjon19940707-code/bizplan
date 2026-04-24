@@ -1,7 +1,7 @@
 """
 AI Engine — Kuchli Multi-Provider AI Generatsiya Tizimi
 ========================================================
-Provider tartibi: ChatGPT (OpenAI) → Groq → Claude (Anthropic) → Gemini (Google) → Grok (xAI)
+Provider tartibi: DeepSeek → ChatGPT (OpenAI) → Groq → Claude (Anthropic) → Gemini (Google) → Grok (xAI)
 Har bir bo'lim kamida 500-700 so'z generatsiya qiladi.
 """
 import os
@@ -19,6 +19,7 @@ _grok_client = None
 _gemini_model = None
 _openai_client = None
 _groq_client = None
+_deepseek_client = None
 
 
 def get_anthropic_client():
@@ -100,6 +101,21 @@ def get_groq_client():
     return _groq_client
 
 
+def get_deepseek_client():
+    """DeepSeek — Arzon va samarali, hozirgi birinchi tanlov."""
+    global _deepseek_client
+    if _deepseek_client is None:
+        key = os.environ.get('DEEPSEEK_API_KEY')
+        if key:
+            try:
+                from openai import OpenAI
+                # Foydalanuvchi so'ragan base_url (OpenAI kutubxonasi /v1 yo'qotmasligi uchun v1 qo'shib yozildi, yoki api.deepseek.com ishlaydi)
+                _deepseek_client = OpenAI(api_key=key, base_url="https://api.deepseek.com")
+                logger.info("✅ DeepSeek client tayyor.")
+            except ImportError:
+                logger.error("DeepSeek uchun 'openai' kutubxonasi o'rnatilmagan.")
+    return _deepseek_client
+
 # ============================================================
 # SO'Z SONI TEKSHIRUVI
 # ============================================================
@@ -144,12 +160,35 @@ def validate_ai_response(text: str, section_name: str) -> str:
 def safe_generate(prompt: str, section_name: str, retry_count: int = 1) -> str:
     """
     Universal generatsiya funksiyasi.
-    Tartib: ChatGPT → Groq → Claude → Gemini → Grok → Static
+    Tartib: DeepSeek → ChatGPT → Groq → Claude → Gemini → Grok → Static
 
     Har bir provider ishlamasa keyingisiga o'tadi.
     So'z soni yetarli bo'lmasa qayta urinadi (retry).
     """
     result = None
+
+    # ─── 0. DEEPSEEK ───
+    ds_client = get_deepseek_client()
+    if ds_client:
+        try:
+            logger.info(f"  🌌 [DEEPSEEK] {section_name} generatsiya qilmoqda...")
+            response = ds_client.chat.completions.create(
+                model="deepseek-chat",
+                messages=[
+                    {"role": "system", "content": "Siz professional biznes-reja yozuvchi mutaxassisiz. O'zbek tilida (lotin alifbosida) yozing. Har bir javob kamida 500-700 so'z bo'lishi shart."},
+                    {"role": "user", "content": prompt}
+                ],
+                max_tokens=4096,
+                temperature=0.7
+            )
+            result = validate_ai_response(response.choices[0].message.content, section_name)
+            if result and count_words(result) >= MIN_WORD_COUNT:
+                logger.info(f"  ✅ [DEEPSEEK] {section_name} — muvaffaqiyatli!")
+                return result
+            else:
+                logger.warning(f"  ⚠️ [DEEPSEEK] {section_name} — so'z soni yetarli emas.")
+        except Exception as e:
+            logger.warning(f"  ❌ [DEEPSEEK] Xato: {e}")
 
     # ─── 1. CHATGPT (OpenAI) ───
     o_client = get_openai_client()
@@ -269,7 +308,7 @@ def generate_pro_business_text(context: dict) -> dict:
     """
     Biznes reja uchun PRO darajadagi, bank talablariga mos matnlarni generatsiya qiladi.
     Har bir bo'lim kamida 500-700 so'z.
-    Provider tartibi: ChatGPT → Groq → Claude → Gemini → Grok → Static
+    Provider tartibi: DeepSeek → ChatGPT → Groq → Claude → Gemini → Grok → Static
     """
     loyiha = context.get('loyiha_nomi', 'Biznes Reja')
     faoliyat = context.get('faoliyat', 'Tadbirkorlik')
@@ -493,7 +532,7 @@ def generate_pro_business_text(context: dict) -> dict:
 
     logger.info("=" * 60)
     logger.info(f"🚀 AI ENGINE: '{loyiha}' uchun matn generatsiyasi boshlandi")
-    logger.info(f"📋 Provider tartibi: ChatGPT → Groq → Claude → Gemini → Grok")
+    logger.info(f"📋 Provider tartibi: DeepSeek → ChatGPT → Groq → Claude → Gemini → Grok")
     logger.info("=" * 60)
 
     section_prompts = [
