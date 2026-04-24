@@ -147,43 +147,44 @@ def _format_ai_text_to_paragraphs(doc, text, parent_element=None, insert_after_i
 # ============================================================
 # KONTEKST TOZALASH
 # ============================================================
+def _clean_text_for_word(text: str) -> str:
+    """
+    Word (ayniqsa Office 2010) hujjatini buzuvchi belgilardan tozalash.
+    1. XML uchun yaroqsiz kontrollar (0x00-0x1F except tab/lf/cr)
+    2. Emojilar (Unicode High Plane characters)
+    3. Markdown belgilari
+    """
+    if not text or not isinstance(text, str):
+        return str(text) if text is not None else ""
+
+    # 1. XML invalid characters (0x00-0x08, 0x0B, 0x0C, 0x0E-0x1F, 0x7F-0x84, 0x86-0x9F)
+    text = re.sub(r'[\x00-\x08\x0b\x0c\x0e-\x1F\x7F-\x84\x86-\x9F]', '', text)
+    
+    # 2. Emojis and other high-plane chars (Anything above U+FFFF)
+    # Office 2010 cannot handle these in the underlying XML
+    text = re.sub(r'[^\u0000-\uFFFF]', '', text)
+    
+    # 3. Markdown cleanup
+    text = re.sub(r'#+\s(.*)', r'\1', text)
+    text = re.sub(r'\*\*(.*?)\*\*', r'\1', text)
+    text = re.sub(r'\*(.*?)\*', r'\1', text)
+    text = re.sub(r'__(.*?)__', r'\1', text)
+    text = re.sub(r'_(.*?)_', r'\1', text)
+    
+    return text.strip()
+
+
+# ============================================================
+# KONTEKST TOZALASH
+# ============================================================
 def deduplicate_context(context: dict) -> dict:
-    """
-    Word hujjat uchun kontekstni tozalash:
-    1. Bo'sh maydonlarni olib tashlash
-    2. Takroriy maydonlarni birlashtirish
-    3. Word fayl formatsiyasini buzuvchi XML va Markdown belgilarni tozalash
-    """
+    """Word hujjat uchun kontekstni tozalash."""
     if not context:
         return {}
 
     cleaned = {}
-    import re
-    
-    # XML uchun yaroqsiz belgilarni tozalash (Word dagi korruptsiyani oldini olish)
-    # Diqqat: MS Office 2010 Emojilarni qabul qila olmaydi. Shuning uchun U+FFFF dan baland barcha narsa o'chirilishi shart.
-    invalid_xml_pattern = re.compile(r'[\x00-\x08\x0b\x0c\x0e-\x1F\x7F-\x84\x86-\x9F\uD800-\uDFFF\uFFFE\uFFFF]|[^\u0000-\uFFFF]')
-    
     for key, val in context.items():
-        if val is None or (isinstance(val, str) and not val.strip()):
-            cleaned[key] = ""
-            continue
-            
-        if isinstance(val, str):
-            # XML invalid belgilarni olib tashlash
-            val = invalid_xml_pattern.sub('', val)
-            
-            # AI dan kelgan markdown belgilarni (bold, italic, sarlavha) tozalash
-            val = re.sub(r'#+\s(.*)', r'\1', val)
-            val = re.sub(r'\*\*(.*?)\*\*', r'\1', val)
-            val = re.sub(r'\*(.*?)\*', r'\1', val)
-            val = re.sub(r'__(.*?)__', r'\1', val)
-            val = re.sub(r'_(.*?)_', r'\1', val)
-            
-            cleaned[key] = val
-        else:
-            cleaned[key] = val
-
+        cleaned[key] = _clean_text_for_word(val)
     return cleaned
 
 
@@ -251,15 +252,18 @@ def create_word_document(template_path: str, output_path: str, context: dict = N
                     for k in ai_text_keys:
                         pattern = r'\{\{\s*' + re.escape(k) + r'\s*\}\}'
                         if re.search(pattern, p_text):
-                            # Jadvallar ichida yangi paragraf yaratish biroz boshqacha
-                            # Hozircha matnni oddiygina cell ichiga joylaymiz
                             ai_content = ai_texts.get(k, "")
                             if ai_content:
-                                p.text = re.sub(pattern, ai_content, p_text)
-                                p_text = p.text
+                                # Jadvallar ichida newline bo'lsa, ularni to'g'ri run'larga bo'lish
+                                p.text = "" # Tozalash
+                                lines = ai_content.split('\n')
+                                for i, line in enumerate(lines):
+                                    run = p.add_run(_clean_text_for_word(line))
+                                    _format_run(run, font_size=10)
+                                    if i < len(lines) - 1:
+                                        run.add_break()
                             else:
                                 p.text = re.sub(pattern, "", p_text)
-                                p_text = p.text
                         
                     _replace_in_paragraph(p, data, images)
 
