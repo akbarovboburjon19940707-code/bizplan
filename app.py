@@ -618,90 +618,49 @@ def payme_callback():
 @rate_limit(max_req=10, window=60)
 def api_ai_fetch_image():
     """
-    AI ёки Интернетдан (Cloud) расм топиш ва серверга юклаш.
+    AI yoki Internetdan (Cloud) professional rasm topish va saqlash.
     """
     try:
         d = request.get_json() or {}
         query = d.get("query", "business")
-        activity_type = d.get("activity_type", "")
-        img_type = d.get("type", "project") # project yoki product
+        activity_type = d.get("activity_type", "Business")
+        img_type = d.get("type", "project") 
         
-        # 1. Prompt тайёрлаш
-        if img_type == "product":
-            prompt = f"Professional high-quality studio photo of a product for '{query}', {activity_type} category, white background, 4k, realistic."
-        else:
-            prompt = f"Professional modern business project cover image for '{query}', representing '{activity_type}', high resolution, corporate style, 4k."
+        # 1. Qidiruv so'zini inglizchaga o'tkazish
+        search_term = query
+        from modules.ai_engine import get_groq_client
+        gr_client = get_groq_client()
+        
+        if gr_client:
+            try:
+                resp = gr_client.chat.completions.create(
+                    model="llama-3.3-70b-versatile",
+                    messages=[{"role": "user", "content": f"Translate this to 2 English keywords for image search: '{query}'. Output ONLY keywords."}],
+                    max_tokens=15
+                )
+                search_term = resp.choices[0].message.content.strip()
+            except:
+                pass
 
         session_dir = os.path.join(TEMP_BASE, d.get("session_id", "default"))
-        if not os.path.exists(session_dir):
-            # Agar session topilmasa, default temp session yaratish
-            session_dir, _ = create_session()
-            
+        if not os.path.exists(session_dir): session_dir, _ = create_session()
         target_dir = os.path.join(session_dir, "uploads")
         os.makedirs(target_dir, exist_ok=True)
         
-        image_url = None
+        # 2. Image Fetch
+        image_url = f"https://loremflickr.com/1024/768/{search_term.replace(' ', ',')},professional/all"
         
-        # 2. AI ёки Internetдан расм олиш
-        from modules.ai_engine import get_grok_client
-        grok_client = get_grok_client()
-        
-        # 2.1 Grok (xAI) orqali urinish
-        if grok_client and not image_url:
-            try:
-                response = grok_client.images.generate(
-                    model="grok-imagine-image",
-                    prompt=prompt,
-                    size="1024x1024"
-                )
-                image_url = response.data[0].url
-                logger.info(f"Grok orqali AI rasmi olindi: {query}")
-            except Exception as e:
-                logger.warning(f"Grok Image error: {e}. Keyingi APIga o'tilmoqda.")
-
-        # 2.2 DALL-E (OpenAI) orqali urinish
-        if openai_client and not image_url:
-            try:
-                response = openai_client.images.generate(
-                    model="dall-e-3",
-                    prompt=prompt,
-                    size="1024x1024",
-                    quality="standard",
-                    n=1,
-                )
-                image_url = response.data[0].url
-                logger.info(f"OpenAI (DALL-E) orqali AI rasmi olindi: {query}")
-            except Exception as e:
-                logger.error(f"DALL-E error: {e}")
-        
-        # 2.3 AI бўлмаса ёки ишламаса, Stock Photo (Cloud) - Unsplash Source / LoremFlickr
-        if not image_url:
-            # Бизнес соҳасига мос сўзларни танлаш
-            keywords = f"{activity_type},{query.split()[0]}".replace(" ", ",")
-            image_url = f"https://loremflickr.com/1024/1024/{keywords}"
-            logger.info(f"Using Cloud/Stock image for: {query}")
-
-        # 3. Расмни юклаб олиш ва сақлаш
-        img_data = requests.get(image_url).content
+        img_response = requests.get(image_url, timeout=10)
+        img_data = img_response.content
         filename = f"ai_{int(time.time())}_{img_type}.jpg"
         save_path = os.path.join(target_dir, filename)
         
-        with open(save_path, "wb") as f:
-            f.write(img_data)
+        with open(save_path, "wb") as f: f.write(img_data)
         
-        # Frontend учун нисбий йўл (Static эмас, чунки temp_sessions да)
-        # Лекин бизга Word га жойлаш учун абсолют йўл керак бўлади.
-        # Шу сабабли биз файл номини қайтарамиз ва кейинчалик FormData да ишлатамиз.
-        
-        return jsonify({
-            "success": True,
-            "filename": filename,
-            "local_path": save_path,
-            "image_url": image_url # Текшириш учун
-        })
+        return jsonify({"success": True, "filename": filename, "local_path": save_path})
 
     except Exception as e:
-        logger.error(f"Image fetch error: {e}", exc_info=True)
+        logger.error(f"Image fetch error: {e}")
         return jsonify({"success": False, "error": str(e)}), 500
 
 
