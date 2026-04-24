@@ -229,19 +229,19 @@ def create_word_document(template_path: str, output_path: str, context: dict = N
 
     # 3. Paragraflarni almashtirish va AI matnlarini maxsus joylashtirish
     for p in doc.paragraphs:
+        p_text = p.text
         for k in ai_text_keys:
-            placeholder = "{{" + k + "}}"
-            if placeholder in p.text and k in ai_texts:
+            # Placeholder yonida har xil invisible belgilar bo'lishi mumkin (masalan )
+            # Shuning uchun qat'iy placeholder qidiramiz
+            pattern = r'\{\{\s*' + re.escape(k) + r'\s*\}\}.*?'
+            if re.search(pattern, p_text):
                 parent = p._element.getparent()
                 current_idx = parent.index(p._element)
-                _format_ai_text_to_paragraphs(doc, ai_texts[k], parent, current_idx)
+                _format_ai_text_to_paragraphs(doc, ai_texts.get(k, ""), parent, current_idx)
                 
-                # Placeholder o'rniga hech narsa qoldirmaymiz (XML da)
-                for r in p.runs:
-                    if placeholder in r.text:
-                        r.text = r.text.replace(placeholder, "")
-                if placeholder in p.text:
-                    p.text = p.text.replace(placeholder, "")
+                # Placeholderni paragrafitdan butunlay olib tashlaymiz
+                p.text = re.sub(pattern, "", p_text)
+                p_text = p.text # Yangilangan textni keyingi iteratsiya uchun saqlaymiz
 
         _replace_in_paragraph(p, data, images)
 
