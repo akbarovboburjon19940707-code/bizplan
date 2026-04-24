@@ -228,22 +228,40 @@ def create_word_document(template_path: str, output_path: str, context: dict = N
             data["{{" + k + "}}"] = ""
 
     # 3. Paragraflarni almashtirish va AI matnlarini maxsus joylashtirish
+    # --- ODDIY PARAGRAFLAR ---
     for p in doc.paragraphs:
         p_text = p.text
         for k in ai_text_keys:
-            # Placeholder yonida har xil invisible belgilar bo'lishi mumkin (masalan )
-            # Shuning uchun qat'iy placeholder qidiramiz
-            pattern = r'\{\{\s*' + re.escape(k) + r'\s*\}\}.*?'
+            pattern = r'\{\{\s*' + re.escape(k) + r'\s*\}\}'
             if re.search(pattern, p_text):
                 parent = p._element.getparent()
                 current_idx = parent.index(p._element)
                 _format_ai_text_to_paragraphs(doc, ai_texts.get(k, ""), parent, current_idx)
-                
-                # Placeholderni paragrafitdan butunlay olib tashlaymiz
                 p.text = re.sub(pattern, "", p_text)
-                p_text = p.text # Yangilangan textni keyingi iteratsiya uchun saqlaymiz
+                p_text = p.text
 
         _replace_in_paragraph(p, data, images)
+
+    # --- JADVALLAR ICHIDAGI PARAGRAFLAR ---
+    for table in doc.tables:
+        for row in table.rows:
+            for cell in row.cells:
+                for p in cell.paragraphs:
+                    p_text = p.text
+                    for k in ai_text_keys:
+                        pattern = r'\{\{\s*' + re.escape(k) + r'\s*\}\}'
+                        if re.search(pattern, p_text):
+                            # Jadvallar ichida yangi paragraf yaratish biroz boshqacha
+                            # Hozircha matnni oddiygina cell ichiga joylaymiz
+                            ai_content = ai_texts.get(k, "")
+                            if ai_content:
+                                p.text = re.sub(pattern, ai_content, p_text)
+                                p_text = p.text
+                            else:
+                                p.text = re.sub(pattern, "", p_text)
+                                p_text = p.text
+                        
+                    _replace_in_paragraph(p, data, images)
 
     # 4. Jadvallar ichidagi placeholderlar
     for table in doc.tables:
