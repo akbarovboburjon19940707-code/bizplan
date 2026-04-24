@@ -1,7 +1,7 @@
 """
 AI Engine — Kuchli Multi-Provider AI Generatsiya Tizimi
 ========================================================
-Provider tartibi: Claude (Anthropic) → Grok (xAI) → Gemini (Google) → ChatGPT (OpenAI)
+Provider tartibi: ChatGPT (OpenAI) → Groq → Claude (Anthropic) → Gemini (Google) → Grok (xAI)
 Har bir bo'lim kamida 500-700 so'z generatsiya qiladi.
 """
 import os
@@ -144,14 +144,37 @@ def validate_ai_response(text: str, section_name: str) -> str:
 def safe_generate(prompt: str, section_name: str, retry_count: int = 1) -> str:
     """
     Universal generatsiya funksiyasi.
-    Tartib: Groq → Claude → Gemini → ChatGPT → Grok → Static
+    Tartib: ChatGPT → Groq → Claude → Gemini → Grok → Static
 
     Har bir provider ishlamasa keyingisiga o'tadi.
     So'z soni yetarli bo'lmasa qayta urinadi (retry).
     """
     result = None
 
-    # ─── 1. GROQ (Llama) — Eng Tezkor va Ishonchli ───
+    # ─── 1. CHATGPT (OpenAI) ───
+    o_client = get_openai_client()
+    if o_client:
+        try:
+            logger.info(f"  🟠 [CHATGPT] {section_name} generatsiya qilmoqda...")
+            response = o_client.chat.completions.create(
+                model="gpt-4o",
+                messages=[
+                    {"role": "system", "content": "Siz professional biznes-reja yozuvchi mutaxassisiz. O'zbek tilida (lotin alifbosida) yozing. Har bir javob kamida 500-700 so'z bo'lishi shart."},
+                    {"role": "user", "content": prompt}
+                ],
+                max_tokens=4096,
+                temperature=0.7
+            )
+            result = validate_ai_response(response.choices[0].message.content, section_name)
+            if result and count_words(result) >= MIN_WORD_COUNT:
+                logger.info(f"  ✅ [CHATGPT] {section_name} — muvaffaqiyatli!")
+                return result
+            else:
+                logger.warning(f"  ⚠️ [CHATGPT] {section_name} — so'z soni yetarli emas.")
+        except Exception as e:
+            logger.warning(f"  ❌ [CHATGPT] Xato: {e}")
+
+    # ─── 2. GROQ (Llama) ───
     gr_client = get_groq_client()
     if gr_client:
         try:
@@ -174,7 +197,7 @@ def safe_generate(prompt: str, section_name: str, retry_count: int = 1) -> str:
         except Exception as e:
             logger.warning(f"  ❌ [GROQ] Xato: {e}")
 
-    # ─── 2. CLAUDE (Anthropic) ───
+    # ─── 3. CLAUDE (Anthropic) ───
     a_client = get_anthropic_client()
     if a_client:
         try:
@@ -193,7 +216,7 @@ def safe_generate(prompt: str, section_name: str, retry_count: int = 1) -> str:
         except Exception as e:
             logger.warning(f"  ❌ [CLAUDE] Xato: {e}")
 
-    # ─── 3. GEMINI (Google) ───
+    # ─── 4. GEMINI (Google) ───
     g_model = get_gemini_model()
     if g_model:
         try:
@@ -207,29 +230,6 @@ def safe_generate(prompt: str, section_name: str, retry_count: int = 1) -> str:
                 logger.warning(f"  ⚠️ [GEMINI] {section_name} — so'z soni yetarli emas.")
         except Exception as e:
             logger.warning(f"  ❌ [GEMINI] Xato: {e}")
-
-    # ─── 4. CHATGPT (OpenAI) ───
-    o_client = get_openai_client()
-    if o_client:
-        try:
-            logger.info(f"  🟠 [CHATGPT] {section_name} generatsiya qilmoqda...")
-            response = o_client.chat.completions.create(
-                model="gpt-4o",
-                messages=[
-                    {"role": "system", "content": "Siz professional biznes-reja yozuvchi mutaxassisiz. O'zbek tilida (lotin alifbosida) yozing. Har bir javob kamida 500-700 so'z bo'lishi shart."},
-                    {"role": "user", "content": prompt}
-                ],
-                max_tokens=4096,
-                temperature=0.7
-            )
-            result = validate_ai_response(response.choices[0].message.content, section_name)
-            if result and count_words(result) >= MIN_WORD_COUNT:
-                logger.info(f"  ✅ [CHATGPT] {section_name} — muvaffaqiyatli!")
-                return result
-            else:
-                logger.warning(f"  ⚠️ [CHATGPT] {section_name} — so'z soni yetarli emas.")
-        except Exception as e:
-            logger.warning(f"  ❌ [CHATGPT] Xato: {e}")
 
     # ─── 5. GROK (xAI) ───
     g_client = get_grok_client()
@@ -269,7 +269,7 @@ def generate_pro_business_text(context: dict) -> dict:
     """
     Biznes reja uchun PRO darajadagi, bank talablariga mos matnlarni generatsiya qiladi.
     Har bir bo'lim kamida 500-700 so'z.
-    Provider tartibi: Claude → Grok → Gemini → ChatGPT → Groq → Static
+    Provider tartibi: ChatGPT → Groq → Claude → Gemini → Grok → Static
     """
     loyiha = context.get('loyiha_nomi', 'Biznes Reja')
     faoliyat = context.get('faoliyat', 'Tadbirkorlik')
@@ -493,7 +493,7 @@ def generate_pro_business_text(context: dict) -> dict:
 
     logger.info("=" * 60)
     logger.info(f"🚀 AI ENGINE: '{loyiha}' uchun matn generatsiyasi boshlandi")
-    logger.info(f"📋 Provider tartibi: Groq → Claude → Gemini → ChatGPT → Grok")
+    logger.info(f"📋 Provider tartibi: ChatGPT → Groq → Claude → Gemini → Grok")
     logger.info("=" * 60)
 
     section_prompts = [
