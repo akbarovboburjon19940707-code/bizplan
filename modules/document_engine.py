@@ -152,16 +152,36 @@ def deduplicate_context(context: dict) -> dict:
     Word hujjat uchun kontekstni tozalash:
     1. Bo'sh maydonlarni olib tashlash
     2. Takroriy maydonlarni birlashtirish
+    3. Word fayl formatsiyasini buzuvchi XML va Markdown belgilarni tozalash
     """
     if not context:
         return {}
 
     cleaned = {}
+    import re
+    
+    # XML uchun yaroqsiz belgilarni tozalash (Word dagi korruptsiyani oldini olish)
+    invalid_xml_pattern = re.compile(r'[\x00-\x08\x0b\x0c\x0e-\x1F\u7F-\u84\u86-\u9F\uD800-\uDFFF\uFFFE\uFFFF]')
+    
     for key, val in context.items():
         if val is None or (isinstance(val, str) and not val.strip()):
             cleaned[key] = ""
             continue
-        cleaned[key] = val
+            
+        if isinstance(val, str):
+            # XML invalid belgilarni olib tashlash
+            val = invalid_xml_pattern.sub('', val)
+            
+            # AI dan kelgan markdown belgilarni (bold, italic, sarlavha) tozalash
+            val = re.sub(r'#+\s(.*)', r'\1', val)
+            val = re.sub(r'\*\*(.*?)\*\*', r'\1', val)
+            val = re.sub(r'\*(.*?)\*', r'\1', val)
+            val = re.sub(r'__(.*?)__', r'\1', val)
+            val = re.sub(r'_(.*?)_', r'\1', val)
+            
+            cleaned[key] = val
+        else:
+            cleaned[key] = val
 
     return cleaned
 

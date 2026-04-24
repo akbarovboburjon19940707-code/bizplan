@@ -545,10 +545,24 @@ def generate_pro_business_text(context: dict) -> dict:
     ]
 
     try:
-        for key, prompt, name in section_prompts:
+        from concurrent.futures import ThreadPoolExecutor, as_completed
+        
+        # Parallely generatsiya qilish
+        def process_prompt(item):
+            key, prompt, name = item
             logger.info(f"\n📌 [{name}] generatsiya boshlanmoqda...")
-            result = safe_generate(prompt, name)
-            sections[key] = result
+            return key, safe_generate(prompt, name)
+
+        with ThreadPoolExecutor(max_workers=6) as executor:
+            future_to_item = {executor.submit(process_prompt, item): item for item in section_prompts}
+            for future in as_completed(future_to_item):
+                item = future_to_item[future]
+                key = item[0]
+                try:
+                    sections[key] = future.result()[1]
+                except Exception as exc:
+                    logger.error(f"❌ [{key}] generatsiyasida xato: {exc}")
+                    sections[key] = None
 
         # Bo'sh bo'limlarni static fallback bilan to'ldirish
         static_fallback = _get_static_fallback_text(loyiha, faoliyat, manzil, tashabbuskor, fin_summary)
