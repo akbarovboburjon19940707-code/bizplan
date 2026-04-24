@@ -94,8 +94,9 @@ def get_groq_client():
         if key:
             try:
                 from openai import OpenAI
-                _groq_client = OpenAI(api_key=key, base_url="https://api.groq.com/openai/v1")
-                logger.info("✅ Groq client tayyor.")
+                # 60 soniya kutish vaqti (timeout) qo'shildi
+                _groq_client = OpenAI(api_key=key, base_url="https://api.groq.com/openai/v1", timeout=60.0)
+                logger.info("✅ Groq client tayyor (timeout=60s).")
             except ImportError:
                 logger.error("Groq uchun 'openai' kutubxonasi o'rnatilmagan.")
     return _groq_client
@@ -167,25 +168,28 @@ def safe_generate(prompt: str, section_name: str, retry_count: int = 1) -> str:
     # ─── 1. GROQ (Llama 3.3-70b) — HOZIRDA ENG YAXSHI VA TEZ ───
     gr_client = get_groq_client()
     if gr_client:
-        try:
-            # Groq uchun eng barqaror model
-            model_name = "llama-3.3-70b-versatile"
-            logger.info(f"  ⚪ [GROQ] {section_name} ({model_name}) generatsiya qilmoqda...")
-            response = gr_client.chat.completions.create(
-                model=model_name,
-                messages=[
-                    {"role": "system", "content": "Siz professional biznes-reja yozuvchi mutaxassisiz. O'zbek tilida (lotin alifbosida) yozing. Har bir javob kamida 500-700 so'z bo'lishi shart."},
-                    {"role": "user", "content": prompt}
-                ],
-                max_tokens=4096,
-                temperature=0.7
-            )
-            result = validate_ai_response(response.choices[0].message.content, section_name)
-            if result and count_words(result) >= MIN_WORD_COUNT:
-                logger.info(f"  ✅ [GROQ] {section_name} — muvaffaqiyatli!")
-                return result
-        except Exception as e:
-            logger.warning(f"  ❌ [GROQ] Xato: {e}")
+        # Bir nechta modellarni navbat bilan sinab ko'rish (redunandcy)
+        models = ["llama-3.3-70b-versatile", "llama-3.1-70b-versatile", "llama3-70b-8192"]
+        
+        for model_name in models:
+            try:
+                logger.info(f"  ⚪ [GROQ] {section_name} ({model_name}) generatsiya qilmoqda...")
+                response = gr_client.chat.completions.create(
+                    model=model_name,
+                    messages=[
+                        {"role": "system", "content": "Siz professional biznes-reja yozuvchi mutaxassisiz. O'zbek tilida (lotin alifbosida) yozing. Bo'limni juda batafsil, dalillarga asoslangan holda kamida 500-700 so'z qilib yozing. Sarlavhalar ishlatmang."},
+                        {"role": "user", "content": prompt}
+                    ],
+                    max_tokens=4096,
+                    temperature=0.8
+                )
+                result = validate_ai_response(response.choices[0].message.content, section_name)
+                if result and count_words(result) >= 150: # Minimal chegara
+                    logger.info(f"  ✅ [GROQ] {section_name} ({model_name}) — muvaffaqiyatli!")
+                    return result
+            except Exception as e:
+                logger.warning(f"  ❌ [GROQ] {model_name} xatosi: {e}")
+                continue
 
     # ─── 1. CHATGPT (OpenAI) ───
     o_client = get_openai_client()
