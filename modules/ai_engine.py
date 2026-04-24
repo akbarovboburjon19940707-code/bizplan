@@ -120,7 +120,7 @@ def get_deepseek_client():
 # ============================================================
 # SO'Z SONI TEKSHIRUVI
 # ============================================================
-MIN_WORD_COUNT = 200  # Minimal qabul qilinadigan so'z soni
+MIN_WORD_COUNT = 100  # Minimal qabul qilinadigan so'z soni
 TARGET_WORD_COUNT = 600  # Maqsadli so'z soni
 
 
@@ -172,7 +172,7 @@ def safe_generate(prompt: str, section_name: str, retry_count: int = 1) -> str:
         models = ["llama-3.3-70b-versatile", "llama-3.1-70b-versatile", "llama3-70b-8192"]
         
         for model_name in models:
-            for attempt in range(3): # Har bir model uchun 3 martagacha urinish
+            for attempt in range(2): # Har bir model uchun 2 martagacha urinish
                 try:
                     logger.info(f"  ⚪ [GROQ] {section_name} ({model_name}) {attempt+1}-urinish...")
                     response = gr_client.chat.completions.create(
@@ -185,15 +185,15 @@ def safe_generate(prompt: str, section_name: str, retry_count: int = 1) -> str:
                         temperature=0.8
                     )
                     result = validate_ai_response(response.choices[0].message.content, section_name)
-                    if result and count_words(result) >= 150:
+                    if result and count_words(result) >= MIN_WORD_COUNT:
                         logger.info(f"  ✅ [GROQ] {section_name} ({model_name}) — muvaffaqiyatli!")
                         return result
                     else:
-                        logger.warning(f"  ⚠️ [GROQ] {section_name} - qisqa javob, qayta urinish...")
+                        logger.warning(f"  ⚠️ [GROQ] {section_name} - qisqa javob ({count_words(result)} so'z), qayta urinish...")
                 except Exception as e:
                     logger.warning(f"  ❌ [GROQ] {model_name} {attempt+1}-urinish xatosi: {e}")
                     import time
-                    time.sleep(2) # Qisqa tanaffus
+                    time.sleep(5) # Rate limit uchun uzunroq tanaffus
                     continue
 
     # ─── 1. CHATGPT (OpenAI) ───
@@ -248,7 +248,7 @@ def safe_generate(prompt: str, section_name: str, retry_count: int = 1) -> str:
         try:
             logger.info(f"  🟣 [CLAUDE] {section_name} generatsiya qilmoqda...")
             response = a_client.messages.create(
-                model="claude-sonnet-4-20250514",
+                model="claude-3-5-sonnet-20241022",
                 max_tokens=4096,
                 messages=[{"role": "user", "content": prompt}]
             )
@@ -316,26 +316,39 @@ def generate_pro_business_text(context: dict) -> dict:
     Har bir bo'lim kamida 500-700 so'z.
     Provider tartibi: DeepSeek → ChatGPT → Groq → Claude → Gemini → Grok → Static
     """
+    # String qiymatlarni raqamga xavfsiz o'tkazish
+    def _safe_num(val, default=0):
+        if isinstance(val, (int, float)):
+            return val
+        try:
+            # "500,000" yoki "500 000" formatlarni tozalash
+            cleaned = str(val).replace(',', '').replace(' ', '').strip()
+            return float(cleaned) if cleaned else default
+        except (ValueError, TypeError):
+            return default
+
     loyiha = context.get('loyiha_nomi', 'Biznes Reja')
     faoliyat = context.get('faoliyat', 'Tadbirkorlik')
     manzil = context.get('manzil', "O'zbekiston")
-    npv = context.get('npv', 0)
-    roi = context.get('roi', 0)
-    kredit = context.get('kredit', 0)
-    foiz = context.get('foiz', 14)
-    muddat = context.get('muddat', 36)
+    npv = _safe_num(context.get('npv', 0))
+    roi = _safe_num(context.get('roi', 0))
+    kredit = _safe_num(context.get('kredit', 0))
+    foiz = _safe_num(context.get('foiz', 14), 14)
+    muddat = _safe_num(context.get('muddat', 36), 36)
     tashabbuskor = context.get('tashabbuskor', '')
-    ishchi_soni = context.get('ishchi_soni', 0)
+    ishchi_soni = _safe_num(context.get('ishchi_soni', 0))
+    loyiha_qiymati = _safe_num(context.get('loyiha_qiymati', 0))
+    yillik_sof_foyda = _safe_num(context.get('yillik_sof_foyda', 0))
 
     # Moliyaviy ko'rsatkichlar — AI uchun kontekst
     fin_summary = f"""
     Moliyaviy ko'rsatkichlar:
-    - Loyiha qiymati: {context.get('loyiha_qiymati', 0):,.0f} so'm
-    - Bank krediti: {kredit:,.0f} so'm ({foiz}% yillik, {muddat} oyga)
+    - Loyiha qiymati: {loyiha_qiymati:,.0f} so'm
+    - Bank krediti: {kredit:,.0f} so'm ({foiz}% yillik, {muddat:.0f} oyga)
     - NPV (Sof keltirilgan qiymat): {npv:,.0f} so'm
     - ROI (Investitsiya rentabelligi): {roi}%
-    - Yillik o'rtacha sof foyda: {context.get('yillik_sof_foyda', 0):,.0f} so'm
-    - Yaratiladigan ish o'rinlari: {ishchi_soni} ta
+    - Yillik o'rtacha sof foyda: {yillik_sof_foyda:,.0f} so'm
+    - Yaratiladigan ish o'rinlari: {ishchi_soni:.0f} ta
     - Tashabbuskor: {tashabbuskor}
     - Joylashuv: {manzil}
     """
@@ -551,24 +564,22 @@ def generate_pro_business_text(context: dict) -> dict:
     ]
 
     try:
-        from concurrent.futures import ThreadPoolExecutor, as_completed
+        import time as _time
         
-        # Parallely generatsiya qilish
-        def process_prompt(item):
-            key, prompt, name = item
+        # KETMA-KET generatsiya (rate limit ga tushmaslik uchun)
+        for key, prompt, name in section_prompts:
             logger.info(f"\n📌 [{name}] generatsiya boshlanmoqda...")
-            return key, safe_generate(prompt, name)
-
-        with ThreadPoolExecutor(max_workers=6) as executor:
-            future_to_item = {executor.submit(process_prompt, item): item for item in section_prompts}
-            for future in as_completed(future_to_item):
-                item = future_to_item[future]
-                key = item[0]
-                try:
-                    sections[key] = future.result()[1]
-                except Exception as exc:
-                    logger.error(f"❌ [{key}] generatsiyasida xato: {exc}")
-                    sections[key] = None
+            try:
+                sections[key] = safe_generate(prompt, name)
+                if sections[key]:
+                    logger.info(f"  ✅ [{name}] — {count_words(sections[key])} so'z")
+                else:
+                    logger.warning(f"  ⚠️ [{name}] — bo'sh natija")
+                # Provider rate limit uchun 3 soniya tanaffus
+                _time.sleep(3)
+            except Exception as exc:
+                logger.error(f"❌ [{key}] generatsiyasida xato: {exc}")
+                sections[key] = None
 
         # Bo'sh bo'limlarni static fallback bilan to'ldirish
         static_fallback = _get_static_fallback_text(loyiha, faoliyat, manzil, tashabbuskor, fin_summary)

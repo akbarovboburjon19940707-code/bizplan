@@ -958,3 +958,83 @@ async function processPaymentAndDownload(format = 'zip') {
         showAlert(e.message || "Yuklab olishda xatolik yuz berdi.");
     }
 }
+
+
+// ============================================================
+// AI IMAGE FETCH (Grok tugmasi va avtomatik qidirish)
+// ============================================================
+async function fetchAIImage(imgType) {
+    // imgType: 'project' yoki 'product'
+    const loyihaNomi = document.getElementById('loyiha_nomi')?.value?.trim();
+    if (!loyihaNomi) {
+        showAlert("Avval loyiha nomini kiriting yoki tanlang!");
+        return;
+    }
+
+    // Preview va hidden input elementlari
+    const previewId = imgType === 'product' ? 'preview_product_photo' : 'preview_business_image';
+    const hiddenId = imgType === 'product' ? 'ai_product_photo_path' : 'ai_business_image_path';
+    const previewBox = document.getElementById(previewId);
+    const hiddenInput = document.getElementById(hiddenId);
+
+    // Loading holati
+    if (previewBox) {
+        previewBox.classList.remove('hidden');
+        previewBox.innerHTML = '<div style="text-align:center;padding:20px;color:#666;"><div class="spinner" style="width:30px;height:30px;border:3px solid #eee;border-top:3px solid #059669;border-radius:50%;animation:spin 1s linear infinite;margin:0 auto 10px;"></div>Rasm qidirilmoqda...</div>';
+    }
+
+    try {
+        const faoliyatTuri = selectedFaoliyat || 'business';
+        
+        const resp = await fetch('/api/ai/fetch-image', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                query: loyihaNomi,
+                activity_type: faoliyatTuri,
+                type: imgType
+            })
+        });
+
+        const res = await resp.json();
+
+        if (res.success && res.image_url) {
+            // Rasmni preview qilish
+            if (previewBox) {
+                previewBox.innerHTML = `
+                    <img src="${res.image_url}" alt="AI Preview" 
+                         style="max-width:100%;max-height:200px;border-radius:8px;object-fit:cover;">
+                    <button type="button" onclick="clearAIImage('${imgType}')" 
+                            style="position:absolute;top:5px;right:5px;background:rgba(0,0,0,0.5);color:white;border:none;border-radius:50%;width:24px;height:24px;cursor:pointer;font-size:14px;">✕</button>
+                `;
+                previewBox.style.position = 'relative';
+                previewBox.classList.remove('hidden');
+            }
+
+            // Hidden inputga yo'lni saqlash (Word uchun)
+            if (hiddenInput) {
+                hiddenInput.value = res.local_path || '';
+            }
+
+            console.log("AI Image fetched:", res);
+        } else {
+            throw new Error(res.error || "Rasm topilmadi");
+        }
+
+    } catch (e) {
+        console.error("AI Image error:", e);
+        if (previewBox) {
+            previewBox.innerHTML = `<div style="text-align:center;padding:15px;color:#dc2626;">Rasm olishda xatolik: ${e.message}</div>`;
+        }
+    }
+}
+
+function clearAIImage(imgType) {
+    const previewId = imgType === 'product' ? 'preview_product_photo' : 'preview_business_image';
+    const hiddenId = imgType === 'product' ? 'ai_product_photo_path' : 'ai_business_image_path';
+    const previewBox = document.getElementById(previewId);
+    const hiddenInput = document.getElementById(hiddenId);
+    
+    if (previewBox) { previewBox.innerHTML = ''; previewBox.classList.add('hidden'); }
+    if (hiddenInput) hiddenInput.value = '';
+}
