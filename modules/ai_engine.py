@@ -168,28 +168,33 @@ def safe_generate(prompt: str, section_name: str, retry_count: int = 1) -> str:
     # ─── 1. GROQ (Llama 3.3-70b) — HOZIRDA ENG YAXSHI VA TEZ ───
     gr_client = get_groq_client()
     if gr_client:
-        # Bir nechta modellarni navbat bilan sinab ko'rish (redunandcy)
+        # Bir nechta modellarni navbat bilan sinab ko'rish
         models = ["llama-3.3-70b-versatile", "llama-3.1-70b-versatile", "llama3-70b-8192"]
         
         for model_name in models:
-            try:
-                logger.info(f"  ⚪ [GROQ] {section_name} ({model_name}) generatsiya qilmoqda...")
-                response = gr_client.chat.completions.create(
-                    model=model_name,
-                    messages=[
-                        {"role": "system", "content": "Siz professional biznes-reja yozuvchi mutaxassisiz. O'zbek tilida (lotin alifbosida) yozing. Bo'limni juda batafsil, dalillarga asoslangan holda kamida 500-700 so'z qilib yozing. Sarlavhalar ishlatmang."},
-                        {"role": "user", "content": prompt}
-                    ],
-                    max_tokens=4096,
-                    temperature=0.8
-                )
-                result = validate_ai_response(response.choices[0].message.content, section_name)
-                if result and count_words(result) >= 150: # Minimal chegara
-                    logger.info(f"  ✅ [GROQ] {section_name} ({model_name}) — muvaffaqiyatli!")
-                    return result
-            except Exception as e:
-                logger.warning(f"  ❌ [GROQ] {model_name} xatosi: {e}")
-                continue
+            for attempt in range(3): # Har bir model uchun 3 martagacha urinish
+                try:
+                    logger.info(f"  ⚪ [GROQ] {section_name} ({model_name}) {attempt+1}-urinish...")
+                    response = gr_client.chat.completions.create(
+                        model=model_name,
+                        messages=[
+                            {"role": "system", "content": "Siz professional biznes-reja yozuvchi mutaxassisiz. O'zbek tilida (lotin alifbosida) yozing. Bo'limni juda batafsil, dalillarga asoslangan holda kamida 500-700 so'z qilib yozing. Sarlavhalar ishlatmang."},
+                            {"role": "user", "content": prompt}
+                        ],
+                        max_tokens=4096,
+                        temperature=0.8
+                    )
+                    result = validate_ai_response(response.choices[0].message.content, section_name)
+                    if result and count_words(result) >= 150:
+                        logger.info(f"  ✅ [GROQ] {section_name} ({model_name}) — muvaffaqiyatli!")
+                        return result
+                    else:
+                        logger.warning(f"  ⚠️ [GROQ] {section_name} - qisqa javob, qayta urinish...")
+                except Exception as e:
+                    logger.warning(f"  ❌ [GROQ] {model_name} {attempt+1}-urinish xatosi: {e}")
+                    import time
+                    time.sleep(2) # Qisqa tanaffus
+                    continue
 
     # ─── 1. CHATGPT (OpenAI) ───
     o_client = get_openai_client()
