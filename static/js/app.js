@@ -326,10 +326,17 @@ function setupAutocomplete() {
 
     function selectItem(idx) {
         if (idx < 0 || idx >= acResults.length) return;
-        input.value = acResults[idx].nomi;
-        selectFaoliyat(acResults[idx].faoliyat_turi);
+        const plan = acResults[idx];
+        input.value = plan.nomi;
+        selectFaoliyat(plan.faoliyat_turi);
         closeDD();
         input.blur();
+
+        // AVTOMATIK RASM QIDIRISH (User tanlaganda)
+        if (typeof fetchAIImage === 'function') {
+            console.log("Auto-fetching image for:", plan.nomi);
+            fetchAIImage('project'); 
+        }
     }
 
     input.addEventListener('input', () => {
