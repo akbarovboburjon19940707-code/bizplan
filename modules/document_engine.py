@@ -230,42 +230,46 @@ def create_word_document(template_path: str, output_path: str, context: dict = N
 
     # 3. Paragraflarni almashtirish va AI matnlarini maxsus joylashtirish
     # --- ODDIY PARAGRAFLAR ---
-    for p in doc.paragraphs:
+    for p in list(doc.paragraphs):
         p_text = p.text
         for k in ai_text_keys:
             pattern = r'\{\{\s*' + re.escape(k) + r'\s*\}\}'
             if re.search(pattern, p_text):
                 parent = p._element.getparent()
                 current_idx = parent.index(p._element)
-                _format_ai_text_to_paragraphs(doc, ai_texts.get(k, ""), parent, current_idx)
-                p.text = re.sub(pattern, "", p_text)
-                p_text = p.text
+                ai_content = ai_texts.get(k, "")
+                if ai_content:
+                    _format_ai_text_to_paragraphs(doc, ai_content, parent, current_idx)
+                    parent.remove(p._element)
+                    break
+                else:
+                    p.text = re.sub(pattern, "", p_text)
 
-        _replace_in_paragraph(p, data, images)
+        if p._element.getparent() is not None:
+             _replace_in_paragraph(p, data, images)
 
     # --- JADVALLAR ICHIDAGI PARAGRAFLAR ---
     for table in doc.tables:
         for row in table.rows:
             for cell in row.cells:
-                for p in cell.paragraphs:
+                for p in list(cell.paragraphs):
                     p_text = p.text
                     for k in ai_text_keys:
                         pattern = r'\{\{\s*' + re.escape(k) + r'\s*\}\}'
                         if re.search(pattern, p_text):
                             ai_content = ai_texts.get(k, "")
                             if ai_content:
-                                # Jadvallar ichida newline bo'lsa, ularni to'g'ri run'larga bo'lish
-                                p.text = "" # Tozalash
-                                lines = ai_content.split('\n')
-                                for i, line in enumerate(lines):
-                                    run = p.add_run(_clean_text_for_word(line))
-                                    _format_run(run, font_size=10)
-                                    if i < len(lines) - 1:
-                                        run.add_break()
+                                p.text = "" 
+                                for line in ai_content.split('\n'):
+                                    if line.strip():
+                                        _run = p.add_run(_clean_text_for_word(line))
+                                        _format_run(_run, font_size=11)
+                                        _run.add_break()
                             else:
                                 p.text = re.sub(pattern, "", p_text)
                         
-                    _replace_in_paragraph(p, data, images)
+                    if p._element.getparent() is not None:
+                        _replace_in_paragraph(p, data, images)
 
     # 4. Jadvallar ichidagi placeholderlar
     for table in doc.tables:
