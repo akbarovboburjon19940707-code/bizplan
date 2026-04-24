@@ -160,20 +160,19 @@ def validate_ai_response(text: str, section_name: str) -> str:
 def safe_generate(prompt: str, section_name: str, retry_count: int = 1) -> str:
     """
     Universal generatsiya funksiyasi.
-    Tartib: DeepSeek → ChatGPT → Groq → Claude → Gemini → Grok → Static
-
-    Har bir provider ishlamasa keyingisiga o'tadi.
-    So'z soni yetarli bo'lmasa qayta urinadi (retry).
+    TARTIB: Groq (Hozircha asosiy) → ChatGPT → DeepSeek → Claude → Gemini
     """
     result = None
 
-    # ─── 0. DEEPSEEK ───
-    ds_client = get_deepseek_client()
-    if ds_client:
+    # ─── 1. GROQ (Llama 3.3-70b) — HOZIRDA ENG YAXSHI VA TEZ ───
+    gr_client = get_groq_client()
+    if gr_client:
         try:
-            logger.info(f"  🌌 [DEEPSEEK] {section_name} generatsiya qilmoqda...")
-            response = ds_client.chat.completions.create(
-                model="deepseek-chat",
+            # Groq uchun eng barqaror model
+            model_name = "llama-3.3-70b-versatile"
+            logger.info(f"  ⚪ [GROQ] {section_name} ({model_name}) generatsiya qilmoqda...")
+            response = gr_client.chat.completions.create(
+                model=model_name,
                 messages=[
                     {"role": "system", "content": "Siz professional biznes-reja yozuvchi mutaxassisiz. O'zbek tilida (lotin alifbosida) yozing. Har bir javob kamida 500-700 so'z bo'lishi shart."},
                     {"role": "user", "content": prompt}
@@ -183,12 +182,10 @@ def safe_generate(prompt: str, section_name: str, retry_count: int = 1) -> str:
             )
             result = validate_ai_response(response.choices[0].message.content, section_name)
             if result and count_words(result) >= MIN_WORD_COUNT:
-                logger.info(f"  ✅ [DEEPSEEK] {section_name} — muvaffaqiyatli!")
+                logger.info(f"  ✅ [GROQ] {section_name} — muvaffaqiyatli!")
                 return result
-            else:
-                logger.warning(f"  ⚠️ [DEEPSEEK] {section_name} — so'z soni yetarli emas.")
         except Exception as e:
-            logger.warning(f"  ❌ [DEEPSEEK] Xato: {e}")
+            logger.warning(f"  ❌ [GROQ] Xato: {e}")
 
     # ─── 1. CHATGPT (OpenAI) ───
     o_client = get_openai_client()
@@ -532,7 +529,7 @@ def generate_pro_business_text(context: dict) -> dict:
 
     logger.info("=" * 60)
     logger.info(f"🚀 AI ENGINE: '{loyiha}' uchun matn generatsiyasi boshlandi")
-    logger.info(f"📋 Provider tartibi: DeepSeek → ChatGPT → Groq → Claude → Gemini → Grok")
+    logger.info(f"📋 Provayder tartibi: Groq (Asosiy) → ChatGPT → DeepSeek → Claude → Gemini")
     logger.info("=" * 60)
 
     section_prompts = [
