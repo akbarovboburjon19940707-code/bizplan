@@ -161,7 +161,8 @@ def deduplicate_context(context: dict) -> dict:
     import re
     
     # XML uchun yaroqsiz belgilarni tozalash (Word dagi korruptsiyani oldini olish)
-    invalid_xml_pattern = re.compile(r'[\x00-\x08\x0b\x0c\x0e-\x1F\u7F-\u84\u86-\u9F\uD800-\uDFFF\uFFFE\uFFFF]')
+    # Diqqat: MS Office 2010 Emojilarni qabul qila olmaydi. Shuning uchun U+FFFF dan baland barcha narsa o'chirilishi shart.
+    invalid_xml_pattern = re.compile(r'[\x00-\x08\x0b\x0c\x0e-\x1F\u7F-\u84\u86-\u9F\uD800-\uDFFF\uFFFE\uFFFF]|[^\u0000-\uFFFF]')
     
     for key, val in context.items():
         if val is None or (isinstance(val, str) and not val.strip()):
