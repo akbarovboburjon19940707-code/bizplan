@@ -660,12 +660,18 @@ class PaymePaymentProvider(PaymentProvider):
 
         all_payments = get_all_payments()
         transactions = []
+        
+        def safe_int(val):
+            try:
+                return int(float(val)) if val else 0
+            except (ValueError, TypeError):
+                return 0
 
         for p in all_payments:
             if p.get("payment_provider") != "payme":
                 continue
             
-            create_time = p.get("payme_create_time", 0)
+            create_time = safe_int(p.get("payme_create_time"))
             if not create_time:
                 continue
 
@@ -681,17 +687,17 @@ class PaymePaymentProvider(PaymentProvider):
 
                 transactions.append({
                     "id": str(p.get("payme_trans_id") or ""),
-                    "time": int(create_time),
-                    "amount": int(float(p.get("amount", 0)) * 100),
+                    "time": create_time,
+                    "amount": safe_int(float(p.get("amount", 0)) * 100),
                     "account": {
                         "order_id": str(p.get("order_id", ""))
                     },
-                    "create_time": int(create_time),
-                    "perform_time": int(p.get("payme_perform_time") or 0),
-                    "cancel_time": int(p.get("payme_cancel_time") or 0),
+                    "create_time": create_time,
+                    "perform_time": safe_int(p.get("payme_perform_time")),
+                    "cancel_time": safe_int(p.get("payme_cancel_time")),
                     "transaction": str(p.get("order_id", "")),
                     "state": state,
-                    "reason": p.get("payme_cancel_reason")
+                    "reason": safe_int(p.get("payme_cancel_reason")) if p.get("payme_cancel_reason") else None
                 })
 
         return self._ok(req_id, {
@@ -708,19 +714,16 @@ class PaymePaymentProvider(PaymentProvider):
     def _err(self, req_id, code: int, message) -> dict:
         """
         JSON-RPC error response.
-
-        Args:
-            req_id: Request ID
-            code: Payme error code
-            message: dict {ru, uz, en} yoki string
         """
-        if isinstance(message, str):
-            message = {"ru": message, "uz": message, "en": message}
+        if isinstance(message, dict):
+            message_str = message.get("ru") or message.get("uz") or message.get("en") or str(message)
+        else:
+            message_str = str(message)
 
         return {
             "error": {
                 "code": code,
-                "message": message
+                "message": message_str
             },
             "id": req_id
         }
