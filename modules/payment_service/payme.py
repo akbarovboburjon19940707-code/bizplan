@@ -213,6 +213,7 @@ class PaymePaymentProvider(PaymentProvider):
             "PerformTransaction": self._perform_transaction,
             "CancelTransaction": self._cancel_transaction,
             "CheckTransaction": self._check_transaction,
+            "GetStatement": self._get_statement,
         }
 
         handler = method_map.get(method)
@@ -641,6 +642,60 @@ class PaymePaymentProvider(PaymentProvider):
             "transaction": payment.get("order_id"),
             "state": state,
             "reason": payment.get("payme_cancel_reason")
+        })
+
+    # ──────────────────────────────────────────────────────────
+    # 10) GetStatement
+    # ──────────────────────────────────────────────────────────
+    def _get_statement(self, req_id, params: dict) -> dict:
+        """
+        Ma'lum bir vaqt oralig'idagi tranzaksiyalar ro'yxatini qaytarish.
+        """
+        from modules.payment import get_all_payments
+
+        from_time = params.get("from", 0)
+        to_time = params.get("to", 0)
+
+        logger.info(f"[PAYME GetStatement] from={from_time}, to={to_time}")
+
+        all_payments = get_all_payments()
+        transactions = []
+
+        for p in all_payments:
+            if p.get("payment_provider") != "payme":
+                continue
+            
+            create_time = p.get("payme_create_time", 0)
+            if not create_time:
+                continue
+
+            # Faqat vaqt oralig'iga tushadiganlarni olish
+            if from_time <= create_time <= to_time:
+                status = p.get("payment_status", "")
+                if status == "success":
+                    state = 2
+                elif status in ("failed", "cancelled"):
+                    state = -2 if p.get("payme_perform_time") else -1
+                else:
+                    state = 1
+
+                transactions.append({
+                    "id": p.get("payme_trans_id", ""),
+                    "time": int(create_time),
+                    "amount": int(float(p.get("amount", 0)) * 100),
+                    "account": {
+                        "order_id": str(p.get("order_id", ""))
+                    },
+                    "create_time": int(create_time),
+                    "perform_time": int(p.get("payme_perform_time", 0)),
+                    "cancel_time": int(p.get("payme_cancel_time", 0)),
+                    "transaction": str(p.get("order_id", "")),
+                    "state": state,
+                    "reason": p.get("payme_cancel_reason")
+                })
+
+        return self._ok(req_id, {
+            "transactions": transactions
         })
 
     # ──────────────────────────────────────────────────────────
