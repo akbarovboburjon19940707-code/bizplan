@@ -653,8 +653,8 @@ class PaymePaymentProvider(PaymentProvider):
         """
         from modules.payment import get_all_payments
 
-        from_time = params.get("from", 0)
-        to_time = params.get("to", 0)
+        from_time = params.get("from") or 0
+        to_time = params.get("to") or 0
 
         logger.info(f"[PAYME GetStatement] from={from_time}, to={to_time}")
 
