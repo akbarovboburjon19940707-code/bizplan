@@ -680,7 +680,7 @@ class PaymePaymentProvider(PaymentProvider):
                     state = 1
 
                 transactions.append({
-                    "id": p.get("payme_trans_id", ""),
+                    "id": str(p.get("payme_trans_id") or ""),
                     "time": int(create_time),
                     "amount": int(float(p.get("amount", 0)) * 100),
                     "account": {
