@@ -687,8 +687,8 @@ class PaymePaymentProvider(PaymentProvider):
                         "order_id": str(p.get("order_id", ""))
                     },
                     "create_time": int(create_time),
-                    "perform_time": int(p.get("payme_perform_time", 0)),
-                    "cancel_time": int(p.get("payme_cancel_time", 0)),
+                    "perform_time": int(p.get("payme_perform_time") or 0),
+                    "cancel_time": int(p.get("payme_cancel_time") or 0),
                     "transaction": str(p.get("order_id", "")),
                     "state": state,
                     "reason": p.get("payme_cancel_reason")
