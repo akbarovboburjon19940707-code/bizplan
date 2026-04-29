@@ -40,6 +40,7 @@ logger = logging.getLogger(__name__)
 # ── Payme credentials ──────────────────────────────────────────
 PAYME_MERCHANT_ID = os.environ.get("PAYME_MERCHANT_ID", "")
 PAYME_KEY = os.environ.get("PAYME_KEY", "")
+PAYME_TEST_KEY = os.environ.get("PAYME_TEST_KEY", "")
 
 # ── Payme Error Codes ──────────────────────────────────────────
 ERR_INTERNAL = -32400
@@ -97,7 +98,7 @@ class PaymePaymentProvider(PaymentProvider):
         # Payme tiyinlarda ishlaydi (1 so'm = 100 tiyin)
         tiyins = int(amount * 100)
 
-        params_str = f"m={PAYME_MERCHANT_ID};ac._id={order_id};a={tiyins}"
+        params_str = f"m={PAYME_MERCHANT_ID};ac.order_id={order_id};ac.product_id=1;a={tiyins}"
         if return_url:
             params_str += f";c={return_url}"
 
@@ -150,7 +151,9 @@ class PaymePaymentProvider(PaymentProvider):
             logger.warning(f"[PAYME AUTH] Noto'g'ri username: {username}")
             return False
 
-        if password != PAYME_KEY:
+        # Parol Payme prod key yoki test key bo'lishi mumkin
+        valid_keys = [k for k in (PAYME_KEY, PAYME_TEST_KEY) if k]
+        if password not in valid_keys or not password:
             logger.warning("[PAYME AUTH] Noto'g'ri password/key")
             return False
 
@@ -250,7 +253,7 @@ class PaymePaymentProvider(PaymentProvider):
         from modules.payment import get_payment_by_order_id
 
         account = params.get("account", {})
-        order_id = str(account.get("_id", ""))
+        order_id = str(account.get("order_id", account.get("_id", "")))
         amount = params.get("amount", 0)
 
         logger.info(f"[PAYME CheckPerform] order={order_id}, amount={amount}")
@@ -328,7 +331,7 @@ class PaymePaymentProvider(PaymentProvider):
 
         trans_id = params.get("id", "")
         account = params.get("account", {})
-        order_id = str(account.get("_id", ""))
+        order_id = str(account.get("order_id", account.get("_id", "")))
         amount = params.get("amount", 0)
         create_time_from_payme = params.get("time")
 
