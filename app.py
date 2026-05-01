@@ -1102,6 +1102,11 @@ def save():
         payment = get_payment(payment_id)
         if not payment or payment.get("status") != "approved":
             return jsonify({"success": False, "errors": ["Ushbu hujjat uchun to'lov admin tomonidan tasdiqlanmagan."]}), 403
+            
+        # GENERATSIYA VA KATALOGNI AJRATISH:
+        # Agar to'lovda product_id bo'lsa, demak bu tayyor biznes reja sotib olingan, generatsiya uchun emas.
+        if payment.get("product_id") is not None:
+            return jsonify({"success": False, "errors": ["Ushbu to'lov tayyor biznes reja (katalog) uchun qilingan. Yangi biznes reja yaratish uchun alohida to'lov qilinishi kerak."]}), 403
 
         # 2. Session
         session_dir, sid = create_session()
