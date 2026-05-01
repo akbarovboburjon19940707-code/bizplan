@@ -60,8 +60,6 @@ def _initialize_default_products():
     """
     with _catalog_lock:
         catalog = _load_catalog()
-        if catalog:
-            return  # Allaqachon mavjud
 
         # HOWO biznes reja — default mahsulot
         howo_source = os.path.join(BASE_DIR, "static", "uploads",
@@ -71,11 +69,17 @@ def _initialize_default_products():
         howo_pdf_name = "HOWO_avtomobil_sotib_olish_biznes_rejasi.pdf"
         howo_dest = os.path.join(CATALOG_DIR, howo_pdf_name)
 
-        # PDF ni xavfsiz papkaga ko'chirish
+        # Har doim PDF ni xavfsiz papkaga ko'chirishga ishonch hosil qilish (agar u serverda yo'q bo'lsa)
         if os.path.exists(howo_source) and not os.path.exists(howo_dest):
-            import shutil
-            shutil.copy2(howo_source, howo_dest)
-            logger.info(f"[CATALOG] HOWO PDF ko'chirildi: {howo_dest}")
+            try:
+                import shutil
+                shutil.copy2(howo_source, howo_dest)
+                logger.info(f"[CATALOG] HOWO PDF ko'chirildi: {howo_dest}")
+            except Exception as e:
+                logger.error(f"[CATALOG] HOWO PDF ko'chirishda xatolik: {e}")
+
+        if catalog:
+            return  # Katalog allaqachon mavjud bo'lsa, faqat faylni nusxalaymiz va qaytamiz
 
         catalog[howo_id] = {
             "id": howo_id,
@@ -142,6 +146,18 @@ def get_product_pdf_path(product_id: str) -> Optional[str]:
     pdf_path = os.path.join(CATALOG_DIR, pdf_file)
     if os.path.exists(pdf_path):
         return pdf_path
+        
+    # Agar xavfsiz papkada topilmasa, static/uploads dan izlash (fallback)
+    fallback_path = os.path.join(BASE_DIR, "static", "uploads", pdf_file)
+    if os.path.exists(fallback_path):
+        return fallback_path
+        
+    # Probellar bilan nomlangan asl faylni izlash (HOWO_... o'rniga HOWO ...)
+    original_name = pdf_file.replace("_", " ")
+    fallback_path2 = os.path.join(BASE_DIR, "static", "uploads", original_name)
+    if os.path.exists(fallback_path2):
+        return fallback_path2
+
     return None
 
 
