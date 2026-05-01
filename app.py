@@ -54,8 +54,12 @@ app.secret_key = os.environ.get('SECRET_KEY', 'breja-enterprise-2026-key')
 app.config['MAX_CONTENT_LENGTH'] = 50 * 1024 * 1024  # 50MB
 
 # ── DATABASE (SQLAlchemy + MySQL/PostgreSQL) ──
-from database import init_db
+from database import init_db, db
 init_db(app)
+
+# ── ADMIN SEED (Birinchi admin yaratish — agar yo'q bo'lsa) ──
+from modules.admin_seed import seed_admin
+seed_admin(app)
 
 csrf = CSRFProtect(app)
 logging.basicConfig(level=logging.INFO,
@@ -103,6 +107,111 @@ def _periodic_cleanup():
         cleanup_old_sessions(3)
 _cleanup_thread = threading.Thread(target=_periodic_cleanup, daemon=True)
 _cleanup_thread.start()
+
+# ============================================================
+# ROUTES — USER AUTH API (Mustaqil — mavjud tizimga ta'sir qilmaydi)
+# ============================================================
+@app.route("/api/auth/register", methods=["POST"])
+@csrf.exempt
+@rate_limit(max_req=5, window=60)
+def api_auth_register():
+    """Foydalanuvchi ro'yxatdan o'tish."""
+    try:
+        from models.user import User
+        d = request.get_json() or {}
+        phone = d.get("phone", "").strip()
+        password = d.get("password", "")
+        first_name = d.get("first_name", "")
+
+        if not phone or len(phone) < 9:
+            return jsonify({"success": False, "error": "Telefon raqam noto'g'ri"}), 400
+        if len(password) < 6:
+            return jsonify({"success": False, "error": "Parol kamida 6 belgidan iborat bo'lishi kerak"}), 400
+
+        existing = User.query.filter_by(phone=phone).first()
+        if existing:
+            return jsonify({"success": False, "error": "Bu raqam allaqachon ro'yxatdan o'tgan"}), 409
+
+        user = User(phone=phone, first_name=first_name)
+        user.set_password(password)
+        db.session.add(user)
+        db.session.commit()
+
+        from modules.auth import create_token_pair
+        tokens = create_token_pair(identity=user.id, role='user')
+
+        logger.info(f"[AUTH] Yangi user: {phone}")
+        return jsonify({"success": True, "user": user.to_dict(), **tokens}), 201
+
+    except Exception as e:
+        db.session.rollback()
+        logger.error(f"Register xatolik: {e}", exc_info=True)
+        return jsonify({"success": False, "error": "Server xatosi"}), 500
+
+
+@app.route("/api/auth/login", methods=["POST"])
+@csrf.exempt
+@rate_limit(max_req=10, window=60)
+def api_auth_login():
+    """Foydalanuvchi login (telefon + parol)."""
+    try:
+        from models.user import User
+        d = request.get_json() or {}
+        phone = d.get("phone", "").strip()
+        password = d.get("password", "")
+
+        user = User.query.filter_by(phone=phone, is_active=True).first()
+        if not user:
+            return jsonify({"success": False, "error": "Telefon yoki parol noto'g'ri"}), 401
+
+        if user.is_locked():
+            return jsonify({"success": False, "error": "Akkaunt bloklangan. 15 daqiqadan keyin urinib ko'ring."}), 429
+
+        if not user.check_password(password):
+            user.record_failed_login()
+            db.session.commit()
+            return jsonify({"success": False, "error": "Telefon yoki parol noto'g'ri"}), 401
+
+        user.record_successful_login()
+        db.session.commit()
+
+        from modules.auth import create_token_pair
+        tokens = create_token_pair(identity=user.id, role=user.role)
+
+        return jsonify({"success": True, "user": user.to_dict(), **tokens})
+
+    except Exception as e:
+        db.session.rollback()
+        logger.error(f"Login xatolik: {e}", exc_info=True)
+        return jsonify({"success": False, "error": "Server xatosi"}), 500
+
+
+@app.route("/api/auth/profile", methods=["GET"])
+@csrf.exempt
+def api_auth_profile():
+    """Joriy foydalanuvchi profili (JWT token bilan)."""
+    try:
+        from modules.auth import decode_token
+        from models.user import User
+
+        auth_header = request.headers.get('Authorization', '')
+        if not auth_header.startswith('Bearer '):
+            return jsonify({"success": False, "error": "Token kerak"}), 401
+
+        payload = decode_token(auth_header[7:])
+        if not payload or payload.get('type') != 'access':
+            return jsonify({"success": False, "error": "Token yaroqsiz"}), 401
+
+        user = db.session.get(User, payload['sub'])
+        if not user:
+            return jsonify({"success": False, "error": "Foydalanuvchi topilmadi"}), 404
+
+        return jsonify({"success": True, "user": user.to_dict(include_private=True)})
+
+    except Exception as e:
+        logger.error(f"Profile xatolik: {e}", exc_info=True)
+        return jsonify({"success": False, "error": "Server xatosi"}), 500
+
 
 # ============================================================
 # ROUTES — ASOSIY

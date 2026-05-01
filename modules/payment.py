@@ -294,7 +294,21 @@ def get_payment_card_info() -> dict:
 
 
 def verify_admin_password(password: str) -> bool:
-    """Admin parolni tekshirish."""
+    """
+    Admin parolni tekshirish.
+    1-usul: DB dagi Admin modeldan (xeshlangan parol)
+    2-usul: Agar DB da admin yo'q bo'lsa — eski env parol (fallback)
+    """
+    try:
+        from models.user import Admin
+        # DB dan faol adminni topish
+        admin = Admin.query.filter_by(is_active=True).first()
+        if admin:
+            return admin.check_password(password)
+    except Exception:
+        pass  # DB xatosi bo'lsa fallback ga tushadi
+
+    # Fallback: env variable
     return password == ADMIN_PASSWORD
 
 
