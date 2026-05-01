@@ -372,20 +372,11 @@ class ClickPaymentProvider(PaymentProvider):
                         received_amount, click_trans_id)
 
         # Click integer merchant_prepare_id talab qiladi
-        # Auto-increment counter ishlatamiz (UUID qabul qilolmaydi)
-        from modules.payment import _next_prepare_id
+        from modules.payment import _next_prepare_id, update_payment_prepare_id
         m_prep_id = _next_prepare_id()
 
-        # prepare_id ni payment yozuvida saqlash
-        from modules.payment import get_payment_by_order_id, _payments_lock, _load_payments, _save_payments
-        with _payments_lock:
-            payments = _load_payments()
-            for pid, p in payments.items():
-                if p.get("order_id") == merchant_trans_id:
-                    p["merchant_prepare_id"] = m_prep_id
-                    payments[pid] = p
-                    break
-            _save_payments(payments)
+        # prepare_id ni DB da saqlash
+        update_payment_prepare_id(merchant_trans_id, m_prep_id)
 
         response = {
             "click_trans_id": int(click_trans_id),

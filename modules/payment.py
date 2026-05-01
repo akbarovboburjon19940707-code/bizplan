@@ -1,15 +1,15 @@
 """
-To'lov Moduli — Production v2.0
-================================
-Bank kartasiga o'tkazma + Click/Payme avtomatik to'lov
+To'lov Moduli — Production v3.0 (SQLAlchemy Database)
+=====================================================
+JSON fayllar o'rniga PostgreSQL/MySQL baza ishlatadi.
+Barcha funksiya nomlari v2.0 bilan 100% mos — app.py o'zgarmaydi.
 
 Xususiyatlar:
-  - Thread-safe JSON file persistence
-  - Atomic write (temp file + rename) — crash protection
-  - Status: pending | preparing | success | failed | cancelled
+  - SQLAlchemy ORM (database.py orqali)
+  - Transaction-safe (db.session.commit/rollback)
+  - Status: pending | preparing | processing | success | failed | cancelled
   - Unique order_id generatsiya
-  - Duplicate detection (click_trans_id, payme_trans_id)
-  - Backup on save
+  - Backward compatible dict response
 
 Narx: 80,000 so'm
 Karta: 9860 0401 0203 1362 (Akbarov B)
@@ -17,18 +17,15 @@ Karta: 9860 0401 0203 1362 (Akbarov B)
 import uuid
 import time
 import os
-import json
 import logging
-import threading
-import tempfile
-import shutil
 from typing import Dict, Optional, List
-from datetime import datetime
+from datetime import datetime, timezone
+
+from database import db
+from models.payment import Payment as PaymentModel
+from models.payment import Transaction, PaymentCallback
 
 logger = logging.getLogger(__name__)
-
-# ── Thread safety ──────────────────────────────────────────────
-_payments_lock = threading.Lock()
 
 # ── Configuration ──────────────────────────────────────────────
 PLAN_PRICE = 80_000
@@ -36,245 +33,186 @@ CARD_NUMBER = "9860 0401 0203 1362"
 CARD_HOLDER = "Akbarov B"
 ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "admin2026")
 
-# ── Paths ──────────────────────────────────────────────────────
+# ── Paths (receipt fayllar uchun — baza emas) ──────────────────
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DATA_DIR = os.environ.get("DATA_DIR", BASE_DIR)
 PAYMENTS_DIR = os.path.join(DATA_DIR, "payments_data")
-PAYMENTS_FILE = os.path.join(PAYMENTS_DIR, "payments.json")
-PAYMENTS_BACKUP = os.path.join(PAYMENTS_DIR, "payments_backup.json")
 RECEIPTS_DIR = os.path.join(PAYMENTS_DIR, "receipts")
-ORDER_COUNTER_FILE = os.path.join(PAYMENTS_DIR, "order_counter.json")
-PREPARE_ID_FILE = os.path.join(PAYMENTS_DIR, "prepare_id_counter.json")
 
-# Papkalarni yaratish
-os.makedirs(PAYMENTS_DIR, exist_ok=True)
+# Papkalarni yaratish (receipt uchun)
 os.makedirs(RECEIPTS_DIR, exist_ok=True)
 
 
 # ============================================================
-# INTERNAL: JSON file operations (atomic write)
+# INTERNAL: Yordamchi funksiyalar
 # ============================================================
 
-def _load_payments() -> Dict[str, dict]:
-    """
-    JSON fayldan to'lovlarni yuklash.
-    MUHIM: Bu funksiya _payments_lock ICHIDA chaqirilishi kerak!
-    """
-    if not os.path.exists(PAYMENTS_FILE):
-        return {}
-    try:
-        with open(PAYMENTS_FILE, "r", encoding="utf-8") as f:
-            data = json.load(f)
-            if isinstance(data, dict):
-                return data
-            return {}
-    except (json.JSONDecodeError, IOError, OSError) as e:
-        logger.error(f"[PAYMENTS] JSON yuklashda xatolik: {e}")
-        # Backup dan tiklash
-        if os.path.exists(PAYMENTS_BACKUP):
-            try:
-                with open(PAYMENTS_BACKUP, "r", encoding="utf-8") as f:
-                    data = json.load(f)
-                    logger.info("[PAYMENTS] Backup dan tiklandi")
-                    return data if isinstance(data, dict) else {}
-            except Exception:
-                pass
-        return {}
-
-
-def _save_payments(payments: Dict[str, dict]):
-    """
-    To'lovlarni JSON faylga ATOMIC saqlash.
-    temp file → rename pattern bilan crash-safe.
-    MUHIM: Bu funksiya _payments_lock ICHIDA chaqirilishi kerak!
-    """
-    try:
-        # 1. Temp faylga yozish
-        fd, tmp_path = tempfile.mkstemp(
-            dir=PAYMENTS_DIR, suffix=".tmp", prefix="payments_"
-        )
-        try:
-            with os.fdopen(fd, "w", encoding="utf-8") as f:
-                json.dump(payments, f, ensure_ascii=False, indent=2)
-                f.flush()
-                os.fsync(f.fileno())
-        except Exception:
-            os.close(fd)
-            raise
-
-        # 2. Backup mavjud faylni
-        if os.path.exists(PAYMENTS_FILE):
-            try:
-                shutil.copy2(PAYMENTS_FILE, PAYMENTS_BACKUP)
-            except Exception as be:
-                logger.warning(f"[PAYMENTS] Backup yaratishda xatolik: {be}")
-
-        # 3. Atomic rename
-        # Windows da rename ustiga yozmaydi, shuning uchun avval o'chirish kerak
-        if os.name == 'nt' and os.path.exists(PAYMENTS_FILE):
-            os.replace(tmp_path, PAYMENTS_FILE)
-        else:
-            os.rename(tmp_path, PAYMENTS_FILE)
-
-    except Exception as e:
-        logger.error(f"[PAYMENTS] Atomic save xatolik: {e}", exc_info=True)
-        # Fallback: oddiy yozish
-        try:
-            with open(PAYMENTS_FILE, "w", encoding="utf-8") as f:
-                json.dump(payments, f, ensure_ascii=False, indent=2)
-        except IOError as ie:
-            logger.critical(f"[PAYMENTS] FALLBACK save ham muvaffaqiyatsiz: {ie}")
-
-
 def _generate_order_id() -> str:
-    """
-    Unikal raqamli order_id generatsiya qilish.
-    Format: timestamp_random (masalan: 1713024000_7a3b)
-    """
+    """Unikal raqamli order_id: timestamp_random."""
     ts = int(time.time())
-    rand = uuid.uuid4().hex[:4]
+    rand = uuid.uuid4().hex[:6]
     return f"{ts}_{rand}"
 
 
 def _now() -> str:
     """Hozirgi vaqtni formatted string sifatida qaytarish."""
-    return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    return datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
+
+
+def _payment_to_dict(p: PaymentModel) -> dict:
+    """
+    PaymentModel ni eski JSON formatdagi dict ga o'tkazish.
+    app.py va click.py bilan backward compatibility uchun.
+    """
+    if not p:
+        return {}
+    return {
+        "id": p.id,
+        "order_id": p.order_id,
+        "user_name": p.user_name or "",
+        "loyiha_nomi": p.project_name or "",
+        "project_name": p.project_name or "",
+        "amount": float(p.amount) if p.amount else PLAN_PRICE,
+        "product_id": p.product_id,
+        "payment_provider": p.payment_provider or "card",
+        "payment_status": p.payment_status or "pending",
+        "status": p.admin_status or "pending",
+        "receipt_file": p.receipt_file,
+        "created_at": p.created_at.strftime("%Y-%m-%d %H:%M:%S") if p.created_at else "",
+        "submitted_at": p.submitted_at.strftime("%Y-%m-%d %H:%M:%S") if p.submitted_at else None,
+        "reviewed_at": p.reviewed_at.strftime("%Y-%m-%d %H:%M:%S") if p.reviewed_at else None,
+        "updated_at": p.updated_at.strftime("%Y-%m-%d %H:%M:%S") if p.updated_at else None,
+        "admin_note": p.admin_note or "",
+        "click_trans_id": p.click_trans_id,
+        "merchant_prepare_id": p.merchant_prepare_id,
+        "payme_trans_id": p.payme_trans_id,
+        "payme_create_time": p.payme_create_time,
+        "payme_perform_time": p.payme_perform_time,
+        "payme_cancel_time": p.payme_cancel_time,
+        "payme_cancel_reason": p.payme_cancel_reason,
+    }
 
 
 def _next_prepare_id() -> int:
     """
-    Click uchun unikal integer merchant_prepare_id generatsiya.
-    Click API faqat integer qabul qiladi — UUID yoki string emas.
-    Auto-increment counter JSON faylda saqlanadi.
+    Click uchun unikal integer merchant_prepare_id.
+    Bazadagi oxirgi prepare_id + 1 qaytaradi.
     """
     try:
-        counter = 1
-        if os.path.exists(PREPARE_ID_FILE):
-            with open(PREPARE_ID_FILE, "r") as f:
-                data = json.load(f)
-                counter = data.get("counter", 0) + 1
-        with open(PREPARE_ID_FILE, "w") as f:
-            json.dump({"counter": counter}, f)
-        return counter
-    except Exception as e:
-        logger.error(f"[PAYMENTS] prepare_id counter xatolik: {e}")
+        from sqlalchemy import func
+        max_id = db.session.query(func.max(PaymentModel.merchant_prepare_id)).scalar()
+        return (max_id or 0) + 1
+    except Exception:
         return int(time.time()) % 1000000
 
 
 # ============================================================
-# CARD — manual to'lov (mavjud tizim)
+# CARD — manual to'lov
 # ============================================================
 
 def create_payment(user_name: str, loyiha_nomi: str = "",
                    product_id: str = None, custom_amount: int = None) -> dict:
     """Yangi to'lov yaratish (karta orqali)."""
-    with _payments_lock:
-        payments = _load_payments()
-        payment_id = str(uuid.uuid4())[:12]
+    try:
+        payment = PaymentModel(
+            id=str(uuid.uuid4())[:12],
+            order_id=_generate_order_id(),
+            user_name=user_name,
+            project_name=loyiha_nomi,
+            amount=custom_amount or PLAN_PRICE,
+            product_id=product_id,
+            payment_provider="card",
+            payment_status="pending",
+            admin_status="pending",
+        )
 
-        payment = {
-            "id": payment_id,
-            "order_id": _generate_order_id(),
-            "user_name": user_name,
-            "loyiha_nomi": loyiha_nomi,
-            "amount": custom_amount or PLAN_PRICE,
-            "product_id": product_id,
-            "payment_provider": "card",
-            "payment_status": "pending",
-            "status": "pending",
-            "receipt_file": None,
-            "created_at": _now(),
-            "submitted_at": None,
-            "reviewed_at": None,
-            "updated_at": None,
-            "admin_note": "",
-            "click_trans_id": None,
-            "merchant_prepare_id": None,
-            "payme_trans_id": None,
-            "payme_create_time": None,
-            "payme_perform_time": None,
-            "payme_cancel_time": None,
-            "payme_cancel_reason": None,
-        }
+        db.session.add(payment)
+        db.session.commit()
 
-        payments[payment_id] = payment
-        _save_payments(payments)
+        logger.info(f"[PAYMENT] Yaratildi: {payment.id}, provider=card, "
+                    f"user={user_name}")
+        return _payment_to_dict(payment)
 
-    logger.info(f"[PAYMENT] Yaratildi: {payment_id}, provider=card, "
-                f"user={user_name}")
-    return payment
+    except Exception as e:
+        db.session.rollback()
+        logger.error(f"[PAYMENT] Yaratishda xatolik: {e}", exc_info=True)
+        raise
 
 
 def submit_receipt(payment_id: str, receipt_filename: str) -> dict:
     """Chek yuklandi — tekshirishga yuborish."""
-    with _payments_lock:
-        payments = _load_payments()
-        payment = payments.get(payment_id)
+    payment = db.session.get(PaymentModel, payment_id)
 
-        if not payment:
-            return {"success": False, "error": "To'lov topilmadi"}
+    if not payment:
+        return {"success": False, "error": "To'lov topilmadi"}
 
-        payment["receipt_file"] = receipt_filename
-        payment["status"] = "reviewing"
-        payment["submitted_at"] = _now()
-        payment["updated_at"] = _now()
+    payment.receipt_file = receipt_filename
+    payment.admin_status = "reviewing"
+    payment.submitted_at = datetime.now(timezone.utc)
+    payment.updated_at = datetime.now(timezone.utc)
 
-        payments[payment_id] = payment
-        _save_payments(payments)
-
-    logger.info(f"[PAYMENT] Chek yuklandi: {payment_id}, fayl={receipt_filename}")
-    return {"success": True, "payment": payment}
+    try:
+        db.session.commit()
+        logger.info(f"[PAYMENT] Chek yuklandi: {payment_id}, fayl={receipt_filename}")
+        return {"success": True, "payment": _payment_to_dict(payment)}
+    except Exception as e:
+        db.session.rollback()
+        logger.error(f"[PAYMENT] submit_receipt xatolik: {e}")
+        return {"success": False, "error": "Server xatosi"}
 
 
 def admin_approve(payment_id: str, admin_note: str = "") -> dict:
     """Admin to'lovni tasdiqlash."""
-    with _payments_lock:
-        payments = _load_payments()
-        payment = payments.get(payment_id)
+    payment = db.session.get(PaymentModel, payment_id)
 
-        if not payment:
-            return {"success": False, "error": "To'lov topilmadi"}
+    if not payment:
+        return {"success": False, "error": "To'lov topilmadi"}
 
-        payment["status"] = "approved"
-        payment["payment_status"] = "success"
-        payment["reviewed_at"] = _now()
-        payment["updated_at"] = _now()
-        payment["admin_note"] = admin_note
+    payment.admin_status = "approved"
+    payment.payment_status = "success"
+    payment.reviewed_at = datetime.now(timezone.utc)
+    payment.updated_at = datetime.now(timezone.utc)
+    payment.admin_note = admin_note
 
-        payments[payment_id] = payment
-        _save_payments(payments)
-
-    logger.info(f"[PAYMENT] Admin tasdiqladi: {payment_id}")
-    return {"success": True, "payment": payment}
+    try:
+        db.session.commit()
+        logger.info(f"[PAYMENT] Admin tasdiqladi: {payment_id}")
+        return {"success": True, "payment": _payment_to_dict(payment)}
+    except Exception as e:
+        db.session.rollback()
+        logger.error(f"[PAYMENT] admin_approve xatolik: {e}")
+        return {"success": False, "error": "Server xatosi"}
 
 
 def admin_reject(payment_id: str, reason: str = "") -> dict:
     """Admin to'lovni rad etish."""
-    with _payments_lock:
-        payments = _load_payments()
-        payment = payments.get(payment_id)
+    payment = db.session.get(PaymentModel, payment_id)
 
-        if not payment:
-            return {"success": False, "error": "To'lov topilmadi"}
+    if not payment:
+        return {"success": False, "error": "To'lov topilmadi"}
 
-        payment["status"] = "rejected"
-        payment["payment_status"] = "failed"
-        payment["reviewed_at"] = _now()
-        payment["updated_at"] = _now()
-        payment["admin_note"] = reason
+    payment.admin_status = "rejected"
+    payment.payment_status = "failed"
+    payment.reviewed_at = datetime.now(timezone.utc)
+    payment.updated_at = datetime.now(timezone.utc)
+    payment.admin_note = reason
 
-        payments[payment_id] = payment
-        _save_payments(payments)
-
-    logger.info(f"[PAYMENT] Admin rad etdi: {payment_id}, sabab={reason}")
-    return {"success": True, "payment": payment}
+    try:
+        db.session.commit()
+        logger.info(f"[PAYMENT] Admin rad etdi: {payment_id}, sabab={reason}")
+        return {"success": True, "payment": _payment_to_dict(payment)}
+    except Exception as e:
+        db.session.rollback()
+        logger.error(f"[PAYMENT] admin_reject xatolik: {e}")
+        return {"success": False, "error": "Server xatosi"}
 
 
 def get_payment(payment_id: str) -> Optional[dict]:
     """Bitta to'lovni olish."""
-    with _payments_lock:
-        payments = _load_payments()
-        return payments.get(payment_id)
+    payment = db.session.get(PaymentModel, payment_id)
+    if not payment:
+        return None
+    return _payment_to_dict(payment)
 
 
 def get_payment_full_status(payment_id: str) -> dict:
@@ -282,29 +220,23 @@ def get_payment_full_status(payment_id: str) -> dict:
     To'lov holatini to'liq qaytarish — Card, Click, Payme barchasi uchun.
     Frontend polling uchun universal endpoint.
     """
-    payment = get_payment(payment_id)
+    payment = db.session.get(PaymentModel, payment_id)
     if not payment:
         return {"success": False, "error": "To'lov topilmadi"}
 
-    provider = payment.get("payment_provider", "card")
-    payment_status = payment.get("payment_status", "pending")
-    admin_status = payment.get("status", "pending")
+    provider = payment.payment_provider or "card"
+    payment_status = payment.payment_status or "pending"
+    admin_status = payment.admin_status or "pending"
 
     # Click/Payme: payment_status=success → tasdiq
     # Card: admin status=approved → tasdiq
-    is_approved = False
     if provider in ("click", "payme"):
         is_approved = payment_status == "success"
-    else:
-        is_approved = admin_status == "approved"
-
-    is_rejected = False
-    if provider in ("click", "payme"):
         is_rejected = payment_status in ("failed", "cancelled")
     else:
+        is_approved = admin_status == "approved"
         is_rejected = admin_status == "rejected"
 
-    # Universal status
     if is_approved:
         unified_status = "approved"
     elif is_rejected:
@@ -319,24 +251,23 @@ def get_payment_full_status(payment_id: str) -> dict:
         "status": unified_status,
         "payment_status": payment_status,
         "payment_provider": provider,
-        "admin_note": payment.get("admin_note", ""),
+        "admin_note": payment.admin_note or "",
         "payment_id": payment_id,
-        "order_id": payment.get("order_id"),
-        "amount": payment.get("amount", 0),
+        "order_id": payment.order_id,
+        "amount": float(payment.amount) if payment.amount else 0,
     }
 
 
 def get_all_payments() -> List[dict]:
     """Barcha to'lovlarni olish (admin uchun)."""
-    with _payments_lock:
-        payments = _load_payments()
-    result = list(payments.values())
-    result.sort(key=lambda x: x.get("created_at", ""), reverse=True)
-    return result
+    payments = PaymentModel.query.order_by(
+        PaymentModel.created_at.desc()
+    ).all()
+    return [_payment_to_dict(p) for p in payments]
 
 
 def save_receipt_file(payment_id: str, file_storage) -> Optional[str]:
-    """Chek faylini saqlash."""
+    """Chek faylini saqlash (disk ga — baza emas)."""
     if not file_storage or not file_storage.filename:
         return None
 
@@ -375,128 +306,113 @@ def create_click_payment(user_name: str, loyiha_nomi: str = "",
                          product_id: str = None,
                          custom_amount: int = None) -> dict:
     """Click to'lov uchun yangi buyurtma yaratish."""
-    with _payments_lock:
-        payments = _load_payments()
-        payment_id = str(uuid.uuid4())[:12]
-        order_id = _generate_order_id()
+    try:
+        payment = PaymentModel(
+            id=str(uuid.uuid4())[:12],
+            order_id=_generate_order_id(),
+            user_name=user_name,
+            project_name=loyiha_nomi,
+            product_id=product_id,
+            amount=custom_amount or PLAN_PRICE,
+            payment_provider="click",
+            payment_status="pending",
+            admin_status="pending",
+        )
 
-        payment = {
-            "id": payment_id,
-            "order_id": order_id,
-            "user_name": user_name,
-            "loyiha_nomi": loyiha_nomi,
-            "product_id": product_id,
-            "amount": custom_amount or PLAN_PRICE,
-            "payment_provider": "click",
-            "payment_status": "pending",
-            "status": "pending",
-            "receipt_file": None,
-            "created_at": _now(),
-            "submitted_at": None,
-            "reviewed_at": None,
-            "updated_at": None,
-            "admin_note": "",
-            "click_trans_id": None,
-            "merchant_prepare_id": None,
-            "payme_trans_id": None,
-            "payme_create_time": None,
-            "payme_perform_time": None,
-            "payme_cancel_time": None,
-            "payme_cancel_reason": None,
-        }
+        db.session.add(payment)
+        db.session.commit()
 
-        payments[payment_id] = payment
-        _save_payments(payments)
+        logger.info(f"[PAYMENT] Click yaratildi: {payment.id}, "
+                    f"order={payment.order_id}, user={user_name}")
+        return _payment_to_dict(payment)
 
-    logger.info(f"[PAYMENT] Click yaratildi: {payment_id}, order={order_id}, "
-                f"user={user_name}")
-    return payment
+    except Exception as e:
+        db.session.rollback()
+        logger.error(f"[PAYMENT] Click yaratishda xatolik: {e}", exc_info=True)
+        raise
 
 
 def get_payment_by_order_id(order_id: str) -> Optional[dict]:
     """order_id bo'yicha to'lovni topish."""
     if not order_id:
         return None
-    with _payments_lock:
-        payments = _load_payments()
-        for payment in payments.values():
-            if payment.get("order_id") == order_id:
-                return payment
-    return None
+    payment = PaymentModel.query.filter_by(order_id=order_id).first()
+    if not payment:
+        return None
+    return _payment_to_dict(payment)
 
 
 def update_click_payment_status(order_id: str, status: str,
                                 click_trans_id: str = None) -> Optional[dict]:
-    """
-    Click to'lov holatini yangilash.
+    """Click to'lov holatini yangilash."""
+    payment = PaymentModel.query.filter_by(order_id=order_id).first()
 
-    Args:
-        order_id: Buyurtma raqami (merchant_trans_id)
-        status: Yangi holat (preparing, success, failed, cancelled)
-        click_trans_id: Click tranzaksiya ID
-    """
-    with _payments_lock:
-        payments = _load_payments()
+    if not payment:
+        logger.error(f"[PAYMENT] Click update: order topilmadi: {order_id}")
+        return None
 
-        target_id = None
-        for pid, payment in payments.items():
-            if payment.get("order_id") == order_id:
-                target_id = pid
-                break
+    payment.payment_status = status
+    payment.updated_at = datetime.now(timezone.utc)
 
-        if not target_id:
-            logger.error(f"[PAYMENT] Click update: order topilmadi: {order_id}")
-            return None
+    if click_trans_id:
+        payment.click_trans_id = click_trans_id
 
-        payment = payments[target_id]
-        payment["payment_status"] = status
-        payment["updated_at"] = _now()
+    # Umumiy status sync
+    if status == "success":
+        payment.admin_status = "approved"
+        payment.reviewed_at = datetime.now(timezone.utc)
+    elif status in ("failed", "cancelled"):
+        payment.admin_status = "rejected"
+        payment.reviewed_at = datetime.now(timezone.utc)
+    elif status == "preparing":
+        payment.admin_status = "reviewing"
 
-        if click_trans_id:
-            payment["click_trans_id"] = click_trans_id
+    try:
+        db.session.commit()
+        logger.info(f"[PAYMENT] Click yangilandi: order={order_id}, "
+                    f"status={status}, click_trans={click_trans_id}")
+        return _payment_to_dict(payment)
+    except Exception as e:
+        db.session.rollback()
+        logger.error(f"[PAYMENT] Click update xatolik: {e}")
+        return None
 
-        # Umumiy status sync
-        if status == "success":
-            payment["status"] = "approved"
-            payment["reviewed_at"] = _now()
-        elif status in ("failed", "cancelled"):
-            payment["status"] = "rejected"
-            payment["reviewed_at"] = _now()
-        elif status == "preparing":
-            payment["status"] = "reviewing"
-            payment["merchant_prepare_id"] = target_id
 
-        payments[target_id] = payment
-        _save_payments(payments)
-
-    logger.info(f"[PAYMENT] Click yangilandi: order={order_id}, "
-                f"status={status}, click_trans={click_trans_id}")
-    return payment
+def update_payment_prepare_id(order_id: str, prepare_id: int):
+    """Click prepare_id ni saqlash (click.py dan chaqiriladi)."""
+    payment = PaymentModel.query.filter_by(order_id=order_id).first()
+    if payment:
+        payment.merchant_prepare_id = prepare_id
+        try:
+            db.session.commit()
+        except Exception as e:
+            db.session.rollback()
+            logger.error(f"[PAYMENT] prepare_id yangilashda xatolik: {e}")
 
 
 def is_payment_already_completed(order_id: str) -> bool:
     """To'lov allaqachon muvaffaqiyatli yakunlanganmi."""
-    payment = get_payment_by_order_id(order_id)
+    payment = PaymentModel.query.filter_by(order_id=order_id).first()
     if not payment:
         return False
-    return payment.get("payment_status") == "success"
+    return payment.payment_status == "success"
 
 
 def get_payment_by_click_status(order_id: str) -> dict:
     """Click to'lov holati (frontend uchun)."""
-    payment = get_payment_by_order_id(order_id)
+    payment = PaymentModel.query.filter_by(order_id=order_id).first()
     if not payment:
         return {"success": False, "error": "To'lov topilmadi"}
 
     return {
         "success": True,
-        "payment_id": payment.get("id"),
-        "order_id": payment.get("order_id"),
-        "status": payment.get("payment_status", "pending"),
-        "payment_provider": payment.get("payment_provider", "unknown"),
-        "amount": payment.get("amount", 0),
-        "created_at": payment.get("created_at"),
-        "updated_at": payment.get("updated_at"),
+        "payment_id": payment.id,
+        "order_id": payment.order_id,
+        "status": payment.payment_status or "pending",
+        "payment_provider": payment.payment_provider or "unknown",
+        "amount": float(payment.amount) if payment.amount else 0,
+        "created_at": payment.created_at.strftime("%Y-%m-%d %H:%M:%S") if payment.created_at else "",
+        "updated_at": payment.updated_at.strftime("%Y-%m-%d %H:%M:%S") if payment.updated_at else "",
     }
 
 
@@ -508,42 +424,30 @@ def create_payme_payment(user_name: str, loyiha_nomi: str = "",
                          product_id: str = None,
                          custom_amount: int = None) -> dict:
     """Payme to'lov uchun yangi buyurtma yaratish."""
-    with _payments_lock:
-        payments = _load_payments()
-        payment_id = str(uuid.uuid4())[:12]
-        order_id = _generate_order_id()
+    try:
+        payment = PaymentModel(
+            id=str(uuid.uuid4())[:12],
+            order_id=_generate_order_id(),
+            user_name=user_name,
+            project_name=loyiha_nomi,
+            product_id=product_id,
+            amount=custom_amount or PLAN_PRICE,
+            payment_provider="payme",
+            payment_status="pending",
+            admin_status="pending",
+        )
 
-        payment = {
-            "id": payment_id,
-            "order_id": order_id,
-            "user_name": user_name,
-            "loyiha_nomi": loyiha_nomi,
-            "product_id": product_id,
-            "amount": custom_amount or PLAN_PRICE,
-            "payment_provider": "payme",
-            "payment_status": "pending",
-            "status": "pending",
-            "receipt_file": None,
-            "created_at": _now(),
-            "submitted_at": None,
-            "reviewed_at": None,
-            "updated_at": None,
-            "admin_note": "",
-            "click_trans_id": None,
-            "merchant_prepare_id": None,
-            "payme_trans_id": None,
-            "payme_create_time": None,
-            "payme_perform_time": None,
-            "payme_cancel_time": None,
-            "payme_cancel_reason": None,
-        }
+        db.session.add(payment)
+        db.session.commit()
 
-        payments[payment_id] = payment
-        _save_payments(payments)
+        logger.info(f"[PAYMENT] Payme yaratildi: {payment.id}, "
+                    f"order={payment.order_id}, user={user_name}")
+        return _payment_to_dict(payment)
 
-    logger.info(f"[PAYMENT] Payme yaratildi: {payment_id}, order={order_id}, "
-                f"user={user_name}")
-    return payment
+    except Exception as e:
+        db.session.rollback()
+        logger.error(f"[PAYMENT] Payme yaratishda xatolik: {e}", exc_info=True)
+        raise
 
 
 def update_payme_payment_status(order_id: str, status: str,
@@ -553,59 +457,52 @@ def update_payme_payment_status(order_id: str, status: str,
                                 cancel_time: int = None,
                                 reason: int = None) -> Optional[dict]:
     """Payme to'lov holatini yangilash."""
-    with _payments_lock:
-        payments = _load_payments()
+    payment = PaymentModel.query.filter_by(order_id=order_id).first()
 
-        target_id = None
-        for pid, payment in payments.items():
-            if payment.get("order_id") == order_id:
-                target_id = pid
-                break
+    if not payment:
+        logger.error(f"[PAYMENT] Payme update: order topilmadi: {order_id}")
+        return None
 
-        if not target_id:
-            logger.error(f"[PAYMENT] Payme update: order topilmadi: {order_id}")
-            return None
+    payment.payment_status = status
+    payment.updated_at = datetime.now(timezone.utc)
 
-        payment = payments[target_id]
-        payment["payment_status"] = status
-        payment["updated_at"] = _now()
+    if payme_trans_id:
+        payment.payme_trans_id = payme_trans_id
+    if create_time:
+        payment.payme_create_time = create_time
+    if perform_time:
+        payment.payme_perform_time = perform_time
+    if cancel_time:
+        payment.payme_cancel_time = cancel_time
+    if reason is not None:
+        payment.payme_cancel_reason = reason
 
-        if payme_trans_id:
-            payment["payme_trans_id"] = payme_trans_id
-        if create_time:
-            payment["payme_create_time"] = create_time
-        if perform_time:
-            payment["payme_perform_time"] = perform_time
-        if cancel_time:
-            payment["payme_cancel_time"] = cancel_time
-        if reason is not None:
-            payment["payme_cancel_reason"] = reason
+    # Umumiy status sync
+    if status == "success":
+        payment.admin_status = "approved"
+        payment.reviewed_at = datetime.now(timezone.utc)
+    elif status in ("failed", "cancelled"):
+        payment.admin_status = "rejected"
+        payment.reviewed_at = datetime.now(timezone.utc)
+    elif status == "preparing":
+        payment.admin_status = "reviewing"
 
-        # Umumiy status sync
-        if status == "success":
-            payment["status"] = "approved"
-            payment["reviewed_at"] = _now()
-        elif status in ("failed", "cancelled"):
-            payment["status"] = "rejected"
-            payment["reviewed_at"] = _now()
-        elif status == "preparing":
-            payment["status"] = "reviewing"
-
-        payments[target_id] = payment
-        _save_payments(payments)
-
-    logger.info(f"[PAYMENT] Payme yangilandi: order={order_id}, "
-                f"status={status}, trans={payme_trans_id}")
-    return payment
+    try:
+        db.session.commit()
+        logger.info(f"[PAYMENT] Payme yangilandi: order={order_id}, "
+                    f"status={status}, trans={payme_trans_id}")
+        return _payment_to_dict(payment)
+    except Exception as e:
+        db.session.rollback()
+        logger.error(f"[PAYMENT] Payme update xatolik: {e}")
+        return None
 
 
 def get_payment_by_payme_trans_id(trans_id: str) -> Optional[dict]:
     """payme_trans_id bo'yicha to'lovni topish."""
     if not trans_id:
         return None
-    with _payments_lock:
-        payments = _load_payments()
-        for payment in payments.values():
-            if payment.get("payme_trans_id") == trans_id:
-                return payment
-    return None
+    payment = PaymentModel.query.filter_by(payme_trans_id=trans_id).first()
+    if not payment:
+        return None
+    return _payment_to_dict(payment)
