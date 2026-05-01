@@ -35,6 +35,10 @@ class User(db.Model):
     last_name = db.Column(db.String(100), nullable=True)
     role = db.Column(db.String(20), nullable=False, default='user')  # user, premium, vip
 
+    # ── Telegram ──
+    telegram_id = db.Column(db.String(50), unique=True, nullable=True, index=True)
+    telegram_username = db.Column(db.String(100), nullable=True)
+
     is_active = db.Column(db.Boolean, default=True, nullable=False)
     is_verified = db.Column(db.Boolean, default=False, nullable=False)
     last_login = db.Column(db.DateTime, nullable=True)
@@ -101,6 +105,8 @@ class User(db.Model):
             data['email'] = self.email
             data['last_login'] = self.last_login.isoformat() if self.last_login else None
             data['login_count'] = self.login_count
+            data['telegram_id'] = self.telegram_id
+            data['telegram_username'] = self.telegram_username
         return data
 
     def __repr__(self):

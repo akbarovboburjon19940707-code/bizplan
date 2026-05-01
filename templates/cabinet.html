@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="UzBizness — Shaxsiy kabinet, profil boshqaruvi va obuna holati">
+    <title>Shaxsiy Kabinet | UzBizness</title>
+    <link rel="icon" href="/static/img/logo_transparent.png" type="image/png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/cabinet.css">
+    <link rel="stylesheet" href="/static/css/auth.css">
+    <link rel="stylesheet" href="/static/css/subscription.css">
+</head>
+<body class="cabinet-page">
+
+    <!-- ═══════ HEADER ═══════ -->
+    <header class="cab-header">
+        <div class="cab-header-inner">
+            <div class="cab-header-left">
+                <div class="cab-header-logo">
+                    <img src="/static/img/logo_transparent.png" alt="Logo">
+                </div>
+                <div class="cab-header-brand">
+                    <h1>UzBizness</h1>
+                    <span>Shaxsiy Kabinet</span>
+                </div>
+            </div>
+            <div class="cab-header-right">
+                <a href="/" class="cab-header-link">Bosh sahifa</a>
+                <a href="/dashboard" class="cab-header-link">Dashboard</a>
+                <a href="/cabinet" class="cab-header-link active">Kabinet</a>
+                <a href="#" class="cab-header-link" onclick="CabinetModule.logout()" id="cabLogoutBtn">Chiqish</a>
+            </div>
+        </div>
+    </header>
+
+    <div class="cab-layout">
+        <!-- ═══════ WELCOME BANNER ═══════ -->
+        <div class="cab-welcome" id="cabWelcome">
+            <div class="cab-welcome-top">
+                <div>
+                    <h2 id="cabWelcomeName">Xush kelibsiz!</h2>
+                    <p id="cabWelcomePhone">Profilingizni boshqaring</p>
+                </div>
+                <div class="cab-plan-badge" id="cabPlanBadge">
+                    <span id="cabPlanEmoji">🆓</span>
+                    <span id="cabPlanName">Demo</span>
+                </div>
+            </div>
+            <div class="cab-welcome-stats">
+                <div class="cab-welcome-stat">
+                    <span class="cab-welcome-stat-value" id="cabStatPlans">0</span>
+                    <span class="cab-welcome-stat-label">Yaratilgan rejalar</span>
+                </div>
+                <div class="cab-welcome-stat">
+                    <span class="cab-welcome-stat-value" id="cabStatDaysLeft">∞</span>
+                    <span class="cab-welcome-stat-label">Obuna (kun)</span>
+                </div>
+                <div class="cab-welcome-stat">
+                    <span class="cab-welcome-stat-value" id="cabStatDailyLeft">1</span>
+                    <span class="cab-welcome-stat-label">Bugungi limit</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══════ ALERT ═══════ -->
+        <div class="cab-alert" id="cabAlert"></div>
+
+        <!-- ═══════ TABS ═══════ -->
+        <div class="cab-tabs" id="cabTabs">
+            <button class="cab-tab active" data-tab="profile" onclick="CabinetModule.switchTab('profile')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                Profil
+            </button>
+            <button class="cab-tab" data-tab="subscription" onclick="CabinetModule.switchTab('subscription')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+                Obuna
+            </button>
+            <button class="cab-tab" data-tab="payments" onclick="CabinetModule.switchTab('payments')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+                To'lovlar
+            </button>
+            <button class="cab-tab" data-tab="security" onclick="CabinetModule.switchTab('security')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                Xavfsizlik
+            </button>
+        </div>
+
+        <!-- ═══════ TAB: PROFIL ═══════ -->
+        <div class="cab-tab-content active" id="tabProfile">
+            <div class="cab-card">
+                <div class="cab-card-header">
+                    <div>
+                        <h3 class="cab-card-title">Shaxsiy ma'lumotlar</h3>
+                        <p class="cab-card-subtitle">Profil ma'lumotlaringizni yangilang</p>
+                    </div>
+                </div>
+                <form id="profileForm" onsubmit="CabinetModule.updateProfile(event)">
+                    <div class="cab-form-grid">
+                        <div class="cab-form-group">
+                            <label class="cab-form-label">Ism</label>
+                            <input type="text" class="cab-form-input" id="profFirstName" placeholder="Ismingiz">
+                        </div>
+                        <div class="cab-form-group">
+                            <label class="cab-form-label">Familiya</label>
+                            <input type="text" class="cab-form-input" id="profLastName" placeholder="Familiyangiz">
+                        </div>
+                        <div class="cab-form-group">
+                            <label class="cab-form-label">Telefon raqam</label>
+                            <input type="tel" class="cab-form-input" id="profPhone" disabled>
+                        </div>
+                        <div class="cab-form-group">
+                            <label class="cab-form-label">Email</label>
+                            <input type="email" class="cab-form-input" id="profEmail" placeholder="email@example.com">
+                        </div>
+                    </div>
+                    <div style="margin-top: 24px; display: flex; gap: 12px;">
+                        <button type="submit" class="cab-btn cab-btn-primary" id="profSaveBtn">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                            Saqlash
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Telegram ulanishi -->
+            <div class="cab-card">
+                <div class="cab-card-header">
+                    <div>
+                        <h3 class="cab-card-title">📱 Telegram orqali kirish</h3>
+                        <p class="cab-card-subtitle">Telegramingiz bilan platformaga tez kiring</p>
+                    </div>
+                </div>
+                <div id="telegramSection">
+                    <div id="telegramNotConnected">
+                        <p style="color: var(--cab-text-muted); font-size: 14px; margin-bottom: 16px;">
+                            Telegram akkauntingizni ulang va har safar parol kiritmasdan kiring.
+                        </p>
+                        <div id="telegramWidgetWrap"></div>
+                    </div>
+                    <div id="telegramConnected" style="display:none;">
+                        <div style="display:flex; align-items:center; gap:12px; padding:16px; background:rgba(34,197,94,0.08); border-radius:12px; border:1px solid rgba(34,197,94,0.2);">
+                            <span style="font-size:24px;">✅</span>
+                            <div>
+                                <strong id="tgConnectedName" style="color:#16a34a;">Ulangan</strong>
+                                <p style="font-size:13px; color:var(--cab-text-muted); margin:2px 0 0;">Telegram orqali kirish faol</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══════ TAB: OBUNA ═══════ -->
+        <div class="cab-tab-content" id="tabSubscription">
+            <!-- Current Plan -->
+            <div class="cab-sub-card" id="cabSubCard">
+                <div class="cab-sub-header">
+                    <div class="cab-sub-plan">
+                        <span class="cab-sub-emoji" id="subEmoji">🆓</span>
+                        <div class="cab-sub-info">
+                            <h3 id="subPlanTitle">Demo tarif</h3>
+                            <p id="subPlanDesc">Bepul sinov rejasi</p>
+                        </div>
+                    </div>
+                    <span class="cab-sub-status free" id="subStatusBadge">BEPUL</span>
+                </div>
+
+                <div class="cab-usage-grid">
+                    <div class="cab-usage-item">
+                        <div class="cab-usage-label">
+                            <span>Kunlik AI so'rovlar</span>
+                            <span id="subDailyUsage">0/1</span>
+                        </div>
+                        <div class="cab-usage-bar">
+                            <div class="cab-usage-fill" id="subDailyBar" style="width:0%"></div>
+                        </div>
+                    </div>
+                    <div class="cab-usage-item">
+                        <div class="cab-usage-label">
+                            <span>Oylik AI so'rovlar</span>
+                            <span id="subMonthlyUsage">0/3</span>
+                        </div>
+                        <div class="cab-usage-bar">
+                            <div class="cab-usage-fill" id="subMonthlyBar" style="width:0%"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="display:flex; gap:12px; flex-wrap:wrap;">
+                    <button class="cab-btn cab-btn-primary" onclick="SubModule.openModal()" id="subUpgradeBtn">
+                        💎 Tarifni yangilash
+                    </button>
+                    <div id="subExpiry" style="display:flex; align-items:center; font-size:13px; color:var(--cab-text-muted); gap:6px;">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                        <span id="subExpiryText"></span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Plan Comparison -->
+            <div class="cab-card">
+                <div class="cab-card-header">
+                    <div>
+                        <h3 class="cab-card-title">Tariflarni solishtirish</h3>
+                        <p class="cab-card-subtitle">O'zingizga mos tarifni tanlang</p>
+                    </div>
+                </div>
+                <div class="cab-table-wrap">
+                    <table class="cab-table" id="planCompareTable">
+                        <thead>
+                            <tr>
+                                <th>Xususiyat</th>
+                                <th>🆓 Demo</th>
+                                <th>⭐ Standart</th>
+                                <th>💎 Premium</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td>Narx</td><td>Bepul</td><td>80 000 so'm/oy</td><td>150 000 so'm/oy</td></tr>
+                            <tr><td>Kunlik AI limit</td><td>1</td><td>5</td><td>50</td></tr>
+                            <tr><td>Oylik AI limit</td><td>3</td><td>30</td><td>500</td></tr>
+                            <tr><td>PDF/Word yuklab olish</td><td>❌</td><td>✅</td><td>✅</td></tr>
+                            <tr><td>To'liq moliyaviy model</td><td>❌</td><td>❌</td><td>✅</td></tr>
+                            <tr><td>Ustuvor yordam</td><td>❌</td><td>❌</td><td>✅</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══════ TAB: TO'LOVLAR ═══════ -->
+        <div class="cab-tab-content" id="tabPayments">
+            <div class="cab-card">
+                <div class="cab-card-header">
+                    <div>
+                        <h3 class="cab-card-title">To'lov tarixi</h3>
+                        <p class="cab-card-subtitle">Barcha to'lovlaringiz ro'yxati</p>
+                    </div>
+                </div>
+                <div id="paymentsContent">
+                    <div class="cab-empty">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+                        <h4>To'lovlar topilmadi</h4>
+                        <p>Siz hali hech qanday to'lov qilmadingiz</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══════ TAB: XAVFSIZLIK ═══════ -->
+        <div class="cab-tab-content" id="tabSecurity">
+            <div class="cab-card">
+                <div class="cab-card-header">
+                    <div>
+                        <h3 class="cab-card-title">Parolni o'zgartirish</h3>
+                        <p class="cab-card-subtitle">Akkaunt xavfsizligini ta'minlang</p>
+                    </div>
+                </div>
+                <form id="passwordForm" onsubmit="CabinetModule.updatePassword(event)">
+                    <div class="cab-form-grid">
+                        <div class="cab-form-group">
+                            <label class="cab-form-label">Joriy parol</label>
+                            <input type="password" class="cab-form-input" id="secCurrentPass" placeholder="Hozirgi parolingiz" required>
+                        </div>
+                        <div class="cab-form-group">
+                            <label class="cab-form-label">Yangi parol</label>
+                            <input type="password" class="cab-form-input" id="secNewPass" placeholder="Kamida 6 belgi" required minlength="6">
+                        </div>
+                        <div class="cab-form-group">
+                            <label class="cab-form-label">Yangi parolni tasdiqlash</label>
+                            <input type="password" class="cab-form-input" id="secConfirmPass" placeholder="Qaytadan kiriting" required>
+                        </div>
+                    </div>
+                    <div style="margin-top: 24px;">
+                        <button type="submit" class="cab-btn cab-btn-primary" id="secSaveBtn">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                            Parolni yangilash
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <div class="cab-card" style="border-color: rgba(239,68,68,0.3);">
+                <div class="cab-card-header">
+                    <div>
+                        <h3 class="cab-card-title" style="color: var(--cab-danger);">⚠️ Akkauntni o'chirish</h3>
+                        <p class="cab-card-subtitle">Bu amalni qaytarib bo'lmaydi</p>
+                    </div>
+                </div>
+                <p style="font-size: 14px; color: var(--cab-text-muted); margin-bottom: 16px;">
+                    Akkauntingizni o'chirsangiz, barcha ma'lumotlaringiz, to'lov tarixi va yaratilgan hujjatlar o'chib ketadi.
+                </p>
+                <button class="cab-btn cab-btn-danger cab-btn-sm" onclick="CabinetModule.deleteAccount()">
+                    Akkauntni o'chirish
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/js/auth.js"></script>
+    <script src="/static/js/subscription.js"></script>
+    <script src="/static/js/cabinet.js"></script>
+</body>
+</html>

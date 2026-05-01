@@ -214,6 +214,218 @@ def api_auth_profile():
 
 
 # ============================================================
+# ROUTES — SUBSCRIPTION & AI LIMITS API
+# ============================================================
+
+@app.route("/api/subscription/plans", methods=["GET"])
+@app.route("/api/plans", methods=["GET"])  # backward compat
+@csrf.exempt
+def api_subscription_plans():
+    """Barcha tariflar ro'yxati."""
+    from modules.subscription_service import get_all_plans
+    return jsonify({"success": True, "plans": get_all_plans()})
+
+
+@app.route("/api/subscription/status", methods=["GET"])
+@app.route("/api/user/plan", methods=["GET"])  # backward compat
+@csrf.exempt
+def api_subscription_status():
+    """Foydalanuvchi obuna holati va AI usage statistikasi."""
+    from modules.auth import decode_token
+    from modules.subscription_service import get_user_subscription, get_ai_usage
+
+    auth_header = request.headers.get('Authorization', '')
+    if not auth_header.startswith('Bearer '):
+        return jsonify({"success": False, "error": "Token kerak"}), 401
+
+    payload = decode_token(auth_header[7:])
+    if not payload or payload.get('type') != 'access':
+        return jsonify({"success": False, "error": "Token yaroqsiz"}), 401
+
+    user_id = payload['sub']
+    subscription = get_user_subscription(user_id)
+    usage = get_ai_usage(user_id)
+
+    return jsonify({
+        "success": True,
+        "subscription": subscription,
+        "usage": usage,
+    })
+
+
+@app.route("/api/subscription/purchase", methods=["POST"])
+@csrf.exempt
+@rate_limit(max_req=10, window=60)
+def api_subscription_purchase():
+    """
+    Obuna sotib olish — Click, Payme yoki Card to'lov.
+    To'lov muvaffaqiyatli bo'lganda obuna avtomatik faollashtiriladi.
+    """
+    from modules.auth import decode_token
+    from modules.subscription_service import PLAN_CONFIG, create_subscription
+
+    auth_header = request.headers.get('Authorization', '')
+    if not auth_header.startswith('Bearer '):
+        return jsonify({"success": False, "error": "Avtorizatsiya kerak"}), 401
+
+    payload = decode_token(auth_header[7:])
+    if not payload or payload.get('type') != 'access':
+        return jsonify({"success": False, "error": "Token yaroqsiz"}), 401
+
+    try:
+        user_id = payload['sub']
+        d = request.get_json() or {}
+        plan_name = d.get("plan", "pro")
+        payment_method = d.get("payment_method", "click")
+
+        if plan_name not in PLAN_CONFIG or plan_name == 'basic':
+            return jsonify({"success": False, "error": "Noto'g'ri tarif"}), 400
+
+        plan_cfg = PLAN_CONFIG[plan_name]
+        plan_price = plan_cfg['price']
+        plan_display = plan_cfg['display_name']
+
+        from models.user import User
+        user = db.session.get(User, user_id)
+        user_name = user.first_name if user else 'User'
+
+        base_url = request.host_url.rstrip("/")
+
+        if payment_method == "click":
+            payment = create_click_payment(
+                user_name=user_name,
+                loyiha_nomi=f"{plan_display} obuna",
+                custom_amount=plan_price
+            )
+            order_id = payment["order_id"]
+            return_url = f"{base_url}/click/return?order_id={order_id}"
+
+            payment_url = click_provider.create_payment_url(
+                order_id=order_id,
+                amount=float(plan_price),
+                return_url=return_url
+            )
+
+            # To'lov muvaffaqiyatli bo'lganda obuna faollashtiriladi (callback da)
+            logger.info(f"[SUB] Click to'lov: user={user_id}, plan={plan_name}")
+
+            return jsonify({
+                "success": True,
+                "payment_id": payment["id"],
+                "order_id": order_id,
+                "payment_url": payment_url,
+                "amount": plan_price,
+                "plan": plan_name,
+            })
+
+        elif payment_method == "payme":
+            from modules.payment import create_payme_payment
+            payment = create_payme_payment(
+                user_name=user_name,
+                loyiha_nomi=f"{plan_display} obuna",
+                custom_amount=plan_price
+            )
+            order_id = payment["order_id"]
+            return_url = base64.b64encode(
+                f"{base_url}/dashboard?payment_id={payment['id']}".encode('utf-8')
+            ).decode('utf-8')
+
+            from modules.payment_service.payme import payme_provider
+            payment_url = payme_provider.create_payment_url(
+                order_id=order_id,
+                amount=float(plan_price),
+                return_url=return_url
+            )
+
+            logger.info(f"[SUB] Payme to'lov: user={user_id}, plan={plan_name}")
+
+            return jsonify({
+                "success": True,
+                "payment_id": payment["id"],
+                "order_id": order_id,
+                "payment_url": payment_url,
+                "amount": plan_price,
+                "plan": plan_name,
+            })
+
+        else:  # card
+            payment = create_payment(
+                user_name=user_name,
+                loyiha_nomi=f"{plan_display} obuna",
+                custom_amount=plan_price
+            )
+
+            return jsonify({
+                "success": True,
+                "payment_id": payment["id"],
+                "order_id": payment["order_id"],
+                "amount": plan_price,
+                "plan": plan_name,
+                "card_info": get_payment_card_info(),
+            })
+
+    except Exception as e:
+        logger.error(f"Obuna xarid xatolik: {e}", exc_info=True)
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+@app.route("/api/subscription/usage", methods=["GET"])
+@app.route("/api/user/ai-check", methods=["GET"])  # backward compat
+@csrf.exempt
+def api_subscription_usage():
+    """AI so'rov limiti va usage statistikasi."""
+    from modules.auth import decode_token
+    from modules.subscription_service import check_ai_usage, get_ai_usage
+
+    auth_header = request.headers.get('Authorization', '')
+    if not auth_header.startswith('Bearer '):
+        return jsonify({"success": True, "allowed": True, "usage": {
+            "daily_used": 0, "daily_limit": 1, "daily_remaining": 1,
+            "monthly_used": 0, "monthly_limit": 3, "monthly_remaining": 3,
+            "plan": "basic"
+        }})
+
+    payload = decode_token(auth_header[7:])
+    if not payload:
+        return jsonify({"success": True, "allowed": True, "usage": {
+            "daily_used": 0, "daily_limit": 1, "daily_remaining": 1,
+            "monthly_used": 0, "monthly_limit": 3, "monthly_remaining": 3,
+            "plan": "basic"
+        }})
+
+    result = check_ai_usage(payload['sub'])
+    return jsonify({"success": True, **result})
+
+
+@app.route("/api/admin/stats", methods=["GET"])
+@csrf.exempt
+def api_admin_stats():
+    """Admin dashboard statistikasi — kengaytirilgan."""
+    if not session.get("admin_logged_in"):
+        return jsonify({"success": False, "error": "Unauthorized"}), 401
+
+    from modules.subscription_service import get_admin_stats
+    stats = get_admin_stats()
+    return jsonify({"success": True, "stats": stats})
+
+
+@app.route("/api/admin/users", methods=["GET"])
+@csrf.exempt
+def api_admin_users():
+    """Admin uchun foydalanuvchilar ro'yxati."""
+    if not session.get("admin_logged_in"):
+        return jsonify({"success": False, "error": "Unauthorized"}), 401
+
+    from modules.subscription_service import get_admin_users
+    page = request.args.get('page', 1, type=int)
+    per_page = request.args.get('per_page', 20, type=int)
+    search = request.args.get('search', None)
+
+    result = get_admin_users(page=page, per_page=per_page, search=search)
+    return jsonify({"success": True, **result})
+
+
+# ============================================================
 # ROUTES — ASOSIY
 # ============================================================
 @app.route("/")
@@ -240,7 +452,212 @@ def payment_page():
     return render_template("payment.html")
 
 
+@app.route("/cabinet")
+def cabinet_page():
+    """Foydalanuvchi shaxsiy kabineti."""
+    return render_template("cabinet.html")
+
+
 # ============================================================
+# ROUTES — USER CABINET API
+# ============================================================
+
+@app.route("/api/user/profile", methods=["PUT"])
+@csrf.exempt
+def api_user_profile_update():
+    """Foydalanuvchi profilini yangilash."""
+    from modules.auth import decode_token
+    from models.user import User
+
+    auth_header = request.headers.get('Authorization', '')
+    if not auth_header.startswith('Bearer '):
+        return jsonify({"success": False, "error": "Token kerak"}), 401
+
+    payload = decode_token(auth_header[7:])
+    if not payload or payload.get('type') != 'access':
+        return jsonify({"success": False, "error": "Token yaroqsiz"}), 401
+
+    try:
+        user = db.session.get(User, payload['sub'])
+        if not user:
+            return jsonify({"success": False, "error": "Foydalanuvchi topilmadi"}), 404
+
+        d = request.get_json() or {}
+
+        if d.get("first_name"):
+            user.first_name = d["first_name"].strip()[:100]
+        if d.get("last_name"):
+            user.last_name = d["last_name"].strip()[:100]
+        if d.get("email"):
+            user.email = d["email"].strip()[:200]
+
+        db.session.commit()
+        logger.info(f"[USER] Profil yangilandi: {user.id}")
+        return jsonify({"success": True, "user": user.to_dict()})
+
+    except Exception as e:
+        db.session.rollback()
+        logger.error(f"Profile update xatolik: {e}", exc_info=True)
+        return jsonify({"success": False, "error": "Server xatosi"}), 500
+
+
+@app.route("/api/user/password", methods=["PUT"])
+@csrf.exempt
+def api_user_password_update():
+    """Foydalanuvchi parolini o'zgartirish."""
+    from modules.auth import decode_token
+    from models.user import User
+
+    auth_header = request.headers.get('Authorization', '')
+    if not auth_header.startswith('Bearer '):
+        return jsonify({"success": False, "error": "Token kerak"}), 401
+
+    payload = decode_token(auth_header[7:])
+    if not payload or payload.get('type') != 'access':
+        return jsonify({"success": False, "error": "Token yaroqsiz"}), 401
+
+    try:
+        user = db.session.get(User, payload['sub'])
+        if not user:
+            return jsonify({"success": False, "error": "Foydalanuvchi topilmadi"}), 404
+
+        d = request.get_json() or {}
+        current_password = d.get("current_password", "")
+        new_password = d.get("new_password", "")
+
+        if not user.check_password(current_password):
+            return jsonify({"success": False, "error": "Joriy parol noto'g'ri"}), 400
+
+        if len(new_password) < 6:
+            return jsonify({"success": False, "error": "Yangi parol kamida 6 belgidan iborat bo'lishi kerak"}), 400
+
+        user.set_password(new_password)
+        db.session.commit()
+        logger.info(f"[USER] Parol yangilandi: {user.id}")
+        return jsonify({"success": True, "message": "Parol muvaffaqiyatli yangilandi"})
+
+    except Exception as e:
+        db.session.rollback()
+        logger.error(f"Password update xatolik: {e}", exc_info=True)
+        return jsonify({"success": False, "error": "Server xatosi"}), 500
+
+
+@app.route("/api/user/payments", methods=["GET"])
+@csrf.exempt
+def api_user_payments():
+    """Foydalanuvchi to'lov tarixi."""
+    from modules.auth import decode_token
+    from models.user import User
+    from models.payment import Payment
+
+    auth_header = request.headers.get('Authorization', '')
+    if not auth_header.startswith('Bearer '):
+        return jsonify({"success": False, "error": "Token kerak"}), 401
+
+    payload = decode_token(auth_header[7:])
+    if not payload or payload.get('type') != 'access':
+        return jsonify({"success": False, "error": "Token yaroqsiz"}), 401
+
+    try:
+        user = db.session.get(User, payload['sub'])
+        if not user:
+            return jsonify({"success": True, "payments": []})
+
+        # User nomi bo'yicha to'lovlarni topish
+        payments = Payment.query.filter(
+            db.or_(
+                Payment.user_name == user.first_name,
+                Payment.user_name == user.phone,
+            )
+        ).order_by(Payment.created_at.desc()).limit(50).all()
+
+        result = []
+        for p in payments:
+            result.append({
+                "id": p.id,
+                "created_at": p.created_at.isoformat() if p.created_at else None,
+                "loyiha_nomi": p.loyiha_nomi,
+                "amount": float(p.amount) if p.amount else None,
+                "payment_method": p.payment_method,
+                "payment_status": p.payment_status,
+                "status": p.status if hasattr(p, 'status') else p.payment_status,
+            })
+
+        return jsonify({"success": True, "payments": result})
+
+    except Exception as e:
+        logger.error(f"User payments xatolik: {e}", exc_info=True)
+        return jsonify({"success": True, "payments": []})
+
+
+@app.route("/api/auth/telegram", methods=["POST"])
+@csrf.exempt
+@rate_limit(max_req=10, window=60)
+def api_auth_telegram():
+    """Telegram orqali autentifikatsiya."""
+    import hashlib, hmac
+
+    try:
+        d = request.get_json() or {}
+        telegram_id = d.get("id")
+        first_name = d.get("first_name", "")
+        username = d.get("username", "")
+        auth_date = d.get("auth_date", "")
+        hash_val = d.get("hash", "")
+
+        if not telegram_id or not hash_val:
+            return jsonify({"success": False, "error": "Telegram ma'lumotlar to'liq emas"}), 400
+
+        # Telegram hash tekshirish
+        bot_token = os.environ.get("TELEGRAM_BOT_TOKEN", "")
+        if bot_token:
+            check_data = "\n".join(
+                f"{k}={d[k]}" for k in sorted(d.keys()) if k != "hash" and d[k]
+            )
+            secret = hashlib.sha256(bot_token.encode()).digest()
+            expected_hash = hmac.new(secret, check_data.encode(), hashlib.sha256).hexdigest()
+
+            if expected_hash != hash_val:
+                logger.warning(f"[TG AUTH] Hash mismatch for tg_id={telegram_id}")
+                # Dev mode da davom etamiz
+                if not app.debug:
+                    return jsonify({"success": False, "error": "Telegram autentifikatsiya yaroqsiz"}), 401
+
+        from models.user import User
+        from modules.auth import create_token_pair
+
+        # Mavjud user qidirish (telegram_id bo'yicha)
+        user = User.query.filter_by(telegram_id=str(telegram_id)).first()
+
+        if user:
+            # Login
+            user.record_successful_login()
+            db.session.commit()
+            tokens = create_token_pair(identity=user.id, role=user.role)
+            return jsonify({"success": True, "user": user.to_dict(), **tokens})
+
+        # Yangi user yaratish
+        user = User(
+            phone=f"tg_{telegram_id}",
+            first_name=first_name or username or f"TG_{telegram_id}",
+            telegram_id=str(telegram_id),
+            telegram_username=username,
+        )
+        user.set_password(f"tg_auto_{telegram_id}_{auth_date}")
+        db.session.add(user)
+        db.session.commit()
+
+        tokens = create_token_pair(identity=user.id, role='user')
+        logger.info(f"[TG AUTH] Yangi Telegram user: {telegram_id} (@{username})")
+        return jsonify({"success": True, "user": user.to_dict(), **tokens}), 201
+
+    except Exception as e:
+        db.session.rollback()
+        logger.error(f"Telegram auth xatolik: {e}", exc_info=True)
+        return jsonify({"success": False, "error": "Server xatosi"}), 500
+
+
+
 # ROUTES — KATEGORIYALAR VA QIDIRISH
 # ============================================================
 @app.route("/api/categories", methods=["GET"])
@@ -430,7 +847,38 @@ def admin_logout():
 def api_admin_approve():
     if not session.get("admin_logged_in"): return jsonify({"success": False, "error": "Unauthorized"}), 401
     d = request.get_json()
-    return jsonify(admin_approve(d.get("payment_id"), d.get("note", "")))
+    payment_id = d.get("payment_id")
+    result = admin_approve(payment_id, d.get("note", ""))
+    
+    # ── Obuna to'lovi bo'lsa, avtomatik faollashtirish ──
+    if result.get("success"):
+        try:
+            payment = get_payment(payment_id)
+            if payment and "obuna" in (payment.get("loyiha_nomi") or "").lower():
+                # Obuna turini aniqlash (narx bo'yicha)
+                amount = payment.get("amount", 0)
+                plan_name = "pro" if amount <= 100000 else "enterprise"
+                
+                # User_id ni topish (payment da user_name bor, lekin user_id kerak)
+                from models.user import User
+                user_name = payment.get("user_name", "")
+                user = User.query.filter(
+                    db.or_(User.first_name == user_name, User.phone == user_name)
+                ).first()
+                
+                if user:
+                    from modules.subscription_service import create_subscription
+                    sub_result = create_subscription(user.id, plan_name, payment_id)
+                    if sub_result.get("success"):
+                        logger.info(f"[SUB] Obuna avtomatik faollashtirildi: user={user.id}, plan={plan_name}")
+                        result["subscription_activated"] = True
+                        result["plan"] = plan_name
+                    else:
+                        logger.warning(f"[SUB] Obuna faollashtirish xatolik: {sub_result}")
+        except Exception as sub_err:
+            logger.error(f"[SUB] Admin approve subscription xatolik: {sub_err}", exc_info=True)
+    
+    return jsonify(result)
 
 @app.route("/api/admin/reject", methods=["POST"])
 @csrf.exempt
@@ -1209,18 +1657,46 @@ def save():
         if errors:
             return jsonify({"success": False, "errors": errors}), 400
 
-        # 1.5 To'lov tekshiruvi (Majburiy)
+        # 1.5 Obuna va To'lov tekshiruvi
+        _gen_user_id = None
+        has_active_sub = False
+        
+        try:
+            from modules.auth import decode_token
+            from modules.subscription_service import check_ai_usage
+            _auth_h = request.headers.get('Authorization', '')
+            if _auth_h.startswith('Bearer '):
+                _pl = decode_token(_auth_h[7:])
+                if _pl and _pl.get('type') == 'access':
+                    _gen_user_id = _pl['sub']
+                    _usage_check = check_ai_usage(_gen_user_id)
+                    
+                    if not _usage_check['allowed']:
+                        return jsonify({
+                            "success": False,
+                            "errors": [_usage_check['reason']],
+                            "usage_limit": True,
+                            "upgrade_needed": True,
+                        }), 429
+                    
+                    # Agar basic bo'lmasa, demak pro/enterprise
+                    if _usage_check.get('usage', {}).get('plan') != 'basic':
+                        has_active_sub = True
+        except Exception as _ue:
+            logger.warning(f"AI usage check xatolik (davom etiladi): {_ue}")
+
+        # Agar aktiv obuna bo'lmasa, alohida to'lov (payment_id) majburiy
         payment_id = request.form.get("payment_id")
-        if not payment_id:
-            return jsonify({"success": False, "errors": ["To'lov amalga oshirilmagan yoki payment_id yo'q"]}), 400
-        payment = get_payment(payment_id)
-        if not payment or payment.get("status") != "approved":
-            return jsonify({"success": False, "errors": ["Ushbu hujjat uchun to'lov admin tomonidan tasdiqlanmagan."]}), 403
-            
-        # GENERATSIYA VA KATALOGNI AJRATISH:
-        # Agar to'lovda product_id bo'lsa, demak bu tayyor biznes reja sotib olingan, generatsiya uchun emas.
-        if payment.get("product_id") is not None:
-            return jsonify({"success": False, "errors": ["Ushbu to'lov tayyor biznes reja (katalog) uchun qilingan. Yangi biznes reja yaratish uchun alohida to'lov qilinishi kerak."]}), 403
+        if not has_active_sub:
+            if not payment_id:
+                return jsonify({"success": False, "errors": ["Ushbu hujjatni yaratish uchun faol obunangiz yo'q. Iltimos obuna xarid qiling yoki alohida to'lov qiling."], "usage_limit": True, "upgrade_needed": True}), 429
+            payment = get_payment(payment_id)
+            if not payment or payment.get("status") != "approved":
+                return jsonify({"success": False, "errors": ["Ushbu hujjat uchun to'lov admin tomonidan tasdiqlanmagan."]}), 403
+                
+            # GENERATSIYA VA KATALOGNI AJRATISH:
+            if payment.get("product_id") is not None:
+                return jsonify({"success": False, "errors": ["Ushbu to'lov tayyor biznes reja (katalog) uchun qilingan. Yangi biznes reja yaratish uchun alohida to'lov qilinishi kerak."]}), 403
 
         # 2. Session
         session_dir, sid = create_session()
@@ -1275,17 +1751,35 @@ def save():
         })
 
         # --- [PRO AI TEXT GENERATION] ---
+        _ai_start_time = time.time()
+        _ai_success = False
+        _ai_provider = 'groq'
         try:
             logger.info("PRO AI: Matnlarni generatsiya qilish boshlandi...")
             # AI engine orqali batafsil matnlarni olish
             pro_texts = generate_pro_business_text(ai_context)
             if pro_texts:
                 ai_context.update(pro_texts)
+                _ai_success = True
                 logger.info("PRO AI: Matnlar muvaffaqiyatli integratsiya qilindi.")
             else:
                 logger.warning("PRO AI: AI matn qaytarmadi, standart matnlar ishlatiladi.")
         except Exception as ai_err:
             logger.error(f"PRO AI Error: {ai_err}")
+        # ── AI Usage yozish ──
+        try:
+            from modules.subscription_service import record_ai_usage
+            _ai_elapsed = int((time.time() - _ai_start_time) * 1000)
+            record_ai_usage(
+                user_id=_gen_user_id,
+                provider=_ai_provider,
+                request_type='business_plan',
+                response_time_ms=_ai_elapsed,
+                is_success=_ai_success,
+                session_id=sid,
+            )
+        except Exception as _re:
+            logger.warning(f"AI usage yozish xatolik: {_re}")
         # --------------------------------
 
         # 6. Professional fayl nomi generatsiya qilish

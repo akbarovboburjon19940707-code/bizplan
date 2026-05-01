@@ -1,0 +1,618 @@
+/* ============================================================
+   Subscription UI — Plan Badges, Usage Meter, Subscription Modal
+   ============================================================ */
+
+/* ── Plan Badge (Header) ── */
+.plan-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 700;
+    font-family: 'Outfit', sans-serif;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    line-height: 1;
+    white-space: nowrap;
+}
+.plan-badge-basic {
+    background: linear-gradient(135deg, #f1f5f9, #e2e8f0);
+    color: #64748b;
+    border: 1px solid #cbd5e1;
+}
+.plan-badge-pro {
+    background: linear-gradient(135deg, #dbeafe, #bfdbfe);
+    color: #1d4ed8;
+    border: 1px solid #93c5fd;
+}
+.plan-badge-enterprise {
+    background: linear-gradient(135deg, #ede9fe, #ddd6fe);
+    color: #6d28d9;
+    border: 1px solid #a78bfa;
+}
+
+/* ── User Dropdown — Extended ── */
+.user-dropdown .dropdown-plan-info {
+    padding: 10px 14px;
+    border-bottom: 1px solid #f1f5f9;
+}
+.dropdown-plan-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 6px;
+}
+.dropdown-plan-name {
+    font-size: 12px;
+    color: #64748b;
+    font-weight: 500;
+}
+.dropdown-upgrade-btn {
+    font-size: 11px;
+    color: #3b82f6;
+    font-weight: 600;
+    text-decoration: none;
+    cursor: pointer;
+    transition: color 0.2s;
+    background: none;
+    border: none;
+    padding: 0;
+}
+.dropdown-upgrade-btn:hover {
+    color: #1d4ed8;
+}
+
+/* ── Usage Meter (Dropdown) ── */
+.usage-meter {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+.usage-meter-label {
+    font-size: 11px;
+    color: #94a3b8;
+    display: flex;
+    justify-content: space-between;
+}
+.usage-meter-bar {
+    width: 100%;
+    height: 4px;
+    background: #e2e8f0;
+    border-radius: 2px;
+    overflow: hidden;
+}
+.usage-meter-fill {
+    height: 100%;
+    border-radius: 2px;
+    transition: width 0.5s ease, background 0.3s;
+    background: linear-gradient(90deg, #3b82f6, #60a5fa);
+}
+.usage-meter-fill.warn {
+    background: linear-gradient(90deg, #f59e0b, #fbbf24);
+}
+.usage-meter-fill.danger {
+    background: linear-gradient(90deg, #ef4444, #f87171);
+}
+
+/* ============================================================
+   SUBSCRIPTION MODAL
+   ============================================================ */
+.sub-modal-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 10000;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+}
+.sub-modal-overlay.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+.sub-modal {
+    background: #fff;
+    border-radius: 20px;
+    width: min(95vw, 860px);
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 25px 60px rgba(0, 0, 0, 0.3);
+    transform: translateY(20px) scale(0.95);
+    transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+    padding: 0;
+}
+.sub-modal-overlay.active .sub-modal {
+    transform: translateY(0) scale(1);
+}
+
+.sub-modal-header {
+    padding: 28px 32px 20px;
+    text-align: center;
+    position: relative;
+}
+.sub-modal-header h2 {
+    font-family: 'Outfit', sans-serif;
+    font-size: 24px;
+    font-weight: 800;
+    color: #0f172a;
+    margin: 0;
+}
+.sub-modal-header p {
+    font-size: 14px;
+    color: #64748b;
+    margin: 6px 0 0;
+}
+.sub-modal-close {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: none;
+    background: #f1f5f9;
+    color: #64748b;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+}
+.sub-modal-close:hover {
+    background: #e2e8f0;
+    color: #0f172a;
+}
+
+/* ── Current Plan Banner ── */
+.sub-current-plan {
+    margin: 0 32px 20px;
+    padding: 14px 18px;
+    background: linear-gradient(135deg, #f0f9ff, #e0f2fe);
+    border: 1px solid #bae6fd;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+.sub-current-plan-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.sub-current-plan-icon {
+    font-size: 24px;
+}
+.sub-current-plan-text {
+    display: flex;
+    flex-direction: column;
+}
+.sub-current-plan-label {
+    font-size: 11px;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 600;
+}
+.sub-current-plan-name {
+    font-size: 16px;
+    font-weight: 700;
+    font-family: 'Outfit', sans-serif;
+    color: #0f172a;
+}
+.sub-current-plan-status {
+    font-size: 12px;
+    color: #0ea5e9;
+    font-weight: 500;
+}
+
+/* ── Plans Grid ── */
+.sub-plans-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    padding: 0 32px 28px;
+}
+
+.sub-plan-card {
+    border: 2px solid #e2e8f0;
+    border-radius: 16px;
+    padding: 22px 18px;
+    text-align: center;
+    transition: all 0.3s;
+    position: relative;
+    cursor: pointer;
+    background: #fff;
+}
+.sub-plan-card:hover {
+    border-color: #93c5fd;
+    box-shadow: 0 8px 25px rgba(59, 130, 246, 0.12);
+    transform: translateY(-4px);
+}
+.sub-plan-card.popular {
+    border-color: #3b82f6;
+    box-shadow: 0 8px 30px rgba(59, 130, 246, 0.15);
+}
+.sub-plan-card.current {
+    border-color: #22c55e;
+    background: #f0fdf4;
+}
+.sub-plan-card.current::after {
+    content: '✓ Hozirgi';
+    position: absolute;
+    top: -10px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #22c55e;
+    color: #fff;
+    padding: 3px 12px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 700;
+}
+
+.sub-plan-popular-badge {
+    position: absolute;
+    top: -10px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: linear-gradient(135deg, #3b82f6, #2563eb);
+    color: #fff;
+    padding: 3px 14px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.sub-plan-emoji {
+    font-size: 32px;
+    margin-bottom: 8px;
+}
+.sub-plan-name {
+    font-family: 'Outfit', sans-serif;
+    font-size: 18px;
+    font-weight: 700;
+    color: #0f172a;
+    margin-bottom: 4px;
+}
+.sub-plan-price {
+    font-family: 'Outfit', sans-serif;
+    font-size: 28px;
+    font-weight: 800;
+    color: #0f172a;
+    margin-bottom: 2px;
+}
+.sub-plan-price-suffix {
+    font-size: 13px;
+    font-weight: 400;
+    color: #94a3b8;
+}
+.sub-plan-duration {
+    font-size: 12px;
+    color: #94a3b8;
+    margin-bottom: 14px;
+}
+
+.sub-plan-features {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 16px;
+    text-align: left;
+}
+.sub-plan-features li {
+    font-size: 13px;
+    color: #475569;
+    padding: 5px 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.sub-plan-features li svg {
+    flex-shrink: 0;
+    width: 16px;
+    height: 16px;
+}
+.sub-plan-features li.disabled {
+    color: #cbd5e1;
+}
+.sub-plan-features li.disabled svg {
+    color: #e2e8f0;
+}
+
+.sub-plan-btn {
+    width: 100%;
+    padding: 10px 18px;
+    border-radius: 10px;
+    font-family: 'Outfit', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    transition: all 0.2s;
+}
+.sub-plan-btn-outline {
+    background: #f8fafc;
+    color: #475569;
+    border: 1.5px solid #e2e8f0;
+}
+.sub-plan-btn-outline:hover {
+    background: #f1f5f9;
+    border-color: #cbd5e1;
+}
+.sub-plan-btn-primary {
+    background: linear-gradient(135deg, #3b82f6, #2563eb);
+    color: #fff;
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+.sub-plan-btn-primary:hover {
+    box-shadow: 0 6px 18px rgba(59, 130, 246, 0.4);
+    transform: translateY(-1px);
+}
+.sub-plan-btn-premium {
+    background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+    color: #fff;
+    box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
+}
+.sub-plan-btn-premium:hover {
+    box-shadow: 0 6px 18px rgba(139, 92, 246, 0.4);
+    transform: translateY(-1px);
+}
+.sub-plan-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none !important;
+}
+
+/* ── Payment Section (inside modal) ── */
+.sub-payment-section {
+    padding: 0 32px 28px;
+    display: none;
+}
+.sub-payment-section.active {
+    display: block;
+}
+.sub-payment-back {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    color: #64748b;
+    cursor: pointer;
+    border: none;
+    background: none;
+    padding: 0;
+    margin-bottom: 16px;
+    font-weight: 500;
+    transition: color 0.2s;
+}
+.sub-payment-back:hover {
+    color: #3b82f6;
+}
+.sub-payment-summary {
+    padding: 16px;
+    background: #f8fafc;
+    border-radius: 12px;
+    border: 1px solid #e2e8f0;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+.sub-payment-plan-name {
+    font-family: 'Outfit', sans-serif;
+    font-weight: 700;
+    font-size: 16px;
+    color: #0f172a;
+}
+.sub-payment-plan-price {
+    font-family: 'Outfit', sans-serif;
+    font-weight: 800;
+    font-size: 20px;
+    color: #3b82f6;
+}
+
+/* ── Usage Limit Alert (for /save page) ── */
+.usage-limit-alert {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 9999;
+    background: #fff;
+    border-radius: 16px;
+    padding: 18px 22px;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+    border-left: 4px solid #f59e0b;
+    max-width: 380px;
+    transform: translateX(120%);
+    transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.usage-limit-alert.show {
+    transform: translateX(0);
+}
+.usage-limit-alert h4 {
+    font-family: 'Outfit', sans-serif;
+    font-weight: 700;
+    font-size: 15px;
+    color: #0f172a;
+    margin: 0 0 6px;
+}
+.usage-limit-alert p {
+    font-size: 13px;
+    color: #64748b;
+    margin: 0 0 12px;
+    line-height: 1.5;
+}
+.usage-limit-alert .alert-upgrade-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: linear-gradient(135deg, #3b82f6, #2563eb);
+    color: #fff;
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+.usage-limit-alert .alert-upgrade-btn:hover {
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.35);
+}
+
+/* ── Admin Stats ── */
+.admin-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 16px;
+    margin-bottom: 24px;
+}
+.admin-stat-card {
+    background: #fff;
+    border-radius: 14px;
+    padding: 18px 20px;
+    border: 1px solid #e2e8f0;
+    transition: all 0.2s;
+}
+.admin-stat-card:hover {
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+    transform: translateY(-2px);
+}
+.admin-stat-label {
+    font-size: 12px;
+    color: #94a3b8;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 600;
+    margin-bottom: 6px;
+}
+.admin-stat-value {
+    font-family: 'Outfit', sans-serif;
+    font-size: 28px;
+    font-weight: 800;
+    color: #0f172a;
+}
+.admin-stat-change {
+    font-size: 12px;
+    font-weight: 600;
+    margin-top: 4px;
+}
+.admin-stat-change.positive {
+    color: #22c55e;
+}
+.admin-stat-change.neutral {
+    color: #94a3b8;
+}
+
+.admin-stat-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 10px;
+    font-size: 20px;
+}
+.admin-stat-icon.blue { background: #dbeafe; }
+.admin-stat-icon.green { background: #dcfce7; }
+.admin-stat-icon.purple { background: #ede9fe; }
+.admin-stat-icon.orange { background: #ffedd5; }
+.admin-stat-icon.red { background: #fee2e2; }
+
+/* Admin tabs */
+.admin-tabs {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 24px;
+    background: #f1f5f9;
+    border-radius: 10px;
+    padding: 4px;
+}
+.admin-tab-btn {
+    padding: 8px 18px;
+    border-radius: 8px;
+    border: none;
+    background: transparent;
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    color: #64748b;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+.admin-tab-btn.active {
+    background: #fff;
+    color: #0f172a;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+.admin-tab-btn:hover:not(.active) {
+    color: #0f172a;
+}
+
+/* Admin users table */
+.admin-users-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+}
+.admin-users-table th {
+    text-align: left;
+    padding: 10px 12px;
+    background: #f8fafc;
+    color: #64748b;
+    font-weight: 600;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-bottom: 1px solid #e2e8f0;
+}
+.admin-users-table td {
+    padding: 10px 12px;
+    border-bottom: 1px solid #f1f5f9;
+    color: #334155;
+}
+.admin-users-table tr:hover td {
+    background: #f8fafc;
+}
+
+/* ── Responsive ── */
+@media (max-width: 768px) {
+    .sub-plans-grid {
+        grid-template-columns: 1fr;
+        padding: 0 16px 20px;
+    }
+    .sub-modal-header {
+        padding: 20px 16px 16px;
+    }
+    .sub-current-plan {
+        margin: 0 16px 16px;
+        flex-direction: column;
+        text-align: center;
+    }
+    .admin-stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    .usage-limit-alert {
+        top: auto;
+        bottom: 20px;
+        right: 12px;
+        left: 12px;
+        max-width: none;
+    }
+}
+
+@media (max-width: 480px) {
+    .admin-stats-grid {
+        grid-template-columns: 1fr;
+    }
+}

@@ -94,6 +94,15 @@ const AuthModule = (() => {
                             <span class="auth-spinner"></span>
                             <span class="auth-btn-text">Kirish</span>
                         </button>
+                        <div style="display:flex;align-items:center;gap:12px;margin-top:16px;">
+                            <div style="flex:1;height:1px;background:#e2e8f0;"></div>
+                            <span style="font-size:12px;color:#94a3b8;font-weight:500;">yoki</span>
+                            <div style="flex:1;height:1px;background:#e2e8f0;"></div>
+                        </div>
+                        <button type="button" class="auth-submit" style="background:linear-gradient(135deg,#0088cc,#0077b5);margin-top:12px;" onclick="AuthModule.telegramLogin()">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 2L11 13"/><path d="M22 2L15 22L11 13L2 9L22 2Z"/></svg>
+                            <span class="auth-btn-text">Telegram orqali kirish</span>
+                        </button>
                     </form>
 
                     <!-- Register Form -->
@@ -359,6 +368,22 @@ const AuthModule = (() => {
         }
     }
 
+    // ── Telegram Login ──
+    function telegramLogin() {
+        const botName = window.__TELEGRAM_BOT_NAME || 'UzBizness_bot';
+        const authUrl = `https://t.me/${botName}?start=login`;
+        window.open(authUrl, '_blank');
+        // Show info
+        const loginError = $('#loginError');
+        if (loginError) {
+            loginError.style.display = 'block';
+            loginError.style.background = 'rgba(59,130,246,0.1)';
+            loginError.style.color = '#3b82f6';
+            loginError.style.borderColor = 'rgba(59,130,246,0.2)';
+            loginError.textContent = "Telegram botga /start yuboring. Keyin sahifani yangilang.";
+        }
+    }
+
     // ── Logout ──
     function logout() {
         clearTokens();
@@ -413,6 +438,7 @@ const AuthModule = (() => {
         handleLogin,
         handleRegister,
         logout,
+        telegramLogin,
         toggleDropdown,
         getToken,
         getUser: () => currentUser,

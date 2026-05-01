@@ -114,6 +114,12 @@
             cursor: pointer; transition: var(--transition); font-family: 'Inter', sans-serif;
         }
         .refresh-btn:hover { background: var(--blue-100); }
+        
+        /* ── Tabs ── */
+        .admin-tabs { display: flex; gap: 8px; margin-bottom: 24px; border-bottom: 1px solid var(--gray-200); padding-bottom: 8px; }
+        .admin-tab-btn { background: transparent; border: none; font-family: 'Inter', sans-serif; font-size: 15px; font-weight: 600; color: var(--gray-500); padding: 8px 16px; border-radius: var(--radius-md); cursor: pointer; transition: var(--transition); }
+        .admin-tab-btn:hover { color: var(--gray-800); background: var(--gray-100); }
+        .admin-tab-btn.active { background: #fff; color: var(--blue-600); box-shadow: var(--shadow-sm); border: 1px solid var(--gray-200); }
 
         /* ── Table ── */
         table { width: 100%; border-collapse: collapse; }
@@ -319,102 +325,127 @@
 </header>
 
 <main class="admin-main">
+    <div class="admin-tabs" id="adminTabs">
+        <button class="admin-tab-btn active" data-target="tab-payments" onclick="switchAdminTab('tab-payments')">💳 To'lovlar</button>
+        <button class="admin-tab-btn" data-target="tab-stats" onclick="switchAdminTab('tab-stats'); loadAdminStats();">📊 Statistika</button>
+        <button class="admin-tab-btn" data-target="tab-users" onclick="switchAdminTab('tab-users'); loadAdminUsers();">👥 Foydalanuvchilar</button>
+    </div>
 
-    <!-- Stats -->
-    {% set total = payments | length %}
-    {% set reviewing = payments | selectattr('status', 'in', ['pending', 'reviewing']) | list | length %}
-    {% set approved = payments | selectattr('status', 'equalto', 'approved') | list | length %}
-    {% set rejected = payments | selectattr('status', 'equalto', 'rejected') | list | length %}
-    <div class="stats-grid">
-        <div class="stat-card stat-total">
-            <div class="stat-num">{{ total }}</div>
-            <div class="stat-label">Jami</div>
+    <!-- TABS CONTENT -->
+    
+    <!-- Tab: Payments -->
+    <div id="tab-payments" class="admin-tab-content">
+        <!-- Stats -->
+        {% set total = payments | length %}
+        {% set reviewing = payments | selectattr('status', 'in', ['pending', 'reviewing']) | list | length %}
+        {% set approved = payments | selectattr('status', 'equalto', 'approved') | list | length %}
+        {% set rejected = payments | selectattr('status', 'equalto', 'rejected') | list | length %}
+        <div class="stats-grid">
+            <div class="stat-card stat-total">
+                <div class="stat-num">{{ total }}</div>
+                <div class="stat-label">Jami</div>
+            </div>
+            <div class="stat-card stat-reviewing">
+                <div class="stat-num">{{ reviewing }}</div>
+                <div class="stat-label">Kutilmoqda</div>
+            </div>
+            <div class="stat-card stat-approved">
+                <div class="stat-num">{{ approved }}</div>
+                <div class="stat-label">Tasdiqlangan</div>
+            </div>
+            <div class="stat-card stat-rejected">
+                <div class="stat-num">{{ rejected }}</div>
+                <div class="stat-label">Rad etilgan</div>
+            </div>
         </div>
-        <div class="stat-card stat-reviewing">
-            <div class="stat-num">{{ reviewing }}</div>
-            <div class="stat-label">Kutilmoqda</div>
-        </div>
-        <div class="stat-card stat-approved">
-            <div class="stat-num">{{ approved }}</div>
-            <div class="stat-label">Tasdiqlangan</div>
-        </div>
-        <div class="stat-card stat-rejected">
-            <div class="stat-num">{{ rejected }}</div>
-            <div class="stat-label">Rad etilgan</div>
+
+        <!-- Table -->
+        <div class="table-card">
+            <div class="table-card-header">
+                <h2 class="table-card-title">To'lovlar Ro'yxati</h2>
+                <button class="refresh-btn" onclick="window.location.href = window.location.pathname + '?t=' + new Date().getTime()">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>
+                    Yangilash
+                </button>
+            </div>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Mijoz / Loyiha</th>
+                        <th>Summa</th>
+                        <th>Sana</th>
+                        <th>Holat</th>
+                        <th>Chek</th>
+                        <th>Amallar</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for p in payments %}
+                    <tr id="row-{{ p.id }}">
+                        <td>
+                            <div class="user-name">{{ p.user_name }}</div>
+                            <div class="user-project">{{ p.loyiha_nomi }}</div>
+                            <div style="font-family:monospace;font-size:11px;color:#94a3b8;margin-top:2px">{{ p.id }}</div>
+                        </td>
+                        <td><span class="amount">{{ "{:,}".format(p.amount).replace(",", " ") }} so'm</span></td>
+                        <td><span class="date">{{ p.created_at }}</span></td>
+                        <td>
+                            <span class="badge {{ p.status }}">
+                                {% if p.status == 'pending' %}Kutilmoqda
+                                {% elif p.status == 'reviewing' %}Tekshirilmoqda
+                                {% elif p.status == 'approved' %}Tasdiqlandi
+                                {% elif p.status == 'rejected' %}Rad etildi
+                                {% else %}{{ p.status }}{% endif %}
+                            </span>
+                        </td>
+                        <td>
+                            {% if p.receipt_file %}
+                                <a href="/receipts/{{ p.receipt_file }}" target="_blank" class="btn btn-view">📎 Ko'rish</a>
+                            {% else %}
+                                <span style="color:#94a3b8;font-size:12px;">—</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if p.status in ['pending', 'reviewing'] %}
+                            <div class="actions">
+                                <button class="btn btn-approve" onclick="openModal('approve','{{ p.id }}')">✓ Tasdiqlash</button>
+                                <button class="btn btn-reject" onclick="openModal('reject','{{ p.id }}')">✕ Rad</button>
+                            </div>
+                            {% else %}
+                            <span style="color:#94a3b8;font-size:12px;">{{ p.admin_note or '—' }}</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                    {% if not payments %}
+                    <tr>
+                        <td colspan="6">
+                            <div class="empty-state">
+                                <div class="empty-icon">📭</div>
+                                <p>Hozircha hech qanday to'lov mavjud emas</p>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endif %}
+                </tbody>
+            </table>
         </div>
     </div>
 
-    <!-- Table -->
-    <div class="table-card">
-        <div class="table-card-header">
-            <h2 class="table-card-title">To'lovlar Ro'yxati</h2>
-            <button class="refresh-btn" onclick="window.location.href = window.location.pathname + '?t=' + new Date().getTime()">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>
-                Yangilash
-            </button>
-        </div>
+    <!-- Tab: Stats -->
+    <div id="tab-stats" class="admin-tab-content" style="display:none;">
+        <h2 style="font-family:'Outfit';margin-bottom:16px;">Platforma Statistikasi</h2>
+        <div id="statsContainer">Yuklanmoqda...</div>
+    </div>
 
-        <table>
-            <thead>
-                <tr>
-                    <th>Mijoz / Loyiha</th>
-                    <th>Summa</th>
-                    <th>Sana</th>
-                    <th>Holat</th>
-                    <th>Chek</th>
-                    <th>Amallar</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for p in payments %}
-                <tr id="row-{{ p.id }}">
-                    <td>
-                        <div class="user-name">{{ p.user_name }}</div>
-                        <div class="user-project">{{ p.loyiha_nomi }}</div>
-                        <div style="font-family:monospace;font-size:11px;color:#94a3b8;margin-top:2px">{{ p.id }}</div>
-                    </td>
-                    <td><span class="amount">{{ "{:,}".format(p.amount).replace(",", " ") }} so'm</span></td>
-                    <td><span class="date">{{ p.created_at }}</span></td>
-                    <td>
-                        <span class="badge {{ p.status }}">
-                            {% if p.status == 'pending' %}Kutilmoqda
-                            {% elif p.status == 'reviewing' %}Tekshirilmoqda
-                            {% elif p.status == 'approved' %}Tasdiqlandi
-                            {% elif p.status == 'rejected' %}Rad etildi
-                            {% else %}{{ p.status }}{% endif %}
-                        </span>
-                    </td>
-                    <td>
-                        {% if p.receipt_file %}
-                            <a href="/receipts/{{ p.receipt_file }}" target="_blank" class="btn btn-view">📎 Ko'rish</a>
-                        {% else %}
-                            <span style="color:#94a3b8;font-size:12px;">—</span>
-                        {% endif %}
-                    </td>
-                    <td>
-                        {% if p.status in ['pending', 'reviewing'] %}
-                        <div class="actions">
-                            <button class="btn btn-approve" onclick="openModal('approve','{{ p.id }}')">✓ Tasdiqlash</button>
-                            <button class="btn btn-reject" onclick="openModal('reject','{{ p.id }}')">✕ Rad</button>
-                        </div>
-                        {% else %}
-                        <span style="color:#94a3b8;font-size:12px;">{{ p.admin_note or '—' }}</span>
-                        {% endif %}
-                    </td>
-                </tr>
-                {% endfor %}
-                {% if not payments %}
-                <tr>
-                    <td colspan="6">
-                        <div class="empty-state">
-                            <div class="empty-icon">📭</div>
-                            <p>Hozircha hech qanday to'lov mavjud emas</p>
-                        </div>
-                    </td>
-                </tr>
-                {% endif %}
-            </tbody>
-        </table>
+    <!-- Tab: Users -->
+    <div id="tab-users" class="admin-tab-content" style="display:none;">
+        <h2 style="font-family:'Outfit';margin-bottom:16px;">Foydalanuvchilar</h2>
+        <div class="table-card" style="padding:16px;">
+            <input type="text" id="usersSearch" placeholder="Qidirish (telefon, ism)..." style="padding:8px 12px; border:1px solid #ccc; border-radius:6px; margin-bottom:16px;" onchange="loadAdminUsers(1, this.value)">
+            <div id="usersContainer">Yuklanmoqda...</div>
+        </div>
     </div>
 </main>
 
@@ -507,8 +538,116 @@
         if (e.target === this) closeModal();
     });
 
-    // Auto-refresh every 30 seconds (cache buster)
-    setInterval(() => window.location.href = window.location.pathname + '?t=' + new Date().getTime(), 30000);
+    // Auto-refresh every 30 seconds (faqat payments tab ochiq bo'lsa)
+    setInterval(() => {
+        if(document.getElementById('tab-payments').style.display !== 'none') {
+            window.location.href = window.location.pathname + '?t=' + new Date().getTime();
+        }
+    }, 30000);
+
+    // --- Tabs Logic ---
+    function switchAdminTab(targetId) {
+        document.querySelectorAll('.admin-tab-content').forEach(el => el.style.display = 'none');
+        document.querySelectorAll('.admin-tab-btn').forEach(el => el.classList.remove('active'));
+        document.getElementById(targetId).style.display = 'block';
+        document.querySelector(`.admin-tab-btn[data-target="${targetId}"]`).classList.add('active');
+        sessionStorage.setItem('admin_active_tab', targetId);
+    }
+
+    document.addEventListener("DOMContentLoaded", function() {
+        const activeTab = sessionStorage.getItem('admin_active_tab');
+        if (activeTab) {
+            switchAdminTab(activeTab);
+            if(activeTab === 'tab-stats') loadAdminStats();
+            if(activeTab === 'tab-users') loadAdminUsers();
+        }
+    });
+
+    // --- API calls for Stats & Users ---
+    async function loadAdminStats() {
+        try {
+            const resp = await fetch('/api/admin/stats');
+            const data = await resp.json();
+            if(!data.success) throw new Error("Xatolik");
+            
+            const stats = data.stats;
+            document.getElementById('statsContainer').innerHTML = `
+                <div class="stats-grid" style="grid-template-columns: repeat(3, 1fr);">
+                    <div class="stat-card">
+                        <div class="stat-label">Jami Foydalanuvchilar</div>
+                        <div class="stat-num" style="color:#2563eb">${stats.users.total}</div>
+                        <div class="stat-label">Bugun: +${stats.users.today}</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Aktiv Obunalar</div>
+                        <div class="stat-num" style="color:#16a34a">${stats.subscriptions.active}</div>
+                        <div class="stat-label">Premium: ${stats.subscriptions.enterprise}</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Jami Daromad</div>
+                        <div class="stat-num" style="color:#0f172a">${stats.payments.total_revenue.toLocaleString()} so'm</div>
+                        <div class="stat-label">Bugun: ${stats.payments.today_revenue.toLocaleString()}</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">AI So'rovlar (Jami)</div>
+                        <div class="stat-num" style="color:#8b5cf6">${stats.ai.total_requests}</div>
+                        <div class="stat-label">Bugun: ${stats.ai.today_requests}</div>
+                    </div>
+                </div>
+            `;
+        } catch(e) {
+            document.getElementById('statsContainer').innerHTML = '<p style="color:red">Statistikani yuklashda xatolik</p>';
+        }
+    }
+
+    async function loadAdminUsers(page = 1, search = '') {
+        try {
+            const resp = await fetch(`/api/admin/users?page=${page}&search=${encodeURIComponent(search)}`);
+            const data = await resp.json();
+            if(!data.success) throw new Error("Xatolik");
+
+            let html = `
+                <table style="width:100%; border-collapse: collapse; font-size:13px;">
+                    <thead style="background:#f1f5f9;text-align:left;">
+                        <tr>
+                            <th style="padding:10px;">ID</th>
+                            <th style="padding:10px;">Ism</th>
+                            <th style="padding:10px;">Telefon</th>
+                            <th style="padding:10px;">Plan</th>
+                            <th style="padding:10px;">Ro'yxatdan o'tgan</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+            data.users.forEach(u => {
+                html += `
+                    <tr style="border-bottom:1px solid #e2e8f0;">
+                        <td style="padding:10px;color:#64748b;">${u.id.substring(0,8)}...</td>
+                        <td style="padding:10px;font-weight:600;">${u.first_name || 'Noma\'lum'}</td>
+                        <td style="padding:10px;">${u.phone}</td>
+                        <td style="padding:10px;">
+                            <span style="background:#dbeafe;color:#1d4ed8;padding:2px 8px;border-radius:12px;font-size:11px;font-weight:600;">
+                                ${u.plan_display || u.plan}
+                            </span>
+                        </td>
+                        <td style="padding:10px;">${new Date(u.created_at).toLocaleDateString()}</td>
+                    </tr>
+                `;
+            });
+            html += `</tbody></table>`;
+            
+            // Pagination controls
+            html += `<div style="margin-top:16px; display:flex; gap:8px;">
+                <button onclick="loadAdminUsers(${Math.max(1, page-1)})" ${page === 1 ? 'disabled' : ''} class="btn-cancel">Oldingi</button>
+                <span style="padding:10px;">Sahifa ${page} / ${data.total_pages}</span>
+                <button onclick="loadAdminUsers(${Math.min(data.total_pages, page+1)})" ${page === data.total_pages ? 'disabled' : ''} class="btn-cancel">Keyingi</button>
+            </div>`;
+
+            document.getElementById('usersContainer').innerHTML = html;
+        } catch(e) {
+            document.getElementById('usersContainer').innerHTML = '<p style="color:red">Foydalanuvchilarni yuklashda xatolik</p>';
+        }
+    }
 </script>
 
 {% endif %}

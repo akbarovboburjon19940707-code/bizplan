@@ -924,16 +924,26 @@ async function processPaymentAndDownload(format = 'zip') {
         formData.append('format', format);
         formData.append('ajax', 'true');
 
+        const reqHeaders = {};
+        if (typeof AuthModule !== 'undefined' && AuthModule.getToken()) {
+            reqHeaders['Authorization'] = 'Bearer ' + AuthModule.getToken();
+        }
+
         // Fetch (JSON qaytadi, fayl emas)
         const resp = await fetch('/save', {
             method: 'POST',
+            headers: reqHeaders,
             body: formData
         });
 
         const res = await resp.json();
 
         if (!resp.ok || !res.success) {
-            throw new Error(res.errors ? res.errors[0] : "Xatolik yuz berdi");
+            if (res.usage_limit && res.upgrade_needed && typeof SubModule !== 'undefined') {
+                SubModule.showPlans();
+                throw new Error("AI so'rovlar limitiga yetdingiz. Iltimos, obunani yangilang!");
+            }
+            throw new Error(res.errors ? res.errors[0] : (res.error || "Xatolik yuz berdi"));
         }
 
         // Muvaffaqiyatli - faylni serverdan URL orqali yuklash

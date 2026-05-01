@@ -25,6 +25,10 @@ CREATE TABLE users (
     last_name       VARCHAR(100),
     role            VARCHAR(20)     NOT NULL DEFAULT 'user',
 
+    -- Telegram
+    telegram_id     VARCHAR(50)     UNIQUE,
+    telegram_username VARCHAR(100),
+
     is_active       BOOLEAN         NOT NULL DEFAULT TRUE,
     is_verified     BOOLEAN         NOT NULL DEFAULT FALSE,
     last_login      DATETIME,
