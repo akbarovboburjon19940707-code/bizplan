@@ -12,7 +12,8 @@ from typing import Any, Dict
 logger = logging.getLogger(__name__)
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-LOGS_DIR = os.path.join(BASE_DIR, "payments_data", "click_logs")
+DATA_DIR = os.environ.get("DATA_DIR", BASE_DIR)
+LOGS_DIR = os.path.join(DATA_DIR, "payments_data", "click_logs")
 ERROR_LOG_FILE = os.path.join(LOGS_DIR, "errors.log")
 CALLBACK_LOG_FILE = os.path.join(LOGS_DIR, "callbacks.log")
 TRANSACTION_LOG_FILE = os.path.join(LOGS_DIR, "transactions.log")

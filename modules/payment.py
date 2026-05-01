@@ -38,7 +38,8 @@ ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "admin2026")
 
 # ── Paths ──────────────────────────────────────────────────────
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-PAYMENTS_DIR = os.path.join(BASE_DIR, "payments_data")
+DATA_DIR = os.environ.get("DATA_DIR", BASE_DIR)
+PAYMENTS_DIR = os.path.join(DATA_DIR, "payments_data")
 PAYMENTS_FILE = os.path.join(PAYMENTS_DIR, "payments.json")
 PAYMENTS_BACKUP = os.path.join(PAYMENTS_DIR, "payments_backup.json")
 RECEIPTS_DIR = os.path.join(PAYMENTS_DIR, "receipts")

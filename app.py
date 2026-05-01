@@ -53,6 +53,10 @@ app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY', 'breja-enterprise-2026-key')
 app.config['MAX_CONTENT_LENGTH'] = 50 * 1024 * 1024  # 50MB
 
+# ── DATABASE (SQLAlchemy + MySQL/PostgreSQL) ──
+from database import init_db
+init_db(app)
+
 csrf = CSRFProtect(app)
 logging.basicConfig(level=logging.INFO,
                     format='%(asctime)s [%(levelname)s] %(message)s')
@@ -339,7 +343,8 @@ def admin_logs():
         return redirect(url_for("admin_payments"))
         
     log_type = request.args.get("type", "callbacks")
-    log_path = os.path.join(BASE_DIR, "payments_data", "click_logs", f"{log_type}.log")
+    DATA_DIR = os.environ.get("DATA_DIR", BASE_DIR)
+    log_path = os.path.join(DATA_DIR, "payments_data", "click_logs", f"{log_type}.log")
     
     content = ""
     if os.path.exists(log_path):

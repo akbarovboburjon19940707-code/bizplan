@@ -11,3 +11,5 @@ static/uploads/
 tmp/
 node_modules/
 .DS_Store
+*.db
+test_database.py

@@ -20,8 +20,9 @@ _catalog_lock = threading.Lock()
 
 # ── Paths ──────────────────────────────────────────────────────
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-CATALOG_DIR = os.path.join(BASE_DIR, "payments_data", "catalog_files")
-CATALOG_DB_FILE = os.path.join(BASE_DIR, "payments_data", "catalog_products.json")
+DATA_DIR = os.environ.get("DATA_DIR", BASE_DIR)
+CATALOG_DIR = os.path.join(DATA_DIR, "payments_data", "catalog_files")
+CATALOG_DB_FILE = os.path.join(DATA_DIR, "payments_data", "catalog_products.json")
 
 # Papkalarni yaratish
 os.makedirs(CATALOG_DIR, exist_ok=True)
