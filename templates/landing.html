@@ -151,40 +151,141 @@
         </div>
     </section>
 
-    <!-- ========== CATALOG SECTION ========== -->
-    <section class="catalog-section" id="catalog" style="padding: 100px 0; background: var(--color-bg);">
+    <!-- ========== CATALOG MARKETPLACE ========== -->
+    <section class="catalog-section" id="catalog" style="padding: 100px 0; background: var(--gray-50);">
         <div class="container">
             <div class="section-header">
-                <span class="section-badge">🗂️ Katalog</span>
+                <span class="section-badge">🛒 Savdo Maydoni</span>
                 <h2 class="section-title">Tayyor Biznes Rejalar</h2>
-                <p class="section-desc">Biznes rejalarimizning birinchi betini ko'rishingiz va to'liq formatini PDF da o'qishingiz mumkin</p>
+                <p class="section-desc">Professional biznes rejalarni sotib oling va darhol PDF formatida yuklab oling</p>
             </div>
             
-            <style>
-                .catalog-card:hover { transform: translateY(-5px); box-shadow: 0 20px 40px rgba(0,0,0,0.08)!important; }
-                .catalog-card:hover .catalog-img-wrap img { transform: scale(1.05); }
-            </style>
-            
-            <div class="catalog-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 30px; margin-top: 40px;">
-                <!-- Catalog Item -->
-                <div class="catalog-card" style="background: white; border-radius: 16px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.05); transition: all 0.3s ease; display:flex; flex-direction:column; border: 1px solid #f1f5f9;">
-                    <div class="catalog-img-wrap" style="height: 380px; overflow: hidden; background: #e2e8f0; position: relative; border-bottom: 1px solid #f1f5f9;">
-                        <img src="/static/img/catalog-howo.png" alt="HOWO biznes reja" style="width: 100%; height: 100%; object-fit: cover; object-position: top; transition: transform 0.5s ease;">
-                        <div style="position: absolute; bottom:0; left:0; right:0; height:80px; background: linear-gradient(to top, rgba(0,0,0,0.4), transparent);"></div>
+            <div class="catalog-grid" id="catalogGrid">
+                <!-- Mahsulotlar API dan yuklanadi -->
+                <div class="catalog-empty">
+                    <div class="status-spinner" style="width:40px;height:40px;border:3px solid #e2e8f0;border-top-color:#3b82f6;border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto 16px;"></div>
+                    <p>Mahsulotlar yuklanmoqda...</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ═══════════ PURCHASE MODAL ═══════════ -->
+    <div class="catalog-modal-overlay" id="purchaseModalOverlay" onclick="closePurchaseModal(event)">
+        <div class="catalog-modal" onclick="event.stopPropagation()">
+            <button class="catalog-modal-close" onclick="closePurchaseModal()" aria-label="Yopish">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+
+            <!-- Step 1: Payment -->
+            <div id="purchaseStep1">
+                <div class="catalog-modal-header">
+                    <h3 id="purchaseTitle">Biznes rejani sotib olish</h3>
+                    <p id="purchaseProductName"></p>
+                    <div class="catalog-modal-price" id="purchasePrice">30 000 so'm</div>
+                </div>
+                <div class="catalog-modal-body">
+                    <div class="catalog-pay-tabs">
+                        <button class="catalog-pay-tab active" data-method="click" onclick="selectCatalogPayMethod('click')" id="catalogTabClick">
+                            <span class="cpt-name">⚡ Click</span>
+                            <span class="cpt-desc">Avtomatik</span>
+                        </button>
+                        <button class="catalog-pay-tab" data-method="payme" onclick="selectCatalogPayMethod('payme')" id="catalogTabPayme">
+                            <span class="cpt-name">💳 Payme</span>
+                            <span class="cpt-desc">Avtomatik</span>
+                        </button>
+                        <button class="catalog-pay-tab" data-method="card" onclick="selectCatalogPayMethod('card')" id="catalogTabCard">
+                            <span class="cpt-name">🏦 Karta</span>
+                            <span class="cpt-desc">O'tkazma</span>
+                        </button>
                     </div>
-                    <div class="catalog-info" style="padding: 24px; display:flex; flex-direction:column; flex:1;">
-                        <span style="display:inline-block; padding:6px 12px; background:rgba(37,99,235,0.1); color:#2563eb; font-size:12px; font-weight:600; border-radius:20px; margin-bottom:12px; align-self:flex-start;">Transport / Lizing</span>
-                        <h3 style="font-size: 1.15rem; color: #1e293b; margin-bottom: 20px; font-weight: 700; line-height:1.4;">HOWO avtomobil sotib olish biznes rejasi</h3>
-                        <div style="flex:1"></div>
-                        <a href="/static/uploads/HOWO avtomobil sotib olish biznes rejasi.pdf" target="_blank" class="btn btn-outline" style="width:100%; display:flex; align-items:center; justify-content:center; gap:8px;">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
-                            PDF hujjatni ochish
+
+                    <div class="catalog-pay-form">
+                        <label for="catalogUserName">Ismingiz <span style="color:#f87171">*</span></label>
+                        <input type="text" id="catalogUserName" placeholder="Masalan: Karimov Azizbek">
+                    </div>
+
+                    <!-- Card payment panel (hidden by default) -->
+                    <div class="catalog-card-panel" id="catalogCardPanel" style="display:none;">
+                        <div class="catalog-card-visual">
+                            <div class="catalog-card-number" id="catalogCardNumber">9860 0401 0203 1362</div>
+                            <div class="catalog-card-holder" id="catalogCardHolder">AKBAROV B</div>
+                        </div>
+                        <p style="font-size:13px;color:var(--gray-500);margin-bottom:12px;">Yuqoridagi kartaga to'lov summasini o'tkazing va chekni yuklang:</p>
+                        <div class="catalog-receipt-upload">
+                            <input type="file" id="catalogReceiptFile" accept=".jpg,.png,.jpeg,.pdf">
+                        </div>
+                    </div>
+
+                    <button class="catalog-pay-btn" id="catalogPayBtn" onclick="submitCatalogPayment()">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 2L11 13"/><path d="M22 2L15 22L11 13L2 9L22 2Z"/></svg>
+                        <span id="catalogPayBtnText">Click orqali to'lash</span>
+                    </button>
+                    <p style="text-align:center;font-size:12px;color:var(--gray-400);margin-top:12px;">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:4px;"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                        SSL himoyalangan xavfsiz to'lov
+                    </p>
+                </div>
+            </div>
+
+            <!-- Step 2: Status (polling) -->
+            <div id="purchaseStep2" style="display:none;">
+                <div class="catalog-modal-body">
+                    <div class="catalog-status-box">
+                        <div class="status-spinner"></div>
+                        <h4 style="font-family:'Outfit',sans-serif;font-size:18px;font-weight:700;color:var(--gray-900);margin-bottom:8px;" id="catalogStatusTitle">To'lov tekshirilmoqda...</h4>
+                        <p style="font-size:14px;color:var(--gray-500);" id="catalogStatusDesc">Iltimos, sahifani yopmang. Admin tekshirmoqda.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 3: Download -->
+            <div id="purchaseStep3" style="display:none;">
+                <div class="catalog-modal-body">
+                    <div class="catalog-download-success">
+                        <div class="success-icon">
+                            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+                        </div>
+                        <h4>To'lov tasdiqlandi! 🎉</h4>
+                        <p>Biznes rejangiz yuklab olishga tayyor</p>
+                        <a class="catalog-download-btn" id="catalogDownloadLink" href="#" target="_blank">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                            📥 PDF yuklab olish
                         </a>
                     </div>
                 </div>
             </div>
         </div>
-    </section>
+    </div>
+
+    <!-- ═══════════ PREVIEW MODAL ═══════════ -->
+    <div class="catalog-modal-overlay" id="previewModalOverlay" onclick="closePreviewModal(event)">
+        <div class="catalog-modal preview-modal" onclick="event.stopPropagation()">
+            <button class="catalog-modal-close" onclick="closePreviewModal()" aria-label="Yopish">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+            
+            <div class="preview-modal-header">
+                <h3 id="previewTitle">Namuna ko'rish</h3>
+                <span class="preview-pages-info" id="previewPagesInfo"></span>
+            </div>
+            
+            <div class="preview-modal-body" id="previewModalBody">
+                <div class="preview-loading">
+                    <div class="status-spinner"></div>
+                    <p>Sahifalar yuklanmoqda...</p>
+                </div>
+            </div>
+            
+            <div class="preview-modal-footer">
+                <p>To'liq hujjatni yuklab olish uchun sotib oling</p>
+                <button class="preview-buy-btn" id="previewBuyBtn" onclick="previewToBuy()">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+                    Sotib olish
+                </button>
+            </div>
+        </div>
+    </div>
 
 
     <!-- ========== KNOWLEDGE / ABOUT ========== -->

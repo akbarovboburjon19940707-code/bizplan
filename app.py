@@ -41,6 +41,10 @@ from modules.payment import (
 )
 from modules.payment_service.click import click_provider
 from modules.payment_logger import log_callback, log_error
+from modules.catalog_products import (
+    get_all_products, get_product_by_id, get_product_pdf_path,
+    increment_download_count, get_preview_page_numbers, CATALOG_DIR
+)
 
 # ============================================================
 # CONFIG
@@ -608,6 +612,281 @@ def payme_callback():
             },
             "id": data.get("id")
         })
+
+
+
+# ============================================================
+# ROUTES — TAYYOR BIZNES REJALAR KATALOGI (MARKETPLACE)
+# ============================================================
+
+@app.route("/api/catalog/products", methods=["GET"])
+@csrf.exempt
+def api_catalog_products():
+    """Barcha tayyor biznes reja mahsulotlarini qaytarish."""
+    try:
+        products = get_all_products(active_only=True)
+        return jsonify({"success": True, "products": products})
+    except Exception as e:
+        logger.error(f"Katalog xatolik: {e}", exc_info=True)
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+@app.route("/api/catalog/product/<product_id>", methods=["GET"])
+@csrf.exempt
+def api_catalog_product(product_id):
+    """Bitta mahsulot ma'lumotlarini qaytarish."""
+    product = get_product_by_id(product_id)
+    if not product:
+        return jsonify({"success": False, "error": "Mahsulot topilmadi"}), 404
+
+    # Xavfsiz ma'lumot (pdf_file yo'lini bermaydi)
+    safe_product = {
+        "id": product["id"],
+        "title": product["title"],
+        "category": product.get("category", "Umumiy"),
+        "description": product.get("description", ""),
+        "price": product.get("price", 30000),
+        "price_formatted": f"{product.get('price', 30000):,}".replace(",", " ") + " so'm",
+        "preview_image": product.get("preview_image", ""),
+        "download_count": product.get("download_count", 0),
+    }
+    return jsonify({"success": True, "product": safe_product})
+
+
+@app.route("/api/catalog/purchase", methods=["POST"])
+@csrf.exempt
+@rate_limit(max_req=10, window=60)
+def api_catalog_purchase():
+    """
+    Tayyor biznes reja sotib olish.
+    To'lov usuli: click, payme, yoki card.
+    """
+    try:
+        d = request.get_json() or {}
+        product_id = d.get("product_id")
+        payment_method = d.get("payment_method", "card")
+        user_name = d.get("user_name", "Noma'lum")
+
+        if not product_id:
+            return jsonify({"success": False, "error": "Mahsulot tanlanmadi"}), 400
+
+        # Mahsulotni tekshirish
+        product = get_product_by_id(product_id)
+        if not product or not product.get("is_active", True):
+            return jsonify({"success": False, "error": "Mahsulot topilmadi"}), 404
+
+        product_price = product.get("price", 30000)
+        product_title = product.get("title", "Tayyor biznes reja")
+
+        base_url = request.host_url.rstrip("/")
+
+        if payment_method == "click":
+            from modules.payment import create_click_payment
+            payment = create_click_payment(
+                user_name=user_name,
+                loyiha_nomi=product_title,
+                product_id=product_id,
+                custom_amount=product_price
+            )
+            order_id = payment["order_id"]
+            return_url = f"{base_url}/click/return?order_id={order_id}"
+
+            payment_url = click_provider.create_payment_url(
+                order_id=order_id,
+                amount=float(product_price),
+                return_url=return_url
+            )
+
+            return jsonify({
+                "success": True,
+                "payment_id": payment["id"],
+                "order_id": order_id,
+                "payment_url": payment_url,
+                "amount": product_price,
+            })
+
+        elif payment_method == "payme":
+            from modules.payment import create_payme_payment
+            payment = create_payme_payment(
+                user_name=user_name,
+                loyiha_nomi=product_title,
+                product_id=product_id,
+                custom_amount=product_price
+            )
+            order_id = payment["order_id"]
+            return_url = base64.b64encode(
+                f"{base_url}/?catalog_payment={payment['id']}".encode('utf-8')
+            ).decode('utf-8')
+
+            from modules.payment_service.payme import payme_provider
+            payment_url = payme_provider.create_payment_url(
+                order_id=order_id,
+                amount=float(product_price),
+                return_url=return_url
+            )
+
+            return jsonify({
+                "success": True,
+                "payment_id": payment["id"],
+                "order_id": order_id,
+                "payment_url": payment_url,
+                "amount": product_price,
+            })
+
+        else:  # card (manual)
+            payment = create_payment(
+                user_name=user_name,
+                loyiha_nomi=product_title,
+                product_id=product_id,
+                custom_amount=product_price
+            )
+            return jsonify({
+                "success": True,
+                "payment_id": payment["id"],
+                "order_id": payment["order_id"],
+                "amount": product_price,
+                "card_info": get_payment_card_info(),
+            })
+
+    except Exception as e:
+        logger.error(f"Katalog xarid xatolik: {e}", exc_info=True)
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+@app.route("/api/catalog/download/<payment_id>", methods=["GET"])
+def api_catalog_download(payment_id):
+    """
+    To'lovdan keyin PDF yuklab olish.
+    Faqat payment_status=success yoki status=approved bo'lgandagina ruxsat.
+    """
+    payment = get_payment(payment_id)
+    if not payment:
+        return jsonify({"success": False, "error": "To'lov topilmadi"}), 404
+
+    # To'lov holatini tekshirish
+    provider = payment.get("payment_provider", "card")
+    is_approved = False
+    if provider in ("click", "payme"):
+        is_approved = payment.get("payment_status") == "success"
+    else:
+        is_approved = payment.get("status") == "approved"
+
+    if not is_approved:
+        return jsonify({
+            "success": False,
+            "error": "To'lov tasdiqlanmagan. PDF yuklab olish mumkin emas."
+        }), 403
+
+    # Mahsulot PDF ni topish
+    product_id = payment.get("product_id")
+    if not product_id:
+        return jsonify({"success": False, "error": "Mahsulot ID topilmadi"}), 400
+
+    pdf_path = get_product_pdf_path(product_id)
+    if not pdf_path:
+        return jsonify({"success": False, "error": "PDF fayl topilmadi"}), 404
+
+    # Download hisoblagichni oshirish
+    increment_download_count(product_id)
+
+    product = get_product_by_id(product_id)
+    download_name = product.get("title", "biznes_reja") + ".pdf"
+
+    logger.info(f"[CATALOG] PDF yuklab olish: product={product_id}, payment={payment_id}")
+    return send_file(pdf_path, as_attachment=True, download_name=download_name)
+
+
+@app.route("/api/catalog/preview/<product_id>", methods=["GET"])
+@csrf.exempt
+def api_catalog_preview(product_id):
+    """
+    PDF ning preview sahifalarini rasm sifatida qaytarish.
+    Boshi, o'rtasi va oxiridan 5-6 sahifa.
+    """
+    try:
+        product = get_product_by_id(product_id)
+        if not product:
+            return jsonify({"success": False, "error": "Mahsulot topilmadi"}), 404
+
+        pdf_path = get_product_pdf_path(product_id)
+        if not pdf_path:
+            return jsonify({"success": False, "error": "PDF topilmadi"}), 404
+
+        # PyMuPDF (fitz) bilan PDF sahifalarini rasm qilish
+        try:
+            import fitz  # PyMuPDF
+        except ImportError:
+            # fitz yo'q bo'lsa preview rasm qaytarish
+            return jsonify({
+                "success": True,
+                "product_id": product_id,
+                "preview_type": "image_only",
+                "preview_image": product.get("preview_image", ""),
+                "pages": [],
+                "total_pages": 0,
+                "message": "PDF preview uchun PyMuPDF kerak"
+            })
+
+        doc = fitz.open(pdf_path)
+        total_pages = len(doc)
+
+        # Preview sahifa raqamlarini hisoblash
+        page_numbers = get_preview_page_numbers(total_pages, count=6)
+
+        # Sahifalarni rasm qilish
+        preview_dir = os.path.join(CATALOG_DIR, "previews", product_id)
+        os.makedirs(preview_dir, exist_ok=True)
+
+        pages_data = []
+        for page_num in page_numbers:
+            idx = page_num - 1  # 0-indexed
+            if idx < 0 or idx >= total_pages:
+                continue
+
+            img_filename = f"page_{page_num}.png"
+            img_path = os.path.join(preview_dir, img_filename)
+
+            # Cache: agar rasm allaqachon bor bo'lsa, qayta yaratmaydi
+            if not os.path.exists(img_path):
+                page = doc.load_page(idx)
+                # 150 DPI — yetarli sifat preview uchun
+                pix = page.get_pixmap(dpi=150)
+                pix.save(img_path)
+
+            pages_data.append({
+                "page_number": page_num,
+                "image_url": f"/api/catalog/preview-image/{product_id}/{img_filename}"
+            })
+
+        doc.close()
+
+        return jsonify({
+            "success": True,
+            "product_id": product_id,
+            "preview_type": "pages",
+            "total_pages": total_pages,
+            "pages": pages_data
+        })
+
+    except Exception as e:
+        logger.error(f"Preview xatolik: {e}", exc_info=True)
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+@app.route("/api/catalog/preview-image/<product_id>/<filename>", methods=["GET"])
+@csrf.exempt
+def api_catalog_preview_image(product_id, filename):
+    """Preview rasm fayllarini qaytarish."""
+    if ".." in product_id or ".." in filename:
+        return "Xavfsizlik xatosi", 400
+
+    preview_dir = os.path.join(CATALOG_DIR, "previews", product_id)
+    img_path = os.path.join(preview_dir, filename)
+
+    if not os.path.exists(img_path):
+        return "Rasm topilmadi", 404
+
+    return send_file(img_path, mimetype="image/png")
 
 
 # ============================================================

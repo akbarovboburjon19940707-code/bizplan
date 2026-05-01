@@ -164,7 +164,8 @@ def _next_prepare_id() -> int:
 # CARD — manual to'lov (mavjud tizim)
 # ============================================================
 
-def create_payment(user_name: str, loyiha_nomi: str = "") -> dict:
+def create_payment(user_name: str, loyiha_nomi: str = "",
+                   product_id: str = None, custom_amount: int = None) -> dict:
     """Yangi to'lov yaratish (karta orqali)."""
     with _payments_lock:
         payments = _load_payments()
@@ -175,7 +176,8 @@ def create_payment(user_name: str, loyiha_nomi: str = "") -> dict:
             "order_id": _generate_order_id(),
             "user_name": user_name,
             "loyiha_nomi": loyiha_nomi,
-            "amount": PLAN_PRICE,
+            "amount": custom_amount or PLAN_PRICE,
+            "product_id": product_id,
             "payment_provider": "card",
             "payment_status": "pending",
             "status": "pending",
@@ -369,7 +371,8 @@ def verify_admin_password(password: str) -> bool:
 # ============================================================
 
 def create_click_payment(user_name: str, loyiha_nomi: str = "",
-                         product_id: str = None) -> dict:
+                         product_id: str = None,
+                         custom_amount: int = None) -> dict:
     """Click to'lov uchun yangi buyurtma yaratish."""
     with _payments_lock:
         payments = _load_payments()
@@ -382,7 +385,7 @@ def create_click_payment(user_name: str, loyiha_nomi: str = "",
             "user_name": user_name,
             "loyiha_nomi": loyiha_nomi,
             "product_id": product_id,
-            "amount": PLAN_PRICE,
+            "amount": custom_amount or PLAN_PRICE,
             "payment_provider": "click",
             "payment_status": "pending",
             "status": "pending",
@@ -501,7 +504,8 @@ def get_payment_by_click_status(order_id: str) -> dict:
 # ============================================================
 
 def create_payme_payment(user_name: str, loyiha_nomi: str = "",
-                         product_id: str = None) -> dict:
+                         product_id: str = None,
+                         custom_amount: int = None) -> dict:
     """Payme to'lov uchun yangi buyurtma yaratish."""
     with _payments_lock:
         payments = _load_payments()
@@ -514,7 +518,7 @@ def create_payme_payment(user_name: str, loyiha_nomi: str = "",
             "user_name": user_name,
             "loyiha_nomi": loyiha_nomi,
             "product_id": product_id,
-            "amount": PLAN_PRICE,
+            "amount": custom_amount or PLAN_PRICE,
             "payment_provider": "payme",
             "payment_status": "pending",
             "status": "pending",
