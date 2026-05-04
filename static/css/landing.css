@@ -1603,7 +1603,109 @@ a {
 }
 
 
-/* ── Catalog Modal (Purchase + Preview) ── */
+/* ── Product Detail Modal (Unified Purchase + Preview) ── */
+.product-detail-modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.6);
+    backdrop-filter: blur(8px);
+    z-index: 10000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+}
+.product-detail-modal-overlay.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+.product-detail-modal {
+    background: white;
+    border-radius: var(--radius-2xl);
+    width: 100%;
+    max-width: 900px;
+    max-height: 90vh;
+    box-shadow: var(--shadow-2xl);
+    transform: translateY(30px) scale(0.95);
+    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+.product-detail-modal-overlay.active .product-detail-modal {
+    transform: translateY(0) scale(1);
+}
+
+.product-detail-modal-close {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: var(--gray-100);
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--gray-600);
+    transition: var(--transition);
+    z-index: 10;
+}
+.product-detail-modal-close:hover {
+    background: var(--gray-200);
+    color: var(--gray-900);
+}
+
+.product-detail-modal-content {
+    display: flex;
+    flex-direction: row;
+    height: 100%;
+    max-height: 90vh;
+}
+
+.product-detail-preview {
+    flex: 1;
+    background: var(--gray-50);
+    padding: 32px;
+    overflow-y: auto;
+    border-right: 1px solid var(--gray-200);
+    display: flex;
+    flex-direction: column;
+}
+
+.product-detail-payment {
+    width: 400px;
+    flex-shrink: 0;
+    background: white;
+    padding: 32px;
+    overflow-y: auto;
+}
+.product-detail-payment-inner {
+    max-width: 100%;
+}
+
+@media (max-width: 900px) {
+    .product-detail-modal-content {
+        flex-direction: column;
+    }
+    .product-detail-payment {
+        width: 100%;
+        border-top: 1px solid var(--gray-200);
+    }
+    .product-detail-preview {
+        border-right: none;
+        max-height: 40vh;
+    }
+}
+
+/* ── Catalog Modal (Legacy) ── */
 .catalog-modal-overlay {
     position: fixed;
     inset: 0;
