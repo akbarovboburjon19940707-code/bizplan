@@ -57,6 +57,21 @@ app.config['MAX_CONTENT_LENGTH'] = 50 * 1024 * 1024  # 50MB
 from database import init_db, db
 init_db(app)
 
+# ── DATABASE FIX: product_id FK ni olib tashlash (bir martalik) ──
+with app.app_context():
+    try:
+        from sqlalchemy import text as _text, inspect as _inspect
+        _db_url = str(db.engine.url)
+        if 'postgresql' in _db_url or 'postgres' in _db_url:
+            db.session.execute(_text(
+                'ALTER TABLE payments DROP CONSTRAINT IF EXISTS payments_product_id_fkey'
+            ))
+            db.session.commit()
+            logging.getLogger(__name__).info("[DB FIX] payments_product_id_fkey olib tashlandi (agar mavjud bo'lsa).")
+    except Exception as _e:
+        db.session.rollback()
+        logging.getLogger(__name__).warning(f"[DB FIX] FK olib tashlashda xatolik (ehtimol allaqachon yo'q): {_e}")
+
 # ── ADMIN SEED (Birinchi admin yaratish — agar yo'q bo'lsa) ──
 from modules.admin_seed import seed_admin
 seed_admin(app)
