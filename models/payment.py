@@ -41,7 +41,7 @@ class Payment(db.Model):
 
     # ── Nima uchun to'layapti ──
     amount = db.Column(db.Numeric(12, 2), nullable=False)
-    product_id = db.Column(db.String(50), db.ForeignKey('business_plans.id', ondelete='SET NULL'), nullable=True)
+    product_id = db.Column(db.String(50), nullable=True)  # Katalog JSON dan — FK shart emas
     project_name = db.Column(db.String(255), nullable=True)  # Generatsiya qilinadigan loyiha nomi
 
     # ── To'lov holati ──
@@ -75,7 +75,7 @@ class Payment(db.Model):
 
     # ── Relationships ──
     user = db.relationship('User', back_populates='payments')
-    product = db.relationship('BusinessPlan', backref='purchases', lazy='select')
+    # product_id — JSON kataloggidan tekshiriladi (catalog_products.py)
     transactions = db.relationship('Transaction', back_populates='payment', lazy='dynamic',
                                    order_by='Transaction.created_at.desc()')
     callbacks = db.relationship('PaymentCallback', back_populates='payment', lazy='dynamic',

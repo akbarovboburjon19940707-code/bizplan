@@ -111,17 +111,40 @@ def get_all_products(active_only: bool = True) -> List[dict]:
         if active_only and not product.get("is_active", True):
             continue
 
+        # File ma'lumotlarini aniqlash
+        file_name = product.get("pdf_file", "")
+        file_extension = ".pdf"
+        if file_name and "." in file_name:
+            file_extension = "." + file_name.rsplit(".", 1)[-1].lower()
+        
+        # File hajmini olish (mock yoki haqiqiy)
+        file_size_formatted = "3.44 MB" # Default
+        pdf_path = get_product_pdf_path(product["id"])
+        if pdf_path and os.path.exists(pdf_path):
+            size_bytes = os.path.getsize(pdf_path)
+            if size_bytes < 1024 * 1024:
+                file_size_formatted = f"{size_bytes / 1024:.2f} KB"
+            else:
+                file_size_formatted = f"{size_bytes / (1024 * 1024):.2f} MB"
+
+        # Ko'rishlar soni (mock, chunki hozircha DB da yo'q)
+        # Aslida ID dan qandaydir stabil son generatsiya qilamiz
+        views_count = product.get("views_count", (len(product["id"]) * 3) % 50 + 5)
+
         # Frontend uchun xavfsiz ma'lumot (pdf_file nomini bermaydi)
         products.append({
             "id": product["id"],
             "title": product["title"],
-            "category": product.get("category", "Umumiy"),
+            "category": product.get("category", "Fayllar"),
             "description": product.get("description", ""),
             "price": product.get("price", 30000),
             "price_formatted": f"{product.get('price', 30000):,}".replace(",", " ") + " so'm",
             "preview_image": product.get("preview_image", ""),
             "download_count": product.get("download_count", 0),
             "is_active": product.get("is_active", True),
+            "file_extension": file_extension,
+            "file_size_formatted": file_size_formatted,
+            "views_count": views_count
         })
 
     return products

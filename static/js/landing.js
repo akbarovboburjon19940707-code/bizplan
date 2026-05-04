@@ -235,15 +235,15 @@ let _pollTimer = null;
  * API dan mahsulotlarni yuklash va grid ga joylashtirish
  */
 async function loadCatalogProducts() {
-    const grid = document.getElementById('catalogGrid');
-    if (!grid) return;
+    const container = document.getElementById('catalogContainer');
+    if (!container) return;
 
     try {
         const resp = await fetch('/api/catalog/products');
         const data = await resp.json();
 
         if (!data.success || !data.products || data.products.length === 0) {
-            grid.innerHTML = `
+            container.innerHTML = `
                 <div class="catalog-empty">
                     <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
                     <p>Hozircha tayyor biznes rejalar mavjud emas</p>
@@ -252,44 +252,70 @@ async function loadCatalogProducts() {
         }
 
         _catalogProducts = data.products;
-        grid.innerHTML = '';
+        container.innerHTML = '';
 
-        data.products.forEach(product => {
-            const card = document.createElement('div');
-            card.className = 'catalog-card';
-            card.innerHTML = `
-                <div class="catalog-img-wrap">
-                    <img src="${product.preview_image || '/static/img/placeholder.png'}" 
-                         alt="${product.title}" loading="lazy">
-                    <span class="catalog-price-badge">${product.price_formatted}</span>
-                </div>
-                <div class="catalog-info">
-                    <span class="catalog-category">${product.category}</span>
-                    <h3 class="catalog-title">${product.title}</h3>
-                    <p class="catalog-desc">${product.description || ''}</p>
-                    <div class="catalog-stats">
-                        <span class="catalog-stat-item">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                            ${product.download_count || 0} yuklab olindi
-                        </span>
-                    </div>
-                    <div class="catalog-actions">
-                        <button class="catalog-btn-preview" onclick="openPreviewModal('${product.id}')">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-                            Namuna
-                        </button>
-                        <button class="catalog-btn-buy" onclick="openPurchaseModal('${product.id}')">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
-                            Sotib olish
-                        </button>
-                    </div>
-                </div>`;
-            grid.appendChild(card);
+        // Guruhlash
+        const grouped = {};
+        _catalogProducts.forEach(p => {
+            const cat = p.category || 'Boshqa';
+            if (!grouped[cat]) grouped[cat] = [];
+            grouped[cat].push(p);
         });
+
+        // Har bir kategoriya uchun grid yaratish
+        for (const [category, products] of Object.entries(grouped)) {
+            const catSection = document.createElement('div');
+            catSection.className = 'catalog-category-section';
+            
+            const catTitle = document.createElement('h3');
+            catTitle.className = 'catalog-category-title';
+            catTitle.innerHTML = `${category} <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>`;
+            
+            const grid = document.createElement('div');
+            grid.className = 'catalog-grid-new';
+
+            products.forEach(product => {
+                const card = document.createElement('div');
+                card.className = 'catalog-item-card';
+                card.onclick = () => openProductDetailModal(product.id);
+                
+                const ext = product.file_extension || '.pdf';
+                const size = product.file_size_formatted || '3.44 MB';
+                const views = product.views_count || 6;
+                const downloads = product.download_count || 0;
+                
+                card.innerHTML = `
+                    <div class="ci-header">
+                        <span class="ci-badge">${ext}</span>
+                        <div class="ci-actions">
+                            <button class="ci-btn-icon" onclick="event.stopPropagation();"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></button>
+                            <button class="ci-btn-icon" onclick="event.stopPropagation(); openProductDetailModal('${product.id}');"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg></button>
+                        </div>
+                    </div>
+                    <div class="ci-image">
+                        <img src="${product.preview_image || '/static/img/placeholder.png'}" alt="${product.title}" loading="lazy">
+                    </div>
+                    <div class="ci-content">
+                        <h4 class="ci-title" title="${product.title}">${product.title}</h4>
+                        <div class="ci-price">${product.price_formatted}</div>
+                    </div>
+                    <div class="ci-footer">
+                        <div class="ci-stat"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg> ${size}</div>
+                        <div class="ci-stat" title="Yuklab olishlar"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> ${downloads}</div>
+                        <div class="ci-stat" title="Ko'rishlar"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg> ${views}</div>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+            
+            catSection.appendChild(catTitle);
+            catSection.appendChild(grid);
+            container.appendChild(catSection);
+        }
 
     } catch (err) {
         console.error('Katalog yuklanmadi:', err);
-        grid.innerHTML = `
+        container.innerHTML = `
             <div class="catalog-empty">
                 <p>Katalogni yuklashda xatolik yuz berdi</p>
             </div>`;
@@ -298,39 +324,104 @@ async function loadCatalogProducts() {
 
 
 /**
- * Sotib olish modalini ochish
+ * Yagona Product Detail Modalini ochish
  */
-function openPurchaseModal(productId) {
+function openProductDetailModal(productId) {
     _currentProductId = productId;
     const product = _catalogProducts.find(p => p.id === productId);
     if (!product) return;
 
-    // Reset modal
+    // Reset payment form steps
     document.getElementById('purchaseStep1').style.display = '';
     document.getElementById('purchaseStep2').style.display = 'none';
     document.getElementById('purchaseStep3').style.display = 'none';
 
-    // Fill info
+    // Set product info in payment column
     document.getElementById('purchaseProductName').textContent = product.title;
     document.getElementById('purchasePrice').textContent = product.price_formatted;
 
-    // Reset form
+    // Reset form inputs
     document.getElementById('catalogUserName').value = '';
     document.getElementById('catalogCardPanel').style.display = 'none';
     selectCatalogPayMethod('click');
 
-    // Show modal
-    document.getElementById('purchaseModalOverlay').classList.add('active');
+    // Reset preview column
+    document.getElementById('previewTitle').textContent = product.title;
+    document.getElementById('previewPagesInfo').textContent = '';
+    document.getElementById('previewModalBody').innerHTML = `
+        <div class="preview-loading">
+            <div class="status-spinner"></div>
+            <p>Sahifalar yuklanmoqda...</p>
+        </div>`;
+
+    // Show modal overlay
+    document.getElementById('productDetailModalOverlay').classList.add('active');
     document.body.style.overflow = 'hidden';
+
+    // API dan preview sahifalarini yuklash
+    loadPreviewPages(productId);
 }
 
-function closePurchaseModal(event) {
+function closeProductDetailModal(event) {
     if (event && event.target !== event.currentTarget) return;
-    document.getElementById('purchaseModalOverlay').classList.remove('active');
+    document.getElementById('productDetailModalOverlay').classList.remove('active');
     document.body.style.overflow = '';
     if (_pollTimer) clearInterval(_pollTimer);
 }
 
+async function loadPreviewPages(productId) {
+    const body = document.getElementById('previewModalBody');
+
+    try {
+        const resp = await fetch(`/api/catalog/preview/${productId}`);
+        const data = await resp.json();
+
+        if (!data.success) {
+            body.innerHTML = `<div class="preview-loading"><p>Preview yuklanmadi: ${data.error || 'Noma\'lum xatolik'}</p></div>`;
+            return;
+        }
+
+        if (data.preview_type === 'image_only' || data.pages.length === 0) {
+            // Faqat rasm ko'rsatish
+            const product = _catalogProducts.find(p => p.id === productId);
+            body.innerHTML = `
+                <div class="preview-page-item">
+                    <img class="preview-page-img" src="${product?.preview_image || ''}" alt="Preview">
+                    <span class="preview-page-label">Muqova</span>
+                </div>
+                <div class="preview-loading" style="padding:30px;">
+                    <p>Hujjatning to'liq ko'rinishini sotib olganingizdan keyin ko'rishingiz mumkin.</p>
+                </div>`;
+            return;
+        }
+
+        document.getElementById('previewPagesInfo').textContent =
+            `${data.pages.length} ta sahifa / jami ${data.total_pages} sahifa`;
+
+        let html = '';
+        let prevPageNum = 0;
+
+        data.pages.forEach((page, index) => {
+            if (prevPageNum > 0 && page.page_number - prevPageNum > 1) {
+                html += `<div class="preview-page-separator">• • •</div>`;
+            }
+
+            html += `
+                <div class="preview-page-item">
+                    <img class="preview-page-img" src="${page.image_url}" alt="Sahifa ${page.page_number}" loading="lazy">
+                    <span class="preview-page-label">${page.page_number}-sahifa</span>
+                </div>`;
+
+            prevPageNum = page.page_number;
+        });
+
+        body.innerHTML = html;
+
+    } catch (err) {
+        console.error('Preview xatolik:', err);
+        body.innerHTML = `<div class="preview-loading"><p>Preview yuklanmadi</p></div>`;
+    }
+}
 
 /**
  * To'lov usulini tanlash
@@ -356,7 +447,6 @@ function selectCatalogPayMethod(method) {
     document.getElementById('catalogPayBtnText').textContent = btnTexts[method] || 'To\'lash';
 }
 
-
 /**
  * To'lovni yuborish
  */
@@ -374,7 +464,6 @@ async function submitCatalogPayment() {
 
     try {
         if (_currentPayMethod === 'card') {
-            // Card: receipt yuklash kerak
             const receiptFile = document.getElementById('catalogReceiptFile').files[0];
             if (!receiptFile) {
                 alert('Iltimos, to\'lov chekini yuklang');
@@ -432,16 +521,13 @@ async function submitCatalogPayment() {
             _currentPaymentId = data.payment_id;
 
             if (data.payment_url) {
-                // To'lov sahifasiga yo'naltirish
                 showPurchaseStep(2);
                 document.getElementById('catalogStatusTitle').textContent =
                     _currentPayMethod === 'click' ? 'Click sahifasiga yo\'naltirilmoqda...' : 'Payme sahifasiga yo\'naltirilmoqda...';
                 document.getElementById('catalogStatusDesc').textContent = 'To\'lovdan keyin avtomatik tasdiqlanadi.';
 
-                // Polling boshlash
                 startCatalogPolling(_currentPaymentId);
 
-                // Redirect
                 setTimeout(() => {
                     window.open(data.payment_url, '_blank');
                 }, 500);
@@ -453,10 +539,9 @@ async function submitCatalogPayment() {
         alert('Xatolik: ' + err.message);
     } finally {
         btn.disabled = false;
-        selectCatalogPayMethod(_currentPayMethod); // Reset button text
+        selectCatalogPayMethod(_currentPayMethod);
     }
 }
-
 
 /**
  * To'lov holatini polling qilish
@@ -483,7 +568,6 @@ function startCatalogPolling(paymentId) {
             if (data.success) {
                 if (data.status === 'approved') {
                     clearInterval(_pollTimer);
-                    // Download bosqichiga o'tish
                     showPurchaseStep(3);
                     document.getElementById('catalogDownloadLink').href =
                         `/api/catalog/download/${paymentId}`;
@@ -500,106 +584,8 @@ function startCatalogPolling(paymentId) {
     }, 1000);
 }
 
-
 function showPurchaseStep(step) {
     document.getElementById('purchaseStep1').style.display = step === 1 ? '' : 'none';
     document.getElementById('purchaseStep2').style.display = step === 2 ? '' : 'none';
     document.getElementById('purchaseStep3').style.display = step === 3 ? '' : 'none';
-}
-
-
-/**
- * Preview modal
- */
-function openPreviewModal(productId) {
-    _currentProductId = productId;
-    const product = _catalogProducts.find(p => p.id === productId);
-    if (!product) return;
-
-    document.getElementById('previewTitle').textContent = product.title;
-    document.getElementById('previewPagesInfo').textContent = '';
-    document.getElementById('previewModalBody').innerHTML = `
-        <div class="preview-loading">
-            <div class="status-spinner"></div>
-            <p>Sahifalar yuklanmoqda...</p>
-        </div>`;
-
-    document.getElementById('previewModalOverlay').classList.add('active');
-    document.body.style.overflow = 'hidden';
-
-    // API dan preview sahifalarini yuklash
-    loadPreviewPages(productId);
-}
-
-function closePreviewModal(event) {
-    if (event && event.target !== event.currentTarget) return;
-    document.getElementById('previewModalOverlay').classList.remove('active');
-    document.body.style.overflow = '';
-}
-
-async function loadPreviewPages(productId) {
-    const body = document.getElementById('previewModalBody');
-
-    try {
-        const resp = await fetch(`/api/catalog/preview/${productId}`);
-        const data = await resp.json();
-
-        if (!data.success) {
-            body.innerHTML = `<div class="preview-loading"><p>Preview yuklanmadi: ${data.error || 'Noma\'lum xatolik'}</p></div>`;
-            return;
-        }
-
-        if (data.preview_type === 'image_only' || data.pages.length === 0) {
-            // Faqat rasm ko'rsatish
-            const product = _catalogProducts.find(p => p.id === productId);
-            body.innerHTML = `
-                <div class="preview-page-item">
-                    <img class="preview-page-img" src="${product?.preview_image || ''}" alt="Preview">
-                    <span class="preview-page-label">Muqova</span>
-                </div>
-                <div class="preview-loading" style="padding:30px;">
-                    <p>PDF preview uchun PyMuPDF kutubxonasi kerak.<br>
-                    <code style="font-size:12px;background:#f1f5f9;padding:4px 8px;border-radius:6px;">pip install PyMuPDF</code></p>
-                </div>`;
-            return;
-        }
-
-        document.getElementById('previewPagesInfo').textContent =
-            `${data.pages.length} ta sahifa / jami ${data.total_pages} sahifa`;
-
-        let html = '';
-        let prevPageNum = 0;
-
-        data.pages.forEach((page, index) => {
-            // Separator (agar sahifalar orasida bo'sh joy bo'lsa)
-            if (prevPageNum > 0 && page.page_number - prevPageNum > 1) {
-                html += `<div class="preview-page-separator">• • •</div>`;
-            }
-
-            html += `
-                <div class="preview-page-item">
-                    <img class="preview-page-img" src="${page.image_url}" alt="Sahifa ${page.page_number}" loading="lazy">
-                    <span class="preview-page-label">${page.page_number}-sahifa</span>
-                </div>`;
-
-            prevPageNum = page.page_number;
-        });
-
-        body.innerHTML = html;
-
-    } catch (err) {
-        console.error('Preview xatolik:', err);
-        body.innerHTML = `<div class="preview-loading"><p>Preview yuklanmadi</p></div>`;
-    }
-}
-
-
-/**
- * Preview dan sotib olishga o'tish
- */
-function previewToBuy() {
-    closePreviewModal();
-    setTimeout(() => {
-        openPurchaseModal(_currentProductId);
-    }, 300);
 }
