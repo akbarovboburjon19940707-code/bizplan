@@ -22,8 +22,24 @@ def upgrade():
     Sabab: katalog mahsulotlari JSON faylda (catalog_products.json) saqlanadi,
     business_plans jadvalida emas. FK shart emas va xatolik keltiradi.
     """
-    with op.batch_alter_table('payments', schema=None) as batch_op:
-        batch_op.drop_constraint('payments_product_id_fkey', type_='foreignkey')
+    conn = op.get_bind()
+    inspector = sa.inspect(conn)
+    
+    # FK bor-yo'qligini tekshirish
+    fks = inspector.get_foreign_keys('payments')
+    fk_exists = False
+    fk_name = 'payments_product_id_fkey'
+    
+    for fk in fks:
+        if fk['name'] == fk_name or ('product_id' in fk.get('constrained_columns', [])):
+            fk_exists = True
+            if fk['name']:
+                fk_name = fk['name']
+            break
+            
+    if fk_exists:
+        with op.batch_alter_table('payments', schema=None) as batch_op:
+            batch_op.drop_constraint(fk_name, type_='foreignkey')
 
 
 def downgrade():
