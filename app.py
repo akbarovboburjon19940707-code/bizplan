@@ -1582,7 +1582,7 @@ def api_analysis():
 def api_preview():
     """Biznes reja preview generatsiya qilish."""
     try:
-        d = request.get_json() or {}
+        d = request.get_json(silent=True) or {}
         model = FinancialEngine(d)
         context = model.get_context()
         tables = []
@@ -1840,11 +1840,27 @@ def save():
 
 @app.errorhandler(413)
 def too_large(e):
-    return jsonify({"success": False, "errors": ["Fayl 50MB dan katta"]}), 413
+    return jsonify({"success": False, "errors": ["Fayl 50MB dan katta"], "error": "Fayl 50MB dan katta"}), 413
+
+@app.errorhandler(400)
+def bad_request(e):
+    return jsonify({"success": False, "errors": ["Noto'g'ri so'rov (Bad Request). Iltimos, ma'lumotlarni tekshiring."], "error": "Noto'g'ri so'rov (Bad Request). Iltimos, ma'lumotlarni tekshiring.", "details": str(e)}), 400
+
+@app.errorhandler(403)
+def forbidden(e):
+    return jsonify({"success": False, "errors": ["Ruxsat etilmagan (Forbidden)."], "error": "Ruxsat etilmagan (Forbidden)."}), 403
+
+@app.errorhandler(404)
+def not_found(e):
+    return jsonify({"success": False, "errors": ["Sahifa yoki API topilmadi (Not Found)."], "error": "Sahifa yoki API topilmadi (Not Found)."}), 404
+
+@app.errorhandler(405)
+def method_not_allowed(e):
+    return jsonify({"success": False, "errors": ["Ushbu metod ruxsat etilmagan (Method Not Allowed)."], "error": "Ushbu metod ruxsat etilmagan (Method Not Allowed)."}), 405
 
 @app.errorhandler(500)
 def server_err(e):
-    return jsonify({"success": False, "errors": ["Server xatosi"]}), 500
+    return jsonify({"success": False, "errors": ["Server xatosi"], "error": "Server xatosi"}), 500
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 10000))
