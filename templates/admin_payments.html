@@ -281,6 +281,187 @@
             th:nth-child(3), td:nth-child(3),
             th:nth-child(6), td:nth-child(6) { display: none; }
         }
+
+        /* ══════════════════════════════════
+           CATALOG MANAGEMENT STYLES
+        ══════════════════════════════════ */
+        .cat-btn-primary {
+            display: inline-flex; align-items: center; gap: 8px;
+            background: linear-gradient(135deg, #4f46e5, #7c3aed);
+            color: #fff; padding: 10px 20px; border: none;
+            border-radius: 10px; font-size: 14px; font-weight: 700;
+            cursor: pointer; transition: var(--transition);
+            font-family: 'Inter', sans-serif;
+        }
+        .cat-btn-primary:hover { filter: brightness(1.1); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(79,70,229,0.3); }
+
+        /* Grid */
+        .cat-grid {
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+        }
+        .cat-loading { text-align: center; padding: 60px; color: #64748b; font-size: 14px; grid-column: 1/-1; }
+
+        /* Product Card */
+        .cat-card {
+            background: #fff; border: 1.5px solid var(--gray-100);
+            border-radius: 16px; overflow: hidden;
+            box-shadow: var(--shadow-sm); transition: var(--transition);
+            position: relative;
+        }
+        .cat-card:hover { box-shadow: var(--shadow-lg); transform: translateY(-2px); border-color: #e0e7ff; }
+        .cat-card.inactive { opacity: 0.6; }
+
+        .cat-card-img {
+            height: 160px; background: linear-gradient(135deg, #eef2ff, #f5f3ff);
+            display: flex; align-items: center; justify-content: center;
+            overflow: hidden; position: relative;
+        }
+        .cat-card-img img { width: 100%; height: 100%; object-fit: cover; }
+        .cat-card-img-placeholder { font-size: 48px; }
+
+        .cat-status-badge {
+            position: absolute; top: 10px; right: 10px;
+            padding: 3px 10px; border-radius: 999px; font-size: 11px; font-weight: 700;
+            backdrop-filter: blur(8px);
+        }
+        .cat-status-badge.active { background: rgba(22,163,74,0.15); color: #15803d; border: 1px solid rgba(22,163,74,0.3); }
+        .cat-status-badge.inactive { background: rgba(239,68,68,0.12); color: #dc2626; border: 1px solid rgba(239,68,68,0.2); }
+
+        .cat-card-body { padding: 16px; }
+        .cat-card-category {
+            font-size: 11px; font-weight: 700; color: #6366f1;
+            text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px;
+        }
+        .cat-card-title { font-family: 'Outfit', sans-serif; font-size: 15px; font-weight: 700; color: #0f172a; margin-bottom: 8px; line-height: 1.35; }
+        .cat-card-desc { font-size: 12px; color: #64748b; line-height: 1.5; margin-bottom: 12px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+
+        .cat-card-meta { display: flex; gap: 12px; margin-bottom: 14px; }
+        .cat-meta-item { display: flex; align-items: center; gap: 4px; font-size: 12px; color: #64748b; }
+        .cat-meta-item strong { color: #1e293b; font-weight: 600; }
+
+        .cat-card-price {
+            font-family: 'Outfit', sans-serif; font-size: 20px; font-weight: 800;
+            color: #4f46e5; margin-bottom: 14px;
+        }
+        .cat-card-actions { display: flex; gap: 8px; }
+        .cat-action-btn {
+            flex: 1; padding: 8px; border-radius: 8px; font-size: 12px; font-weight: 600;
+            cursor: pointer; border: 1px solid transparent; transition: var(--transition);
+            font-family: 'Inter', sans-serif; text-align: center;
+        }
+        .cat-action-edit { background: #eef2ff; color: #4f46e5; border-color: #e0e7ff; }
+        .cat-action-edit:hover { background: #e0e7ff; }
+        .cat-action-toggle { background: #f0fdf4; color: #16a34a; border-color: #dcfce7; }
+        .cat-action-toggle:hover { background: #dcfce7; }
+        .cat-action-toggle.deactivate { background: #fff7ed; color: #c2410c; border-color: #fed7aa; }
+        .cat-action-toggle.deactivate:hover { background: #ffedd5; }
+        .cat-action-delete { background: #fef2f2; color: #ef4444; border-color: #fecaca; }
+        .cat-action-delete:hover { background: #fee2e2; }
+
+        /* Add Product Card (empty) */
+        .cat-add-card {
+            border: 2px dashed #c7d2fe; border-radius: 16px;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            padding: 40px 24px; cursor: pointer; transition: var(--transition);
+            background: #fafafa; min-height: 320px;
+        }
+        .cat-add-card:hover { border-color: #6366f1; background: #eef2ff; }
+        .cat-add-card-icon { font-size: 40px; margin-bottom: 12px; }
+        .cat-add-card-text { font-size: 14px; font-weight: 600; color: #6366f1; }
+
+        /* Catalog Modal */
+        .cat-modal-overlay {
+            display: none; position: fixed; inset: 0; z-index: 2000;
+            align-items: center; justify-content: center; padding: 20px;
+            background: rgba(15,23,42,0.55); backdrop-filter: blur(6px);
+        }
+        .cat-modal-overlay.open { display: flex; }
+        .cat-modal {
+            background: #fff; border-radius: 20px; max-width: 820px; width: 100%;
+            max-height: 90vh; display: flex; flex-direction: column;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.15);
+            animation: modalIn 0.25s ease;
+        }
+        .cat-modal-header {
+            display: flex; align-items: flex-start; justify-content: space-between;
+            padding: 22px 28px; border-bottom: 1px solid #f1f5f9; flex-shrink: 0;
+        }
+        .cat-modal-title { font-family: 'Outfit', sans-serif; font-size: 20px; font-weight: 800; color: #0f172a; margin-bottom: 2px; }
+        .cat-modal-sub { font-size: 13px; color: #64748b; }
+        .cat-modal-body { padding: 24px 28px; overflow-y: auto; flex: 1; }
+        .cat-modal-footer {
+            display: flex; gap: 12px; justify-content: flex-end;
+            padding: 16px 28px; border-top: 1px solid #f1f5f9; flex-shrink: 0;
+        }
+
+        /* Form */
+        .cat-form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; }
+        .cat-form-col { display: flex; flex-direction: column; gap: 16px; }
+        .cat-field { display: flex; flex-direction: column; gap: 6px; }
+        .cat-label { font-size: 13px; font-weight: 600; color: #475569; }
+        .cat-req { color: #ef4444; }
+        .cat-input {
+            padding: 10px 14px; border: 2px solid #e2e8f0; border-radius: 10px;
+            font-size: 14px; color: #1e293b; font-family: 'Inter', sans-serif;
+            outline: none; transition: var(--transition); width: 100%;
+        }
+        .cat-input:focus { border-color: #6366f1; box-shadow: 0 0 0 4px rgba(99,102,241,0.08); }
+        .cat-textarea { resize: vertical; min-height: 100px; line-height: 1.5; }
+        .cat-input-prefix { position: relative; }
+        .cat-prefix { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); font-size: 14px; color: #94a3b8; font-weight: 600; }
+        .cat-input-with-prefix { padding-left: 28px; }
+
+        /* Dropzone */
+        .cat-dropzone {
+            border: 2px dashed #c7d2fe; border-radius: 12px; padding: 24px 16px;
+            text-align: center; cursor: pointer; transition: var(--transition);
+            background: #fafbff;
+        }
+        .cat-dropzone:hover, .cat-dropzone.dragover { border-color: #6366f1; background: #eef2ff; }
+        .cat-dropzone-icon { font-size: 32px; margin-bottom: 8px; }
+        .cat-dropzone-text { font-size: 13px; color: #475569; margin-bottom: 4px; }
+        .cat-dropzone-hint { font-size: 11px; color: #94a3b8; }
+        .cat-file-info {
+            display: flex; align-items: center; gap: 8px;
+            background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px;
+            padding: 10px 12px; font-size: 13px; color: #15803d; font-weight: 600;
+            margin-top: 8px;
+        }
+
+        /* Image upload */
+        .cat-img-upload {
+            border: 2px dashed #e2e8f0; border-radius: 12px;
+            height: 150px; cursor: pointer; display: flex;
+            align-items: center; justify-content: center;
+            overflow: hidden; transition: var(--transition); background: #f8fafc;
+        }
+        .cat-img-upload:hover { border-color: #6366f1; }
+        .cat-img-placeholder { text-align: center; }
+
+        /* Current file */
+        .cat-current-file {
+            display: flex; align-items: center; gap: 8px;
+            background: #f0fdf4; border: 1px solid #bbf7d0;
+            border-radius: 8px; padding: 10px 14px; font-size: 13px;
+            color: #15803d; font-weight: 500;
+        }
+
+        /* Progress */
+        .cat-progress-wrap { margin-top: 16px; }
+        .cat-progress-label { display: flex; justify-content: space-between; font-size: 13px; font-weight: 600; color: #475569; margin-bottom: 6px; }
+        .cat-progress-bar { height: 8px; background: #e2e8f0; border-radius: 999px; overflow: hidden; }
+        .cat-progress-fill { height: 100%; background: linear-gradient(90deg, #6366f1, #8b5cf6); width: 0%; transition: width 0.3s ease; border-radius: 999px; }
+
+        /* Form message */
+        .cat-form-msg { padding: 12px 16px; border-radius: 10px; font-size: 13px; font-weight: 600; margin-top: 12px; }
+        .cat-form-msg.success { background: #f0fdf4; color: #15803d; border: 1px solid #bbf7d0; }
+        .cat-form-msg.error { background: #fef2f2; color: #dc2626; border: 1px solid #fecaca; }
+
+        @media (max-width: 640px) {
+            .cat-form-grid { grid-template-columns: 1fr; }
+            .cat-modal { max-height: 95vh; }
+        }
     </style>
 </head>
 <body>
@@ -329,6 +510,7 @@
         <button class="admin-tab-btn active" data-target="tab-payments" onclick="switchAdminTab('tab-payments')">💳 To'lovlar</button>
         <button class="admin-tab-btn" data-target="tab-stats" onclick="switchAdminTab('tab-stats'); loadAdminStats();">📊 Statistika</button>
         <button class="admin-tab-btn" data-target="tab-users" onclick="switchAdminTab('tab-users'); loadAdminUsers();">👥 Foydalanuvchilar</button>
+        <button class="admin-tab-btn" data-target="tab-catalog" onclick="switchAdminTab('tab-catalog'); loadCatalogProducts();">📦 Katalog</button>
     </div>
 
     <!-- TABS CONTENT -->
@@ -447,7 +629,169 @@
             <div id="usersContainer">Yuklanmoqda...</div>
         </div>
     </div>
+
+    <!-- Tab: Catalog -->
+    <div id="tab-catalog" class="admin-tab-content" style="display:none;">
+        <!-- Header -->
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;">
+            <div>
+                <h2 style="font-family:'Outfit';font-size:22px;font-weight:800;color:#0f172a;margin-bottom:4px;">📦 Biznes Reja Katalogi</h2>
+                <p style="font-size:13px;color:#64748b;">PDF mahsulotlar boshqaruvi — qo'shish, tahrirlash, o'chirish</p>
+            </div>
+            <button class="cat-btn-primary" onclick="openAddModal()">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                Yangi mahsulot
+            </button>
+        </div>
+
+        <!-- Products Grid -->
+        <div id="catalogProductsGrid" class="cat-grid">
+            <div class="cat-loading">⏳ Yuklanmoqda...</div>
+        </div>
+    </div>
 </main>
+
+<!-- ══════════════════════════════════════════
+     CATALOG MODALS
+══════════════════════════════════════════ -->
+
+<!-- Add / Edit Product Modal -->
+<div class="cat-modal-overlay" id="catalogModal">
+    <div class="cat-modal">
+        <div class="cat-modal-header">
+            <div>
+                <div class="cat-modal-title" id="catalogModalTitle">Yangi mahsulot qo'shish</div>
+                <div class="cat-modal-sub" id="catalogModalSub">PDF fayl va mahsulot ma'lumotlarini kiriting</div>
+            </div>
+            <button class="modal-close" onclick="closeCatalogModal()">×</button>
+        </div>
+        <div class="cat-modal-body">
+            <form id="catalogProductForm" enctype="multipart/form-data">
+                <input type="hidden" id="catEditId" value="">
+
+                <!-- 2 column layout -->
+                <div class="cat-form-grid">
+                    <!-- LEFT -->
+                    <div class="cat-form-col">
+                        <div class="cat-field">
+                            <label class="cat-label">Mahsulot nomi <span class="cat-req">*</span></label>
+                            <input type="text" id="catTitle" class="cat-input" placeholder="Masalan: HOWO yuk mashinasi biznes rejasi" required>
+                        </div>
+                        <div class="cat-field">
+                            <label class="cat-label">Kategoriya</label>
+                            <input type="text" id="catCategory" class="cat-input" placeholder="Masalan: Transport / Lizing" list="catCategoryList">
+                            <datalist id="catCategoryList">
+                                <option value="Transport / Lizing">
+                                <option value="Savdo va xizmat">
+                                <option value="Ishlab chiqarish">
+                                <option value="Qishloq xo'jaligi">
+                                <option value="IT va texnologiya">
+                                <option value="Qurilish">
+                                <option value="Oziq-ovqat">
+                                <option value="Turizm va mehmonxona">
+                                <option value="Ta'lim">
+                                <option value="Tibbiyot">
+                            </datalist>
+                        </div>
+                        <div class="cat-field">
+                            <label class="cat-label">Narx (so'm) <span class="cat-req">*</span></label>
+                            <div class="cat-input-prefix">
+                                <span class="cat-prefix">₀</span>
+                                <input type="number" id="catPrice" class="cat-input cat-input-with-prefix" placeholder="30000" min="0" step="1000" required>
+                            </div>
+                        </div>
+                        <div class="cat-field">
+                            <label class="cat-label">Mahsulot ID (ixtiyoriy)</label>
+                            <input type="text" id="catProductId" class="cat-input" placeholder="avtomatik yaratiladi">
+                        </div>
+                        <div class="cat-field">
+                            <label class="cat-label">Tavsif</label>
+                            <textarea id="catDescription" class="cat-input cat-textarea" placeholder="Mahsulot haqida qisqacha ma'lumot..." rows="4"></textarea>
+                        </div>
+                    </div>
+
+                    <!-- RIGHT -->
+                    <div class="cat-form-col">
+                        <!-- PDF Upload -->
+                        <div class="cat-field">
+                            <label class="cat-label">PDF Fayl <span class="cat-req">*</span></label>
+                            <div class="cat-dropzone" id="pdfDropzone" onclick="document.getElementById('catPdfFile').click()">
+                                <div class="cat-dropzone-icon">📄</div>
+                                <div class="cat-dropzone-text" id="pdfDropText">
+                                    <strong>PDF faylni tanlang</strong><br>
+                                    <span>yoki shu yerga tashlang</span>
+                                </div>
+                                <div class="cat-dropzone-hint">Faqat .pdf • Maks 50MB</div>
+                            </div>
+                            <input type="file" id="catPdfFile" accept=".pdf" style="display:none;" onchange="onPdfSelected(this)">
+                            <div class="cat-file-info" id="pdfFileInfo" style="display:none;"></div>
+                        </div>
+
+                        <!-- Preview Image Upload -->
+                        <div class="cat-field">
+                            <label class="cat-label">Cover rasm (ixtiyoriy)</label>
+                            <div class="cat-img-upload" id="imgUploadArea" onclick="document.getElementById('catImgFile').click()">
+                                <img id="catImgPreview" src="" alt="" style="display:none;width:100%;height:100%;object-fit:cover;border-radius:10px;">
+                                <div class="cat-img-placeholder" id="catImgPlaceholder">
+                                    <div style="font-size:32px;margin-bottom:8px;">🖼️</div>
+                                    <div style="font-size:13px;color:#64748b;">Rasm tanlang<br><small>JPG, PNG, WebP</small></div>
+                                </div>
+                            </div>
+                            <input type="file" id="catImgFile" accept="image/*" style="display:none;" onchange="onImgSelected(this)">
+                        </div>
+
+                        <!-- Current PDF info (edit mode) -->
+                        <div id="currentPdfInfo" style="display:none;" class="cat-current-file">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                            <span id="currentPdfName">—</span>
+                            <span id="currentPdfPages" style="color:#64748b;font-size:12px;"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Upload Progress -->
+                <div class="cat-progress-wrap" id="uploadProgress" style="display:none;">
+                    <div class="cat-progress-label">
+                        <span id="progressLabel">Yuklanmoqda...</span>
+                        <span id="progressPct">0%</span>
+                    </div>
+                    <div class="cat-progress-bar"><div class="cat-progress-fill" id="progressFill"></div></div>
+                </div>
+
+                <!-- Result message -->
+                <div id="catalogFormMsg" style="display:none;" class="cat-form-msg"></div>
+            </form>
+        </div>
+        <div class="cat-modal-footer">
+            <button class="btn-cancel" onclick="closeCatalogModal()">Bekor</button>
+            <button class="cat-btn-primary" id="catalogSubmitBtn" onclick="submitCatalogProduct()">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                <span id="catalogSubmitLabel">Saqlash</span>
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirm Modal -->
+<div class="cat-modal-overlay" id="deleteModal">
+    <div class="cat-modal" style="max-width:400px;">
+        <div class="cat-modal-header">
+            <div class="cat-modal-title" style="color:#ef4444;">🗑️ Mahsulotni o'chirish</div>
+            <button class="modal-close" onclick="closeDeleteModal()">×</button>
+        </div>
+        <div class="cat-modal-body">
+            <p style="font-size:14px;color:#475569;line-height:1.6;">
+                <strong id="deleteProductName"></strong> mahsulotini o'chirmoqchimisiz?<br>
+                Bu amalni qaytarib bo'lmaydi.
+            </p>
+        </div>
+        <div class="cat-modal-footer">
+            <button class="btn-cancel" onclick="closeDeleteModal()">Bekor</button>
+            <button style="background:#ef4444;color:#fff;padding:10px 24px;border:none;border-radius:10px;font-weight:700;cursor:pointer;" id="deleteConfirmBtn" onclick="confirmDelete()">O'chirish</button>
+        </div>
+    </div>
+</div>
+
 
 <!-- Modal -->
 <div class="modal-overlay" id="actionModal">
@@ -648,7 +992,332 @@
             document.getElementById('usersContainer').innerHTML = '<p style="color:red">Foydalanuvchilarni yuklashda xatolik</p>';
         }
     }
+
+    /* ══════════════════════════════════════════
+       CATALOG MANAGEMENT JAVASCRIPT
+    ══════════════════════════════════════════ */
+
+    let _deleteProductId = null;
+    let _editMode = false;
+
+    // ── Load & render products ──
+    async function loadCatalogProducts() {
+        const grid = document.getElementById('catalogProductsGrid');
+        grid.innerHTML = '<div class="cat-loading">⏳ Yuklanmoqda...</div>';
+        try {
+            const resp = await fetch('/api/admin/catalog/products');
+            const data = await resp.json();
+            if (!data.success) throw new Error(data.error);
+            renderCatalogGrid(data.products);
+        } catch(e) {
+            grid.innerHTML = `<div class="cat-loading" style="color:#ef4444;">❌ Xatolik: ${e.message}</div>`;
+        }
+    }
+
+    function renderCatalogGrid(products) {
+        const grid = document.getElementById('catalogProductsGrid');
+        let html = '';
+
+        products.forEach(p => {
+            const isActive = p.is_active;
+            const imgHtml = p.preview_image
+                ? `<img src="${p.preview_image}" alt="${p.title}" onerror="this.style.display='none'">`
+                : `<div class="cat-card-img-placeholder">📄</div>`;
+            const priceFormatted = Number(p.price).toLocaleString('ru-RU') + " so'm";
+            const pagesText = p.total_pages ? `${p.total_pages} sahifa` : '—';
+            const pdfText = p.pdf_file ? `📄 ${p.pdf_file}` : '❌ PDF yo\'q';
+
+            html += `
+            <div class="cat-card ${isActive ? '' : 'inactive'}" id="cat-card-${p.id}">
+                <div class="cat-card-img">
+                    ${imgHtml}
+                    <span class="cat-status-badge ${isActive ? 'active' : 'inactive'}">
+                        ${isActive ? '✓ Faol' : '✕ Nofaol'}
+                    </span>
+                </div>
+                <div class="cat-card-body">
+                    <div class="cat-card-category">${p.category || 'Umumiy'}</div>
+                    <div class="cat-card-title">${p.title}</div>
+                    <div class="cat-card-desc">${p.description || 'Tavsif yo\'q'}</div>
+                    <div class="cat-card-meta">
+                        <div class="cat-meta-item">📄 <strong>${pagesText}</strong></div>
+                        <div class="cat-meta-item">⬇️ <strong>${p.download_count || 0}</strong></div>
+                        <div class="cat-meta-item">📁 <strong>${p.file_size_formatted || '—'}</strong></div>
+                    </div>
+                    <div style="font-size:11px;color:#94a3b8;margin-bottom:10px;font-family:monospace;">${pdfText}</div>
+                    <div class="cat-card-price">${priceFormatted}</div>
+                    <div class="cat-card-actions">
+                        <button class="cat-action-btn cat-action-edit" onclick="openEditModal(${JSON.stringify(p).replace(/"/g,'&quot;')})">✏️ Tahrir</button>
+                        <button class="cat-action-btn cat-action-toggle ${isActive ? 'deactivate' : ''}" onclick="toggleProduct('${p.id}', ${isActive})">
+                            ${isActive ? '⏸ O\'chirish' : '▶ Yoqish'}
+                        </button>
+                        <button class="cat-action-btn cat-action-delete" onclick="openDeleteModal('${p.id}', '${p.title.replace(/'/g,"\\'")}')">🗑</button>
+                    </div>
+                </div>
+            </div>`;
+        });
+
+        // Add-new card
+        html += `
+        <div class="cat-add-card" onclick="openAddModal()">
+            <div class="cat-add-card-icon">➕</div>
+            <div class="cat-add-card-text">Yangi mahsulot qo'shish</div>
+        </div>`;
+
+        grid.innerHTML = html;
+    }
+
+    // ── Open Add Modal ──
+    function openAddModal() {
+        _editMode = false;
+        document.getElementById('catalogModalTitle').textContent = "Yangi mahsulot qo'shish";
+        document.getElementById('catalogModalSub').textContent = "PDF fayl va mahsulot ma'lumotlarini kiriting";
+        document.getElementById('catalogSubmitLabel').textContent = 'Saqlash';
+        document.getElementById('catEditId').value = '';
+        document.getElementById('catTitle').value = '';
+        document.getElementById('catCategory').value = '';
+        document.getElementById('catPrice').value = '30000';
+        document.getElementById('catDescription').value = '';
+        document.getElementById('catProductId').value = '';
+        document.getElementById('catProductId').disabled = false;
+        document.getElementById('pdfDropText').innerHTML = '<strong>PDF faylni tanlang</strong><br><span>yoki shu yerga tashlang</span>';
+        document.getElementById('pdfFileInfo').style.display = 'none';
+        document.getElementById('catImgPreview').style.display = 'none';
+        document.getElementById('catImgPlaceholder').style.display = 'block';
+        document.getElementById('currentPdfInfo').style.display = 'none';
+        document.getElementById('catPdfFile').value = '';
+        document.getElementById('catImgFile').value = '';
+        hideCatalogMsg();
+        document.getElementById('catalogModal').classList.add('open');
+    }
+
+    // ── Open Edit Modal ──
+    function openEditModal(p) {
+        _editMode = true;
+        document.getElementById('catalogModalTitle').textContent = '✏️ Mahsulotni tahrirlash';
+        document.getElementById('catalogModalSub').textContent = p.title;
+        document.getElementById('catalogSubmitLabel').textContent = 'Yangilash';
+        document.getElementById('catEditId').value = p.id;
+        document.getElementById('catTitle').value = p.title || '';
+        document.getElementById('catCategory').value = p.category || '';
+        document.getElementById('catPrice').value = p.price || 30000;
+        document.getElementById('catDescription').value = p.description || '';
+        document.getElementById('catProductId').value = p.id;
+        document.getElementById('catProductId').disabled = true;
+        // Reset file inputs
+        document.getElementById('catPdfFile').value = '';
+        document.getElementById('catImgFile').value = '';
+        document.getElementById('pdfFileInfo').style.display = 'none';
+        // Show current PDF info
+        if (p.pdf_file) {
+            document.getElementById('currentPdfInfo').style.display = 'flex';
+            document.getElementById('currentPdfName').textContent = p.pdf_file;
+            document.getElementById('currentPdfPages').textContent = p.total_pages ? `• ${p.total_pages} sahifa` : '';
+            document.getElementById('pdfDropText').innerHTML = '<strong>Yangi PDF (ixtiyoriy)</strong><br><span>o\'zgartirmasangiz, eski qoladi</span>';
+        } else {
+            document.getElementById('currentPdfInfo').style.display = 'none';
+            document.getElementById('pdfDropText').innerHTML = '<strong>PDF faylni tanlang</strong><br><span>yoki shu yerga tashlang</span>';
+        }
+        // Preview image
+        if (p.preview_image) {
+            document.getElementById('catImgPreview').src = p.preview_image;
+            document.getElementById('catImgPreview').style.display = 'block';
+            document.getElementById('catImgPlaceholder').style.display = 'none';
+        } else {
+            document.getElementById('catImgPreview').style.display = 'none';
+            document.getElementById('catImgPlaceholder').style.display = 'block';
+        }
+        hideCatalogMsg();
+        document.getElementById('catalogModal').classList.add('open');
+    }
+
+    function closeCatalogModal() {
+        document.getElementById('catalogModal').classList.remove('open');
+        document.getElementById('uploadProgress').style.display = 'none';
+        document.getElementById('progressFill').style.width = '0%';
+    }
+
+    // ── Submit (Add or Edit) ──
+    async function submitCatalogProduct() {
+        const editId = document.getElementById('catEditId').value;
+        const title = document.getElementById('catTitle').value.trim();
+        const category = document.getElementById('catCategory').value.trim();
+        const price = document.getElementById('catPrice').value.trim();
+        const description = document.getElementById('catDescription').value.trim();
+        const productId = document.getElementById('catProductId').value.trim();
+        const pdfFile = document.getElementById('catPdfFile').files[0];
+        const imgFile = document.getElementById('catImgFile').files[0];
+
+        if (!title) { showCatalogMsg('error', '❌ Mahsulot nomi kiritilmadi'); return; }
+        if (!editId && !pdfFile) { showCatalogMsg('error', '❌ PDF fayl tanlanmadi'); return; }
+
+        const formData = new FormData();
+        formData.append('title', title);
+        formData.append('category', category || 'Umumiy');
+        formData.append('price', price || '30000');
+        formData.append('description', description);
+        if (!editId && productId) formData.append('product_id', productId);
+        if (pdfFile) formData.append('pdf_file', pdfFile);
+        if (imgFile) formData.append('preview_image', imgFile);
+        if (editId) {
+            formData.append('is_active', 'true');
+        }
+
+        const btn = document.getElementById('catalogSubmitBtn');
+        btn.disabled = true;
+        document.getElementById('catalogSubmitLabel').textContent = '⏳ Yuklanmoqda...';
+
+        // Show progress (simulated)
+        const progressWrap = document.getElementById('uploadProgress');
+        const progressFill = document.getElementById('progressFill');
+        const progressPct = document.getElementById('progressPct');
+        const progressLabel = document.getElementById('progressLabel');
+        progressWrap.style.display = 'block';
+        let pct = 0;
+        const interval = setInterval(() => {
+            pct = Math.min(pct + Math.random() * 15, 85);
+            progressFill.style.width = pct + '%';
+            progressPct.textContent = Math.round(pct) + '%';
+        }, 200);
+
+        try {
+            const url = editId
+                ? `/api/admin/catalog/update/${editId}`
+                : '/api/admin/catalog/add';
+            progressLabel.textContent = editId ? 'Yangilanmoqda...' : 'PDF yuklanmoqda...';
+
+            const resp = await fetch(url, { method: 'POST', body: formData });
+            const data = await resp.json();
+
+            clearInterval(interval);
+            progressFill.style.width = '100%';
+            progressPct.textContent = '100%';
+
+            if (data.success) {
+                progressLabel.textContent = '✅ Muvaffaqiyatli!';
+                showCatalogMsg('success', editId ? '✅ Mahsulot yangilandi!' : '✅ Yangi mahsulot qo\'shildi!');
+                setTimeout(() => {
+                    closeCatalogModal();
+                    loadCatalogProducts();
+                }, 1200);
+            } else {
+                clearInterval(interval);
+                progressWrap.style.display = 'none';
+                showCatalogMsg('error', '❌ ' + (data.error || 'Xatolik yuz berdi'));
+                btn.disabled = false;
+                document.getElementById('catalogSubmitLabel').textContent = editId ? 'Yangilash' : 'Saqlash';
+            }
+        } catch(e) {
+            clearInterval(interval);
+            progressWrap.style.display = 'none';
+            showCatalogMsg('error', '❌ Tarmoq xatosi: ' + e.message);
+            btn.disabled = false;
+            document.getElementById('catalogSubmitLabel').textContent = editId ? 'Yangilash' : 'Saqlash';
+        }
+    }
+
+    // ── Toggle active/inactive ──
+    async function toggleProduct(productId, currentStatus) {
+        try {
+            const resp = await fetch(`/api/admin/catalog/toggle/${productId}`, { method: 'POST' });
+            const data = await resp.json();
+            if (data.success) loadCatalogProducts();
+            else alert('Xatolik: ' + data.error);
+        } catch(e) {
+            alert('Tarmoq xatosi!');
+        }
+    }
+
+    // ── Delete ──
+    function openDeleteModal(productId, productName) {
+        _deleteProductId = productId;
+        document.getElementById('deleteProductName').textContent = productName;
+        document.getElementById('deleteModal').classList.add('open');
+    }
+    function closeDeleteModal() {
+        document.getElementById('deleteModal').classList.remove('open');
+        _deleteProductId = null;
+    }
+    async function confirmDelete() {
+        if (!_deleteProductId) return;
+        const btn = document.getElementById('deleteConfirmBtn');
+        btn.disabled = true;
+        btn.textContent = '⏳...';
+        try {
+            const resp = await fetch(`/api/admin/catalog/delete/${_deleteProductId}`, { method: 'POST' });
+            const data = await resp.json();
+            if (data.success) {
+                closeDeleteModal();
+                loadCatalogProducts();
+            } else {
+                alert('Xatolik: ' + data.error);
+                btn.disabled = false;
+                btn.textContent = "O'chirish";
+            }
+        } catch(e) {
+            alert('Tarmoq xatosi!');
+            btn.disabled = false;
+            btn.textContent = "O'chirish";
+        }
+    }
+
+    // ── File selections ──
+    function onPdfSelected(input) {
+        const file = input.files[0];
+        if (!file) return;
+        const sizeMB = (file.size / 1024 / 1024).toFixed(2);
+        document.getElementById('pdfFileInfo').style.display = 'flex';
+        document.getElementById('pdfFileInfo').innerHTML = `✅ ${file.name} <span style="color:#64748b;font-weight:400;">(${sizeMB} MB)</span>`;
+        document.getElementById('pdfDropText').innerHTML = `<strong style="color:#16a34a;">✓ Tanlandi</strong><br><span>${file.name}</span>`;
+    }
+    function onImgSelected(input) {
+        const file = input.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = e => {
+            const preview = document.getElementById('catImgPreview');
+            preview.src = e.target.result;
+            preview.style.display = 'block';
+            document.getElementById('catImgPlaceholder').style.display = 'none';
+        };
+        reader.readAsDataURL(file);
+    }
+
+    // ── Drag & Drop on PDF dropzone ──
+    document.addEventListener('DOMContentLoaded', () => {
+        const dz = document.getElementById('pdfDropzone');
+        if (!dz) return;
+        ['dragenter','dragover'].forEach(ev => dz.addEventListener(ev, e => { e.preventDefault(); dz.classList.add('dragover'); }));
+        ['dragleave','drop'].forEach(ev => dz.addEventListener(ev, e => { e.preventDefault(); dz.classList.remove('dragover'); }));
+        dz.addEventListener('drop', e => {
+            const files = e.dataTransfer.files;
+            if (files.length && files[0].name.toLowerCase().endsWith('.pdf')) {
+                const dt = new DataTransfer();
+                dt.items.add(files[0]);
+                document.getElementById('catPdfFile').files = dt.files;
+                onPdfSelected(document.getElementById('catPdfFile'));
+            }
+        });
+    });
+
+    // ── Close on overlay click ──
+    document.getElementById('catalogModal').addEventListener('click', e => { if (e.target === document.getElementById('catalogModal')) closeCatalogModal(); });
+    document.getElementById('deleteModal').addEventListener('click', e => { if (e.target === document.getElementById('deleteModal')) closeDeleteModal(); });
+
+    // ── Helpers ──
+    function showCatalogMsg(type, text) {
+        const el = document.getElementById('catalogFormMsg');
+        el.className = 'cat-form-msg ' + type;
+        el.textContent = text;
+        el.style.display = 'block';
+    }
+    function hideCatalogMsg() {
+        const el = document.getElementById('catalogFormMsg');
+        el.style.display = 'none';
+    }
+
 </script>
+
 
 {% endif %}
 </body>

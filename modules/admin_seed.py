@@ -15,17 +15,24 @@ logger = logging.getLogger(__name__)
 def seed_admin(app):
     """
     Bazada admin mavjudligini tekshirish va yo'q bo'lsa yaratish.
+    Agar admin bor bo'lsa — .env dagi parol bilan sinxronlashtirish.
     app.py da init_db(app) dan KEYIN chaqiriladi.
     """
     with app.app_context():
         try:
+            admin_password = os.environ.get("ADMIN_PASSWORD", "admin2026")
             existing = Admin.query.first()
             if existing:
-                logger.info(f"[ADMIN] Admin mavjud: {existing.username} (id={existing.id})")
+                # Parol env bilan mos emasligini tekshirish va yangilash
+                if not existing.check_password(admin_password):
+                    existing.set_password(admin_password)
+                    db.session.commit()
+                    logger.info(f"[ADMIN] Admin paroli .env bilan sinxronlashtirildi: {existing.username}")
+                else:
+                    logger.info(f"[ADMIN] Admin mavjud: {existing.username} (id={existing.id})")
                 return
 
             # Yangi admin yaratish
-            admin_password = os.environ.get("ADMIN_PASSWORD", "admin2026")
             admin = Admin(
                 username="admin",
                 role="superadmin",

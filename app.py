@@ -43,7 +43,8 @@ from modules.payment_service.click import click_provider
 from modules.payment_logger import log_callback, log_error
 from modules.catalog_products import (
     get_all_products, get_product_by_id, get_product_pdf_path,
-    increment_download_count, get_preview_page_numbers, CATALOG_DIR
+    increment_download_count, get_preview_page_numbers, CATALOG_DIR,
+    add_product, update_product, delete_product
 )
 
 # ============================================================
@@ -931,6 +932,219 @@ def admin_logs():
         content = "Log fayli topilmadi."
         
     return f"<h3>Admin Debug: {log_type}.log (Last 100 lines)</h3><pre>{content}</pre><br><a href='/admin/payments'>Orqaga</a>"
+
+
+# ============================================================
+# ROUTES — ADMIN CATALOG MANAGEMENT
+# ============================================================
+
+@app.route("/api/admin/catalog/products", methods=["GET"])
+@csrf.exempt
+def api_admin_catalog_list():
+    """Admin: barcha mahsulotlar (faol + nofaol)."""
+    if not session.get("admin_logged_in"):
+        return jsonify({"success": False, "error": "Unauthorized"}), 401
+    try:
+        products = get_all_products(active_only=False)
+        # Admin uchun pdf_file nomini ham qaytarish
+        import json as _json
+        with open(os.path.join(BASE_DIR, "payments_data", "catalog_products.json"), "r", encoding="utf-8") as _f:
+            _raw = _json.load(_f)
+        for p in products:
+            raw = _raw.get(p["id"], {})
+            p["pdf_file"] = raw.get("pdf_file", "")
+            p["total_pages"] = raw.get("total_pages", 0)
+            p["created_at"] = raw.get("created_at", "")
+        return jsonify({"success": True, "products": products})
+    except Exception as e:
+        logger.error(f"Admin katalog ro'yxat xatolik: {e}", exc_info=True)
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+@app.route("/api/admin/catalog/add", methods=["POST"])
+@csrf.exempt
+def api_admin_catalog_add():
+    """Admin: yangi mahsulot qo'shish (PDF fayl bilan)."""
+    if not session.get("admin_logged_in"):
+        return jsonify({"success": False, "error": "Unauthorized"}), 401
+    try:
+        # Form data o'qish
+        title = request.form.get("title", "").strip()
+        category = request.form.get("category", "").strip()
+        description = request.form.get("description", "").strip()
+        price = request.form.get("price", "30000").strip()
+        product_id = request.form.get("product_id", "").strip()
+
+        if not title:
+            return jsonify({"success": False, "error": "Mahsulot nomi kiritilmadi"}), 400
+
+        # PDF faylni yuklash
+        pdf_filename = ""
+        if "pdf_file" in request.files:
+            pdf = request.files["pdf_file"]
+            if pdf and pdf.filename and pdf.filename.lower().endswith(".pdf"):
+                import re
+                safe_name = re.sub(r"[^\w\-.]", "_", pdf.filename)
+                os.makedirs(CATALOG_DIR, exist_ok=True)
+                pdf_path = os.path.join(CATALOG_DIR, safe_name)
+                pdf.save(pdf_path)
+                pdf_filename = safe_name
+
+                # PDF sahifa sonini hisoblash
+                try:
+                    import fitz
+                    doc = fitz.open(pdf_path)
+                    total_pages = len(doc)
+                    doc.close()
+                except Exception:
+                    total_pages = 0
+            else:
+                if pdf and pdf.filename:
+                    return jsonify({"success": False, "error": "Faqat PDF fayl qabul qilinadi"}), 400
+
+        # Preview rasmni yuklash
+        preview_image_url = ""
+        if "preview_image" in request.files:
+            img = request.files["preview_image"]
+            if img and img.filename:
+                ext = img.filename.rsplit(".", 1)[-1].lower()
+                if ext in ("jpg", "jpeg", "png", "webp"):
+                    import re
+                    safe_img = re.sub(r"[^\w\-.]", "_", img.filename)
+                    img_dir = os.path.join(BASE_DIR, "static", "img")
+                    os.makedirs(img_dir, exist_ok=True)
+                    img_path = os.path.join(img_dir, safe_img)
+                    img.save(img_path)
+                    preview_image_url = f"/static/img/{safe_img}"
+
+        data = {
+            "title": title,
+            "category": category or "Umumiy",
+            "description": description,
+            "price": int(price) if price.isdigit() else 30000,
+            "pdf_file": pdf_filename,
+            "preview_image": preview_image_url,
+            "total_pages": total_pages if pdf_filename else 0,
+            "is_active": True,
+        }
+        if product_id:
+            data["id"] = product_id
+
+        product = add_product(data)
+        logger.info(f"[ADMIN CATALOG] Yangi mahsulot: {product['id']} — {title}")
+        return jsonify({"success": True, "product": product})
+
+    except Exception as e:
+        logger.error(f"Admin katalog qo'shish xatolik: {e}", exc_info=True)
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+@app.route("/api/admin/catalog/update/<product_id>", methods=["POST"])
+@csrf.exempt
+def api_admin_catalog_update(product_id):
+    """Admin: mahsulotni tahrirlash."""
+    if not session.get("admin_logged_in"):
+        return jsonify({"success": False, "error": "Unauthorized"}), 401
+    try:
+        data = {}
+        title = request.form.get("title", "").strip()
+        category = request.form.get("category", "").strip()
+        description = request.form.get("description", "").strip()
+        price = request.form.get("price", "").strip()
+        is_active = request.form.get("is_active", "true").lower() == "true"
+
+        if title:
+            data["title"] = title
+        if category:
+            data["category"] = category
+        if description is not None:
+            data["description"] = description
+        if price:
+            data["price"] = int(price) if price.isdigit() else 30000
+        data["is_active"] = is_active
+
+        # Yangi PDF faylni yuklash (ixtiyoriy)
+        if "pdf_file" in request.files:
+            pdf = request.files["pdf_file"]
+            if pdf and pdf.filename and pdf.filename.lower().endswith(".pdf"):
+                import re
+                safe_name = re.sub(r"[^\w\-.]", "_", pdf.filename)
+                os.makedirs(CATALOG_DIR, exist_ok=True)
+                pdf_path = os.path.join(CATALOG_DIR, safe_name)
+                pdf.save(pdf_path)
+                data["pdf_file"] = safe_name
+                try:
+                    import fitz
+                    doc = fitz.open(pdf_path)
+                    data["total_pages"] = len(doc)
+                    doc.close()
+                    # Preview cache ni tozalash
+                    import shutil
+                    preview_dir = os.path.join(CATALOG_DIR, "previews", product_id)
+                    if os.path.exists(preview_dir):
+                        shutil.rmtree(preview_dir)
+                except Exception:
+                    pass
+
+        # Yangi preview rasm (ixtiyoriy)
+        if "preview_image" in request.files:
+            img = request.files["preview_image"]
+            if img and img.filename:
+                ext = img.filename.rsplit(".", 1)[-1].lower()
+                if ext in ("jpg", "jpeg", "png", "webp"):
+                    import re
+                    safe_img = re.sub(r"[^\w\-.]", "_", img.filename)
+                    img_dir = os.path.join(BASE_DIR, "static", "img")
+                    os.makedirs(img_dir, exist_ok=True)
+                    img_path = os.path.join(img_dir, safe_img)
+                    img.save(img_path)
+                    data["preview_image"] = f"/static/img/{safe_img}"
+
+        product = update_product(product_id, data)
+        if not product:
+            return jsonify({"success": False, "error": "Mahsulot topilmadi"}), 404
+
+        logger.info(f"[ADMIN CATALOG] Mahsulot yangilandi: {product_id}")
+        return jsonify({"success": True, "product": product})
+
+    except Exception as e:
+        logger.error(f"Admin katalog yangilash xatolik: {e}", exc_info=True)
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+@app.route("/api/admin/catalog/delete/<product_id>", methods=["POST"])
+@csrf.exempt
+def api_admin_catalog_delete(product_id):
+    """Admin: mahsulotni o'chirish."""
+    if not session.get("admin_logged_in"):
+        return jsonify({"success": False, "error": "Unauthorized"}), 401
+    try:
+        success = delete_product(product_id)
+        if not success:
+            return jsonify({"success": False, "error": "Mahsulot topilmadi"}), 404
+        logger.info(f"[ADMIN CATALOG] Mahsulot o'chirildi: {product_id}")
+        return jsonify({"success": True, "message": "Mahsulot o'chirildi"})
+    except Exception as e:
+        logger.error(f"Admin katalog o'chirish xatolik: {e}", exc_info=True)
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+@app.route("/api/admin/catalog/toggle/<product_id>", methods=["POST"])
+@csrf.exempt
+def api_admin_catalog_toggle(product_id):
+    """Admin: mahsulotni faol/nofaol qilish."""
+    if not session.get("admin_logged_in"):
+        return jsonify({"success": False, "error": "Unauthorized"}), 401
+    try:
+        product = get_product_by_id(product_id)
+        if not product:
+            return jsonify({"success": False, "error": "Mahsulot topilmadi"}), 404
+        new_status = not product.get("is_active", True)
+        updated = update_product(product_id, {"is_active": new_status})
+        return jsonify({"success": True, "is_active": new_status, "product": updated})
+    except Exception as e:
+        logger.error(f"Admin katalog toggle xatolik: {e}", exc_info=True)
+        return jsonify({"success": False, "error": str(e)}), 500
 
 
 # ============================================================
