@@ -82,6 +82,11 @@ logging.basicConfig(level=logging.INFO,
                     format='%(asctime)s [%(levelname)s] %(message)s')
 logger = logging.getLogger(__name__)
 
+# Telegram Bot konfiguratsiyasi
+app.config['TELEGRAM_BOT_NAME'] = os.environ.get('TELEGRAM_BOT_NAME', 'uzbiznesssbot')
+app.config['TELEGRAM_BOT_TOKEN'] = os.environ.get('TELEGRAM_BOT_TOKEN', '')
+
+
 # OpenAI Client
 openai_client = None
 if os.environ.get('OPENAI_API_KEY'):
@@ -673,6 +678,473 @@ def api_auth_telegram():
         return jsonify({"success": False, "error": "Server xatosi"}), 500
 
 
+@app.route("/api/auth/telegram-webapp", methods=["POST"])
+@csrf.exempt
+@rate_limit(max_req=20, window=60)
+def api_auth_telegram_webapp():
+    """
+    Telegram Mini App orqali avtomatik login.
+    Frontend: window.Telegram.WebApp.initData ni yuboradi.
+    Backend: HMAC-SHA256 bilan tekshiradi va JWT qaytaradi.
+    """
+    try:
+        from modules.auth import validate_telegram_init_data, create_token_pair
+        from models.user import User, TelegramUser
+
+        d = request.get_json() or {}
+        init_data = d.get("init_data", "")
+
+        if not init_data:
+            return jsonify({"success": False, "error": "init_data kerak"}), 400
+
+        bot_token = os.environ.get("TELEGRAM_BOT_TOKEN", "")
+        if not bot_token:
+            return jsonify({"success": False, "error": "Bot token sozlanmagan"}), 500
+
+        # initData ni kriptografik tekshirish
+        tg_data = validate_telegram_init_data(init_data, bot_token)
+
+        if not tg_data:
+            logger.warning("[TG WEBAPP] initData validation failed")
+            return jsonify({"success": False, "error": "Telegram autentifikatsiya yaroqsiz"}), 401
+
+        telegram_id = str(tg_data.get("telegram_id", ""))
+        first_name = tg_data.get("first_name", "")
+        last_name = tg_data.get("last_name", "")
+        username = tg_data.get("username", "")
+        language_code = tg_data.get("language_code", "uz")
+        is_premium = tg_data.get("is_premium", False)
+        start_param = tg_data.get("start_param")  # Referral
+
+        if not telegram_id:
+            return jsonify({"success": False, "error": "Telegram ID topilmadi"}), 400
+
+        # 1. Mavjud user qidirish
+        user = User.query.filter_by(telegram_id=telegram_id).first()
+
+        if user:
+            user.record_successful_login()
+            if username and not user.telegram_username:
+                user.telegram_username = username
+            db.session.commit()
+
+            tokens = create_token_pair(identity=user.id, role=user.role)
+            logger.info(f"[TG WEBAPP] Login: {telegram_id} (@{username}) -> user={user.id}")
+            return jsonify({"success": True, "user": user.to_dict(include_private=True), **tokens})
+
+        # 2. Yangi user yaratish
+        import uuid as _uuid
+        user = User(
+            phone=f"tg_{telegram_id}",
+            first_name=first_name or username or f"User_{telegram_id[-4:]}",
+            last_name=last_name or None,
+            telegram_id=telegram_id,
+            telegram_username=username or None,
+        )
+        user.set_password(f"tg_webapp_{telegram_id}_{_uuid.uuid4().hex[:8]}")
+        db.session.add(user)
+        db.session.flush()
+
+        # 3. TelegramUser yozuvini yaratish
+        tg_user = TelegramUser.query.filter_by(telegram_id=int(telegram_id)).first()
+        if not tg_user:
+            tg_user = TelegramUser(
+                telegram_id=int(telegram_id),
+                username=username or None,
+                first_name=first_name or None,
+                last_name=last_name or None,
+                language_code=language_code,
+                is_premium=is_premium,
+                user_id=user.id,
+                referred_by=int(start_param) if start_param and start_param.isdigit() else None,
+            )
+            db.session.add(tg_user)
+
+            if start_param and start_param.isdigit():
+                referrer = TelegramUser.query.filter_by(telegram_id=int(start_param)).first()
+                if referrer:
+                    referrer.referral_count += 1
+                    logger.info(f"[TG WEBAPP] Referral: {start_param} -> {telegram_id}")
+        else:
+            if not tg_user.user_id:
+                tg_user.user_id = user.id
+            tg_user.track_activity()
+
+        db.session.commit()
+
+        tokens = create_token_pair(identity=user.id, role='user')
+        logger.info(f"[TG WEBAPP] Yangi user: {telegram_id} (@{username}) -> user={user.id}")
+
+        # Xush kelibsiz bildirishnoma
+        try:
+            from modules.telegram_notifier import _send_async
+            _greeting_name = first_name or "do'stim"
+            _send_async(
+                telegram_id,
+                f"\U0001f389 <b>Xush kelibsiz, {_greeting_name}!</b>\n\n"
+                "✅ UzBizness platformasiga muvaffaqiyatli kirdingiz.\n\n"
+                "📋 Imkoniyatlar:\n"
+                "• 500+ biznes yo'nalishi\n"
+                "• AI yordamida biznes reja yaratish\n"
+                "• Professional moliyaviy hisob-kitoblar\n\n"
+                "🚀 Boshlash uchun dashboardga o'ting!"
+            )
+        except Exception:
+            pass
+
+        return jsonify({"success": True, "user": user.to_dict(include_private=True), **tokens}), 201
+
+    except Exception as e:
+        db.session.rollback()
+        logger.error(f"Telegram webapp auth xatolik: {e}", exc_info=True)
+        return jsonify({"success": False, "error": "Server xatosi"}), 500
+
+
+# ============================================================
+# ROUTES — TELEGRAM BOT BILDIRISHNOMALAR
+# ============================================================
+
+@app.route("/api/telegram/connect", methods=["POST"])
+@csrf.exempt
+@rate_limit(max_req=10, window=60)
+def api_telegram_connect():
+    """
+    Foydalanuvchi Telegram ID sini bog'lash.
+    Kabinetdan Telegram ID kiritib, bildirishnomalarni yoqish.
+    """
+    from modules.auth import decode_token
+    from models.user import User
+
+    auth_header = request.headers.get('Authorization', '')
+    if not auth_header.startswith('Bearer '):
+        return jsonify({"success": False, "error": "Token kerak"}), 401
+
+    payload = decode_token(auth_header[7:])
+    if not payload or payload.get('type') != 'access':
+        return jsonify({"success": False, "error": "Token yaroqsiz"}), 401
+
+    try:
+        user = db.session.get(User, payload['sub'])
+        if not user:
+            return jsonify({"success": False, "error": "Foydalanuvchi topilmadi"}), 404
+
+        d = request.get_json() or {}
+        telegram_id = str(d.get("telegram_id", "")).strip()
+
+        if not telegram_id or not telegram_id.isdigit():
+            return jsonify({"success": False, "error": "Telegram ID noto'g'ri"}), 400
+
+        # Boshqa user da shu telegram_id bor emasligini tekshirish
+        existing = User.query.filter(
+            User.telegram_id == telegram_id,
+            User.id != user.id
+        ).first()
+        if existing:
+            return jsonify({"success": False, "error": "Bu Telegram ID boshqa akkauntga bog'langan"}), 409
+
+        user.telegram_id = telegram_id
+        if d.get("username"):
+            user.telegram_username = d["username"]
+        db.session.commit()
+
+        # Test xabar yuborish
+        try:
+            from modules.telegram_notifier import _send_async
+            _send_async(
+                telegram_id,
+                "🔗 <b>Telegram bog'landi!</b>\n\n"
+                f"👤 Salom, {user.first_name or 'foydalanuvchi'}!\n"
+                "✅ Endi muhim xabarlarni shu yerdan olasiz:\n"
+                "• To'lov tasdiqlanganda\n"
+                "• Obuna faollashganda\n"
+                "• Muhim yangiliklar\n\n"
+                "📱 UzBizness platformasi"
+            )
+        except Exception:
+            pass
+
+        logger.info(f"[TG CONNECT] User {user.id} -> telegram_id={telegram_id}")
+        return jsonify({"success": True, "message": "Telegram muvaffaqiyatli bog'landi!"})
+
+    except Exception as e:
+        db.session.rollback()
+        logger.error(f"Telegram connect xatolik: {e}", exc_info=True)
+        return jsonify({"success": False, "error": "Server xatosi"}), 500
+
+
+@app.route("/api/telegram/disconnect", methods=["POST"])
+@csrf.exempt
+def api_telegram_disconnect():
+    """Telegram bog'lanishini o'chirish."""
+    from modules.auth import decode_token
+    from models.user import User
+
+    auth_header = request.headers.get('Authorization', '')
+    if not auth_header.startswith('Bearer '):
+        return jsonify({"success": False, "error": "Token kerak"}), 401
+
+    payload = decode_token(auth_header[7:])
+    if not payload or payload.get('type') != 'access':
+        return jsonify({"success": False, "error": "Token yaroqsiz"}), 401
+
+    try:
+        user = db.session.get(User, payload['sub'])
+        if not user:
+            return jsonify({"success": False, "error": "Foydalanuvchi topilmadi"}), 404
+
+        user.telegram_id = None
+        user.telegram_username = None
+        db.session.commit()
+
+        logger.info(f"[TG DISCONNECT] User {user.id}")
+        return jsonify({"success": True, "message": "Telegram uzildi"})
+
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"success": False, "error": "Server xatosi"}), 500
+
+
+
+
+# ============================================================
+# TELEGRAM BOT LOGIN — Temp Token oqimi
+# ============================================================
+
+# Xotira ichidagi temp tokenlar: {token: {status, user_data, created_at}}
+_tg_login_tokens = {}
+_tg_tokens_lock = threading.Lock()
+
+def _cleanup_tg_tokens():
+    """Eskirgan temp tokenlarni o'chirish."""
+    while True:
+        time.sleep(120)
+        now = time.time()
+        with _tg_tokens_lock:
+            expired = [k for k, v in _tg_login_tokens.items() if now - v['created_at'] > 300]
+            for k in expired:
+                del _tg_login_tokens[k]
+
+threading.Thread(target=_cleanup_tg_tokens, daemon=True).start()
+
+
+@app.route("/api/auth/telegram-login-init", methods=["POST"])
+@csrf.exempt
+@rate_limit(max_req=10, window=60)
+def api_telegram_login_init():
+    """
+    Telegram bot orqali login oqimini boshlash.
+    1) Noyob temp_token yaratadi
+    2) Foydalanuvchi botda /start login_TOKEN yuboradi
+    3) Bot webhook tokenni foydalanuvchi ma'lumotlari bilan faollashtiradi
+    4) Frontend /api/auth/telegram-poll bilan kutadi
+    """
+    import secrets
+    token = secrets.token_urlsafe(24)
+    with _tg_tokens_lock:
+        _tg_login_tokens[token] = {
+            'status': 'pending',
+            'user_data': None,
+            'created_at': time.time()
+        }
+    logger.info(f"[TG LOGIN] Temp token yaratildi: {token[:8]}...")
+    return jsonify({"success": True, "token": token})
+
+
+@app.route("/api/auth/telegram-poll", methods=["GET"])
+@csrf.exempt
+@rate_limit(max_req=60, window=60)
+def api_telegram_poll():
+    """
+    Telegram login holatini tekshirish (polling).
+    Frontend har 3 sekundda bu endpointga murojaat qiladi.
+    """
+    token = request.args.get("token", "")
+    if not token:
+        return jsonify({"success": False, "error": "Token kerak"}), 400
+
+    with _tg_tokens_lock:
+        entry = _tg_login_tokens.get(token)
+
+    if not entry:
+        return jsonify({"success": False, "status": "expired", "error": "Token topilmadi yoki muddati o'tgan"}), 404
+
+    now = time.time()
+    if now - entry['created_at'] > 300:
+        with _tg_tokens_lock:
+            _tg_login_tokens.pop(token, None)
+        return jsonify({"success": False, "status": "expired"}), 410
+
+    if entry['status'] == 'pending':
+        return jsonify({"success": True, "status": "pending"})
+
+    if entry['status'] == 'authenticated':
+        # Token faollashdi — JWT yaratib qaytarish
+        user_data = entry['user_data']
+        with _tg_tokens_lock:
+            _tg_login_tokens.pop(token, None)
+
+        try:
+            from models.user import User
+            from modules.auth import create_token_pair
+
+            telegram_id = str(user_data.get('id', ''))
+            first_name = user_data.get('first_name', '')
+            username = user_data.get('username', '')
+
+            user = User.query.filter_by(telegram_id=telegram_id).first()
+
+            if user:
+                user.record_successful_login()
+                db.session.commit()
+            else:
+                user = User(
+                    phone=f"tg_{telegram_id}",
+                    first_name=first_name or username or f"TG_{telegram_id[-4:]}",
+                    telegram_id=telegram_id,
+                    telegram_username=username or None,
+                )
+                import uuid as _uuid2
+                user.set_password(f"tg_bot_{telegram_id}_{_uuid2.uuid4().hex[:8]}")
+                db.session.add(user)
+                db.session.commit()
+                logger.info(f"[TG LOGIN] Yangi user: {telegram_id} (@{username})")
+
+            tokens = create_token_pair(identity=user.id, role=user.role)
+            return jsonify({"success": True, "status": "authenticated", "user": user.to_dict(), **tokens})
+
+        except Exception as e:
+            db.session.rollback()
+            logger.error(f"[TG POLL] User yaratishda xatolik: {e}", exc_info=True)
+            return jsonify({"success": False, "error": "Server xatosi"}), 500
+
+    return jsonify({"success": False, "status": "error"})
+
+
+@app.route("/api/telegram/webhook", methods=["POST"])
+@csrf.exempt
+def api_telegram_webhook():
+    """
+    Telegram Bot Webhook — botdan kelgan xabarlarni qayta ishlash.
+    Bot /start login_TOKEN xabarini olganda temp tokenni faollashtiradi.
+    """
+    try:
+        update = request.get_json(silent=True) or {}
+        message = update.get('message') or update.get('edited_message', {})
+
+        if not message:
+            return jsonify({"ok": True})
+
+        chat_id = str(message.get('chat', {}).get('id', ''))
+        text = message.get('text', '').strip()
+        from_user = message.get('from', {})
+        tg_id = str(from_user.get('id', ''))
+        first_name = from_user.get('first_name', '')
+        username = from_user.get('username', '')
+
+        if not text or not tg_id:
+            return jsonify({"ok": True})
+
+        bot_token = os.environ.get("TELEGRAM_BOT_TOKEN", "")
+        tg_api = f"https://api.telegram.org/bot{bot_token}"
+
+        def send_msg(chat, text_msg, parse_mode="HTML", reply_markup=None):
+            try:
+                payload = {
+                    "chat_id": chat,
+                    "text": text_msg,
+                    "parse_mode": parse_mode
+                }
+                if reply_markup:
+                    payload["reply_markup"] = reply_markup
+                requests.post(f"{tg_api}/sendMessage", json=payload, timeout=5)
+            except Exception:
+                pass
+
+        # Faqat "Biznes reja yaratish" tugmasi bilan keyboard
+        main_keyboard = {
+            "keyboard": [
+                [{"text": "📋 Biznes reja yaratish", "web_app": {"url": "https://uzbizness.uz/dashboard"}}]
+            ],
+            "resize_keyboard": True,
+            "one_time_keyboard": False
+        }
+
+        # /start login_TOKEN — Telegram login oqimi
+        if text.startswith('/start login_'):
+            login_token = text[len('/start login_'):]
+            with _tg_tokens_lock:
+                entry = _tg_login_tokens.get(login_token)
+
+            if entry and entry['status'] == 'pending':
+                now = time.time()
+                if now - entry['created_at'] <= 300:
+                    with _tg_tokens_lock:
+                        _tg_login_tokens[login_token] = {
+                            **entry,
+                            'status': 'authenticated',
+                            'user_data': {
+                                'id': tg_id,
+                                'first_name': first_name,
+                                'username': username,
+                            }
+                        }
+                    send_msg(chat_id,
+                        f"✅ <b>Muvaffaqiyatli!</b>\n\n"
+                        f"Salom, <b>{first_name or 'foydalanuvchi'}</b>! 👋\n"
+                        "UzBizness platformasiga kirdingiz.\n\n"
+                        "🌐 Brauzerga qaytib, sahifani ko'ring — kirish avtomatik amalga oshadi!",
+                        reply_markup=main_keyboard
+                    )
+                    logger.info(f"[TG WEBHOOK] Login token faollashdi: tg_id={tg_id}")
+                else:
+                    send_msg(chat_id, "⏰ Login so'rovining muddati o'tgan. Qaytadan urinib ko'ring.",
+                             reply_markup=main_keyboard)
+            else:
+                send_msg(chat_id, "❌ Noto'g'ri yoki muddati o'tgan token. Saytdan qaytadan urinib ko'ring.",
+                         reply_markup=main_keyboard)
+            return jsonify({"ok": True})
+
+        # /start (oddiy)
+        elif text == '/start':
+            send_msg(chat_id,
+                f"👋 Salom, <b>{first_name or 'foydalanuvchi'}</b>!\n\n"
+                "🏢 <b>UzBizness</b> — O'zbekistondagi professional biznes reja platformasi.\n\n"
+                "📊 Imkoniyatlar:\n"
+                "• 500+ biznes yo'nalishi\n"
+                "• AI yordamida biznes reja\n"
+                "• Professional moliyaviy hisob-kitoblar\n\n"
+                "📋 Quyidagi tugmani bosib biznes reja yarating! 👇",
+                reply_markup=main_keyboard
+            )
+            return jsonify({"ok": True})
+
+        return jsonify({"ok": True})
+
+    except Exception as e:
+        logger.error(f"[TG WEBHOOK] Xatolik: {e}", exc_info=True)
+        return jsonify({"ok": True})  # Telegram 200 kutadi
+
+
+@app.route("/api/telegram/test", methods=["POST"])
+@csrf.exempt
+def api_telegram_test():
+    """Admin uchun — Telegram xabar test."""
+    if not session.get("admin_logged_in"):
+        return jsonify({"success": False, "error": "Unauthorized"}), 401
+
+    try:
+        from modules.telegram_notifier import send_test_message
+        d = request.get_json() or {}
+        chat_id = d.get("chat_id", "")
+        if not chat_id:
+            return jsonify({"success": False, "error": "chat_id kerak"}), 400
+
+        result = send_test_message(chat_id)
+        return jsonify({"success": result, "message": "Test xabar yuborildi" if result else "Yuborilmadi"})
+
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
 
 # ROUTES — KATEGORIYALAR VA QIDIRISH
 # ============================================================
@@ -893,6 +1365,15 @@ def api_admin_approve():
                         logger.warning(f"[SUB] Obuna faollashtirish xatolik: {sub_result}")
         except Exception as sub_err:
             logger.error(f"[SUB] Admin approve subscription xatolik: {sub_err}", exc_info=True)
+
+        # ── Telegram bildirishnoma: to'lov tasdiqlandi ──
+        try:
+            from modules.telegram_notifier import notify_payment_approved
+            _p = get_payment(payment_id)
+            if _p:
+                notify_payment_approved(_p)
+        except Exception:
+            pass  # Telegram xatolik saytga ta'sir qilmaydi
     
     return jsonify(result)
 
@@ -901,7 +1382,21 @@ def api_admin_approve():
 def api_admin_reject():
     if not session.get("admin_logged_in"): return jsonify({"success": False, "error": "Unauthorized"}), 401
     d = request.get_json()
-    return jsonify(admin_reject(d.get("payment_id"), d.get("note", "")))
+    payment_id = d.get("payment_id")
+    note = d.get("note", "")
+    result = admin_reject(payment_id, note)
+
+    # ── Telegram bildirishnoma: to'lov rad etildi ──
+    if result.get("success"):
+        try:
+            from modules.telegram_notifier import notify_payment_rejected
+            _p = get_payment(payment_id)
+            if _p:
+                notify_payment_rejected(_p, reason=note)
+        except Exception:
+            pass  # Telegram xatolik saytga ta'sir qilmaydi
+
+    return jsonify(result)
 
 @app.route("/receipts/<path:filename>")
 def serve_receipt(filename):

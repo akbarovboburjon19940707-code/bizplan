@@ -429,7 +429,7 @@ const CabinetModule = (() => {
         if (!wrap) return;
 
         // Telegram Login Widget
-        const botName = window.__TELEGRAM_BOT_NAME || 'UzBizness_bot';
+        const botName = window.__TELEGRAM_BOT_NAME || 'uzbiznesssbot';
         wrap.innerHTML = `
             <div style="padding:20px; background:var(--cab-surface-alt); border-radius:12px; border:1px solid var(--cab-border); text-align:center;">
                 <button class="cab-btn cab-btn-outline" onclick="CabinetModule.connectTelegram()" style="gap:8px;">
@@ -441,7 +441,7 @@ const CabinetModule = (() => {
     }
 
     function connectTelegram() {
-        const botName = window.__TELEGRAM_BOT_NAME || 'UzBizness_bot';
+        const botName = window.__TELEGRAM_BOT_NAME || 'uzbiznesssbot';
         window.open(`https://t.me/${botName}?start=connect`, '_blank');
     }
 

@@ -385,6 +385,15 @@ def update_click_payment_status(order_id: str, status: str,
         db.session.commit()
         logger.info(f"[PAYMENT] Click yangilandi: order={order_id}, "
                     f"status={status}, click_trans={click_trans_id}")
+
+        # ── Telegram bildirishnoma: Click to'lov muvaffaqiyatli ──
+        if status == "success":
+            try:
+                from modules.telegram_notifier import notify_auto_payment_success
+                notify_auto_payment_success(_payment_to_dict(payment))
+            except Exception:
+                pass  # Telegram xatolik to'lovga ta'sir qilmaydi
+
         return _payment_to_dict(payment)
     except Exception as e:
         db.session.rollback()
@@ -505,6 +514,15 @@ def update_payme_payment_status(order_id: str, status: str,
         db.session.commit()
         logger.info(f"[PAYMENT] Payme yangilandi: order={order_id}, "
                     f"status={status}, trans={payme_trans_id}")
+
+        # ── Telegram bildirishnoma: Payme to'lov muvaffaqiyatli ──
+        if status == "success":
+            try:
+                from modules.telegram_notifier import notify_auto_payment_success
+                notify_auto_payment_success(_payment_to_dict(payment))
+            except Exception:
+                pass  # Telegram xatolik to'lovga ta'sir qilmaydi
+
         return _payment_to_dict(payment)
     except Exception as e:
         db.session.rollback()
