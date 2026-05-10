@@ -53,7 +53,7 @@ resp = requests.post(f"{API}/setChatMenuButton", json={
         "type": "web_app",
         "text": "Biznes reja yaratish",
         "web_app": {
-            "url": "https://uzbizness.uz/dashboard"
+            "url": f"{os.environ.get('SERVER_URL', 'https://bizplanai.uz').rstrip('/')}/dashboard"
         }
     }
 })
