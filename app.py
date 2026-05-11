@@ -1050,15 +1050,27 @@ def api_telegram_webhook():
         bot_token = os.environ.get("TELEGRAM_BOT_TOKEN", "")
         tg_api = f"https://api.telegram.org/bot{bot_token}"
 
-        def send_msg(chat, text_msg, parse_mode="HTML"):
+        def send_msg(chat, text_msg, parse_mode="HTML", reply_markup=None):
             try:
-                requests.post(f"{tg_api}/sendMessage", json={
+                payload = {
                     "chat_id": chat,
                     "text": text_msg,
                     "parse_mode": parse_mode
-                }, timeout=5)
+                }
+                if reply_markup:
+                    payload["reply_markup"] = reply_markup
+                requests.post(f"{tg_api}/sendMessage", json=payload, timeout=5)
             except Exception:
                 pass
+
+        # Faqat "Biznes reja yaratish" tugmasi bilan keyboard
+        main_keyboard = {
+            "keyboard": [
+                [{"text": "📋 Biznes reja yaratish", "web_app": {"url": "https://uzbizness.uz/dashboard"}}]
+            ],
+            "resize_keyboard": True,
+            "one_time_keyboard": False
+        }
 
         # /start login_TOKEN — Telegram login oqimi
         if text.startswith('/start login_'):
@@ -1083,13 +1095,16 @@ def api_telegram_webhook():
                         f"✅ <b>Muvaffaqiyatli!</b>\n\n"
                         f"Salom, <b>{first_name or 'foydalanuvchi'}</b>! 👋\n"
                         "UzBizness platformasiga kirdingiz.\n\n"
-                        "🌐 Brauzerga qaytib, sahifani ko'ring — kirish avtomatik amalga oshadi!"
+                        "🌐 Brauzerga qaytib, sahifani ko'ring — kirish avtomatik amalga oshadi!",
+                        reply_markup=main_keyboard
                     )
                     logger.info(f"[TG WEBHOOK] Login token faollashdi: tg_id={tg_id}")
                 else:
-                    send_msg(chat_id, "⏰ Login so'rovining muddati o'tgan. Qaytadan urinib ko'ring.")
+                    send_msg(chat_id, "⏰ Login so'rovining muddati o'tgan. Qaytadan urinib ko'ring.",
+                             reply_markup=main_keyboard)
             else:
-                send_msg(chat_id, "❌ Noto'g'ri yoki muddati o'tgan token. Saytdan qaytadan urinib ko'ring.")
+                send_msg(chat_id, "❌ Noto'g'ri yoki muddati o'tgan token. Saytdan qaytadan urinib ko'ring.",
+                         reply_markup=main_keyboard)
             return jsonify({"ok": True})
 
         # /start (oddiy)
@@ -1101,7 +1116,8 @@ def api_telegram_webhook():
                 "• 500+ biznes yo'nalishi\n"
                 "• AI yordamida biznes reja\n"
                 "• Professional moliyaviy hisob-kitoblar\n\n"
-                "🌐 Platformaga kirish: uzbizness.uz"
+                "📋 Quyidagi tugmani bosib biznes reja yarating! 👇",
+                reply_markup=main_keyboard
             )
             return jsonify({"ok": True})
 
