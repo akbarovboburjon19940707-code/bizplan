@@ -1470,6 +1470,7 @@ def api_admin_catalog_add():
 
         # PDF faylni yuklash
         pdf_filename = ""
+        total_pages = 0
         if "pdf_file" in request.files:
             pdf = request.files["pdf_file"]
             if pdf and pdf.filename and pdf.filename.lower().endswith(".pdf"):
