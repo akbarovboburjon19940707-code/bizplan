@@ -1248,3 +1248,181 @@ mark.ac-highlight { background: #fef08a; color: inherit; border-radius: 2px; pad
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
 }
+
+/* ═══════════════════════════════════════════════════════
+   TELEGRAM WEBAPP — Mobil optimizatsiya
+   .tg-webapp class telegram_webapp.js tomonidan qo'shiladi
+   ═══════════════════════════════════════════════════════ */
+.tg-webapp .dash-layout {
+  max-width: 100% !important;
+  padding: 0 12px 24px !important;
+  grid-template-columns: 1fr !important;
+  gap: 0 !important;
+}
+
+.tg-webapp .dash-sidebar {
+  display: none !important;
+}
+
+.tg-webapp .dash-topbar {
+  display: none !important;
+}
+
+.tg-webapp .dash-footer {
+  display: none !important;
+}
+
+/* Tablar — ixcham */
+.tg-webapp .panel-tabs {
+  margin-bottom: 16px;
+  padding: 4px;
+  border-radius: 10px;
+}
+
+.tg-webapp .panel-tab {
+  padding: 10px 8px;
+  gap: 6px;
+  font-size: 0.8rem;
+}
+
+.tg-webapp .tab-num {
+  width: 22px;
+  height: 22px;
+  font-size: 0.7rem;
+}
+
+.tg-webapp .tab-text {
+  display: none;
+}
+
+/* Form bo'limlari — ixcham */
+.tg-webapp .form-section {
+  margin-bottom: 10px;
+  border-radius: 12px;
+}
+
+.tg-webapp .section-header {
+  padding: 14px 16px;
+  gap: 10px;
+}
+
+.tg-webapp .section-icon {
+  width: 36px;
+  height: 36px;
+  font-size: 16px;
+  border-radius: 8px;
+}
+
+.tg-webapp .section-info h2 {
+  font-size: 0.92rem;
+}
+
+.tg-webapp .section-info p {
+  font-size: 0.72rem;
+}
+
+.tg-webapp .section-body {
+  padding: 0 16px;
+}
+
+.tg-webapp .section-body.open {
+  padding: 0 16px 20px;
+}
+
+/* Inputlar */
+.tg-webapp .form-grid {
+  grid-template-columns: 1fr !important;
+  gap: 12px;
+}
+
+.tg-webapp .input-ctrl {
+  padding: 10px 12px;
+  font-size: 0.88rem;
+}
+
+.tg-webapp .form-field label {
+  font-size: 0.72rem;
+}
+
+/* Mulkchilik kartalar */
+.tg-webapp .mulk-grid {
+  grid-template-columns: 1fr 1fr !important;
+  gap: 8px;
+}
+
+.tg-webapp .mulk-card {
+  padding: 10px 12px;
+  gap: 8px;
+}
+
+.tg-webapp .mulk-icon {
+  font-size: 1.1rem;
+}
+
+.tg-webapp .mulk-card strong {
+  font-size: 0.78rem;
+}
+
+.tg-webapp .mulk-card small {
+  font-size: 0.65rem;
+}
+
+/* Kredit turi */
+.tg-webapp .kredit-type-row {
+  gap: 8px;
+}
+
+.tg-webapp .kto-content {
+  padding: 12px;
+}
+
+/* Tugmalar */
+.tg-webapp .panel-actions {
+  margin-top: 16px;
+}
+
+.tg-webapp .btn {
+  padding: 11px 18px;
+  font-size: 0.85rem;
+}
+
+/* Preview sahifa */
+.tg-webapp .doc-preview {
+  font-size: 0.85rem;
+}
+
+.tg-webapp .doc-kpi-grid {
+  grid-template-columns: 1fr 1fr 1fr !important;
+  gap: 8px !important;
+}
+
+.tg-webapp .doc-meta-grid {
+  grid-template-columns: 1fr !important;
+}
+
+/* To'lov bo'limi */
+.tg-webapp .payment-section {
+  padding: 16px !important;
+}
+
+.tg-webapp .payment-price {
+  font-size: 1.2rem !important;
+}
+
+/* STIR */
+.tg-webapp .stir-field-input {
+  font-size: 1rem;
+  letter-spacing: 2px;
+}
+
+/* Alert */
+.tg-webapp .alert {
+  font-size: 0.82rem;
+  padding: 10px 14px;
+}
+
+/* Loading overlay */
+.tg-webapp .loading-content h2 {
+  font-size: 1.1rem;
+}
+
