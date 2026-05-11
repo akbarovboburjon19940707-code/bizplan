@@ -219,13 +219,13 @@ def safe_generate(prompt: str, section_name: str, retry_count: int = 1) -> str:
         except Exception as e:
             logger.warning(f"  ❌ [CHATGPT] Xato: {e}")
 
-    # ─── 2. GROQ (Llama) ───
-    gr_client = get_groq_client()
-    if gr_client:
+    # ─── 2. DEEPSEEK ───
+    ds_client = get_deepseek_client()
+    if ds_client:
         try:
-            logger.info(f"  ⚪ [GROQ] {section_name} generatsiya qilmoqda...")
-            response = gr_client.chat.completions.create(
-                model="llama-3.3-70b-versatile",
+            logger.info(f"  🔷 [DEEPSEEK] {section_name} generatsiya qilmoqda...")
+            response = ds_client.chat.completions.create(
+                model="deepseek-chat",
                 messages=[
                     {"role": "system", "content": "Siz professional biznes-reja yozuvchi mutaxassisiz. O'zbek tilida (lotin alifbosida) yozing. Har bir javob kamida 500-700 so'z bo'lishi shart."},
                     {"role": "user", "content": prompt}
@@ -235,12 +235,12 @@ def safe_generate(prompt: str, section_name: str, retry_count: int = 1) -> str:
             )
             result = validate_ai_response(response.choices[0].message.content, section_name)
             if result and count_words(result) >= MIN_WORD_COUNT:
-                logger.info(f"  ✅ [GROQ] {section_name} — muvaffaqiyatli!")
+                logger.info(f"  ✅ [DEEPSEEK] {section_name} — muvaffaqiyatli!")
                 return result
             else:
-                logger.warning(f"  ⚠️ [GROQ] {section_name} — so'z soni yetarli emas.")
+                logger.warning(f"  ⚠️ [DEEPSEEK] {section_name} — so'z soni yetarli emas.")
         except Exception as e:
-            logger.warning(f"  ❌ [GROQ] Xato: {e}")
+            logger.warning(f"  ❌ [DEEPSEEK] Xato: {e}")
 
     # ─── 3. CLAUDE (Anthropic) ───
     a_client = get_anthropic_client()
