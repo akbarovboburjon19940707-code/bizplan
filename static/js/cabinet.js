@@ -26,6 +26,7 @@ const CabinetModule = (() => {
         loadProfile();
         loadSubscription();
         loadPayments();
+        loadPlans();
     }
 
     // ============================================================
@@ -38,6 +39,7 @@ const CabinetModule = (() => {
         $$('.cab-tab-content').forEach(c => c.classList.remove('active'));
 
         const tabMap = {
+            'plans': 'tabPlans',
             'profile': 'tabProfile',
             'subscription': 'tabSubscription',
             'payments': 'tabPayments',
@@ -480,6 +482,109 @@ const CabinetModule = (() => {
         setTimeout(() => {
             alert.classList.remove('show');
         }, 5000);
+    }
+
+    // ============================================================
+    // PLANS (Generated + Purchased)
+    // ============================================================
+    async function loadPlans() {
+        const token = AuthModule.getToken();
+        if (!token) return;
+
+        // Load generated plans
+        try {
+            const resp = await fetch('/api/user/generated-plans', {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            const data = await resp.json();
+            if (data.success) {
+                renderGeneratedPlans(data.plans || []);
+                const statEl = $('#cabStatPlans');
+                if (statEl) statEl.textContent = (data.plans || []).length;
+            }
+        } catch (e) {
+            console.log('[CAB] Generated plans not available yet');
+        }
+
+        // Load purchased catalog plans
+        try {
+            const resp = await fetch('/api/user/purchased-plans', {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            const data = await resp.json();
+            if (data.success) {
+                renderPurchasedPlans(data.plans || []);
+                const statEl = $('#cabStatPurchased');
+                if (statEl) statEl.textContent = (data.plans || []).length;
+            }
+        } catch (e) {
+            console.log('[CAB] Purchased plans not available yet');
+        }
+    }
+
+    function renderGeneratedPlans(plans) {
+        const container = $('#generatedPlansContent');
+        if (!container) return;
+
+        if (!plans.length) return; // Keep default empty state
+
+        let html = '<div class="cab-plan-list">';
+        plans.forEach(p => {
+            const date = p.created_at ? new Date(p.created_at).toLocaleDateString('uz-UZ', {
+                year: 'numeric', month: 'short', day: 'numeric'
+            }) : '';
+
+            html += `
+                <div class="cab-plan-item">
+                    <div class="cab-plan-item-icon generated">📄</div>
+                    <div class="cab-plan-item-info">
+                        <h4 class="cab-plan-item-title">${p.title || p.loyiha_nomi || 'Biznes reja'}</h4>
+                        <div class="cab-plan-item-meta">
+                            <span>📅 ${date}</span>
+                            ${p.category ? `<span>📂 ${p.category}</span>` : ''}
+                        </div>
+                    </div>
+                    <div class="cab-plan-item-actions">
+                        ${p.pdf_url ? `<a href="${p.pdf_url}" target="_blank" class="cab-btn cab-btn-primary">📥 PDF</a>` : ''}
+                        ${p.word_url ? `<a href="${p.word_url}" target="_blank" class="cab-btn cab-btn-outline">📝 Word</a>` : ''}
+                    </div>
+                </div>`;
+        });
+        html += '</div>';
+        container.innerHTML = html;
+    }
+
+    function renderPurchasedPlans(plans) {
+        const container = $('#purchasedPlansContent');
+        if (!container) return;
+
+        if (!plans.length) return; // Keep default empty state
+
+        let html = '<div class="cab-plan-list">';
+        plans.forEach(p => {
+            const date = p.purchased_at ? new Date(p.purchased_at).toLocaleDateString('uz-UZ', {
+                year: 'numeric', month: 'short', day: 'numeric'
+            }) : '';
+            const price = p.price ? Number(p.price).toLocaleString('uz-UZ') + " so'm" : '';
+
+            html += `
+                <div class="cab-plan-item">
+                    <div class="cab-plan-item-icon purchased">🛒</div>
+                    <div class="cab-plan-item-info">
+                        <h4 class="cab-plan-item-title">${p.title || 'Biznes reja'}</h4>
+                        <div class="cab-plan-item-meta">
+                            <span>📅 ${date}</span>
+                            ${price ? `<span>💰 ${price}</span>` : ''}
+                            ${p.category ? `<span>📂 ${p.category}</span>` : ''}
+                        </div>
+                    </div>
+                    <div class="cab-plan-item-actions">
+                        ${p.download_url ? `<a href="${p.download_url}" target="_blank" class="cab-btn cab-btn-primary">📥 Yuklab olish</a>` : ''}
+                    </div>
+                </div>`;
+        });
+        html += '</div>';
+        container.innerHTML = html;
     }
 
     // ============================================================

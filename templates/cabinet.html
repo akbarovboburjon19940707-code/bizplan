@@ -56,6 +56,10 @@
                     <span class="cab-welcome-stat-label">Yaratilgan rejalar</span>
                 </div>
                 <div class="cab-welcome-stat">
+                    <span class="cab-welcome-stat-value" id="cabStatPurchased">0</span>
+                    <span class="cab-welcome-stat-label">Sotib olingan</span>
+                </div>
+                <div class="cab-welcome-stat">
                     <span class="cab-welcome-stat-value" id="cabStatDaysLeft">∞</span>
                     <span class="cab-welcome-stat-label">Obuna (kun)</span>
                 </div>
@@ -71,7 +75,11 @@
 
         <!-- ═══════ TABS ═══════ -->
         <div class="cab-tabs" id="cabTabs">
-            <button class="cab-tab active" data-tab="profile" onclick="CabinetModule.switchTab('profile')">
+            <button class="cab-tab active" data-tab="plans" onclick="CabinetModule.switchTab('plans')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                Mening rejalarim
+            </button>
+            <button class="cab-tab" data-tab="profile" onclick="CabinetModule.switchTab('profile')">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
                 Profil
             </button>
@@ -89,8 +97,78 @@
             </button>
         </div>
 
+        <!-- ═══════ TAB: MENING REJALARIM ═══════ -->
+        <div class="cab-tab-content active" id="tabPlans">
+            <!-- Tezkor harakatlar -->
+            <div class="cab-quick-actions">
+                <a href="/register" class="cab-quick-card" id="quickNewPlan">
+                    <div class="cab-quick-icon cab-quick-blue">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+                    </div>
+                    <div class="cab-quick-text">
+                        <strong>Yangi biznes reja</strong>
+                        <span>AI yordamida yarating</span>
+                    </div>
+                </a>
+                <a href="/#catalog" class="cab-quick-card" id="quickCatalog">
+                    <div class="cab-quick-icon cab-quick-purple">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+                    </div>
+                    <div class="cab-quick-text">
+                        <strong>Tayyor rejalar katalogi</strong>
+                        <span>Sotib olib yuklab oling</span>
+                    </div>
+                </a>
+                <a href="/dashboard" class="cab-quick-card" id="quickDashboard">
+                    <div class="cab-quick-icon cab-quick-green">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+                    </div>
+                    <div class="cab-quick-text">
+                        <strong>Dashboard</strong>
+                        <span>Barcha vositalar</span>
+                    </div>
+                </a>
+            </div>
+
+            <!-- Yaratilgan rejalar ro'yxati -->
+            <div class="cab-card">
+                <div class="cab-card-header">
+                    <div>
+                        <h3 class="cab-card-title">📄 Yaratilgan biznes rejalar</h3>
+                        <p class="cab-card-subtitle">Siz yaratgan barcha biznes rejalar</p>
+                    </div>
+                </div>
+                <div id="generatedPlansContent">
+                    <div class="cab-empty">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                        <h4>Hali rejalar yaratilmadi</h4>
+                        <p>Yangi biznes reja yaratish uchun quyidagi tugmani bosing</p>
+                        <a href="/register" class="cab-btn cab-btn-primary" style="margin-top:16px;">⚡ Biznes reja yaratish</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sotib olingan tayyor rejalar -->
+            <div class="cab-card">
+                <div class="cab-card-header">
+                    <div>
+                        <h3 class="cab-card-title">🛒 Sotib olingan tayyor rejalar</h3>
+                        <p class="cab-card-subtitle">Katalogdan sotib olgan biznes rejalaringiz</p>
+                    </div>
+                </div>
+                <div id="purchasedPlansContent">
+                    <div class="cab-empty">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+                        <h4>Sotib olingan rejalar yo'q</h4>
+                        <p>Tayyor biznes rejalar katalogidan xarid qiling</p>
+                        <a href="/#catalog" class="cab-btn cab-btn-outline" style="margin-top:16px;">📚 Katalogga o'tish</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- ═══════ TAB: PROFIL ═══════ -->
-        <div class="cab-tab-content active" id="tabProfile">
+        <div class="cab-tab-content" id="tabProfile">
             <div class="cab-card">
                 <div class="cab-card-header">
                     <div>

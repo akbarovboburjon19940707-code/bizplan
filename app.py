@@ -614,6 +614,101 @@ def api_user_payments():
         return jsonify({"success": True, "payments": []})
 
 
+@app.route("/api/user/generated-plans", methods=["GET"])
+@csrf.exempt
+def api_user_generated_plans():
+    """Foydalanuvchi yaratgan biznes rejalar ro'yxati."""
+    from modules.auth import decode_token
+    from models.user import User
+    from models.business import BusinessPlan
+
+    auth_header = request.headers.get('Authorization', '')
+    if not auth_header.startswith('Bearer '):
+        return jsonify({"success": False, "error": "Token kerak"}), 401
+
+    payload = decode_token(auth_header[7:])
+    if not payload or payload.get('type') != 'access':
+        return jsonify({"success": False, "error": "Token yaroqsiz"}), 401
+
+    try:
+        user = db.session.get(User, payload['sub'])
+        if not user:
+            return jsonify({"success": True, "plans": []})
+
+        # Foydalanuvchi yaratgan rejalarni topish
+        plans = BusinessPlan.query.filter_by(
+            user_id=user.id
+        ).order_by(BusinessPlan.created_at.desc()).limit(50).all()
+
+        result = []
+        for p in plans:
+            result.append({
+                "id": p.id,
+                "title": p.loyiha_nomi or p.biznes_turi or "Biznes reja",
+                "category": p.biznes_turi or "",
+                "created_at": p.created_at.isoformat() if p.created_at else None,
+                "pdf_url": f"/api/download/{p.id}/pdf" if p.pdf_file else None,
+                "word_url": f"/api/download/{p.id}/word" if p.word_file else None,
+            })
+
+        return jsonify({"success": True, "plans": result})
+
+    except Exception as e:
+        logger.error(f"User generated plans xatolik: {e}", exc_info=True)
+        return jsonify({"success": True, "plans": []})
+
+
+@app.route("/api/user/purchased-plans", methods=["GET"])
+@csrf.exempt
+def api_user_purchased_plans():
+    """Foydalanuvchi katalogdan sotib olgan rejalar."""
+    from modules.auth import decode_token
+    from models.user import User
+    from models.payment import Payment
+
+    auth_header = request.headers.get('Authorization', '')
+    if not auth_header.startswith('Bearer '):
+        return jsonify({"success": False, "error": "Token kerak"}), 401
+
+    payload = decode_token(auth_header[7:])
+    if not payload or payload.get('type') != 'access':
+        return jsonify({"success": False, "error": "Token yaroqsiz"}), 401
+
+    try:
+        user = db.session.get(User, payload['sub'])
+        if not user:
+            return jsonify({"success": True, "plans": []})
+
+        # Catalog to'lovlarini topish (tasdiqlangan)
+        payments = Payment.query.filter(
+            db.and_(
+                db.or_(
+                    Payment.user_name == user.first_name,
+                    Payment.user_name == user.phone,
+                ),
+                Payment.payment_status == 'success',
+                Payment.payment_type == 'catalog',
+            )
+        ).order_by(Payment.created_at.desc()).limit(50).all()
+
+        result = []
+        for p in payments:
+            result.append({
+                "id": p.id,
+                "title": p.loyiha_nomi or "Biznes reja",
+                "category": "",
+                "price": float(p.amount) if p.amount else None,
+                "purchased_at": p.created_at.isoformat() if p.created_at else None,
+                "download_url": f"/api/catalog/download/{p.prepare_id}" if hasattr(p, 'prepare_id') and p.prepare_id else None,
+            })
+
+        return jsonify({"success": True, "plans": result})
+
+    except Exception as e:
+        logger.error(f"User purchased plans xatolik: {e}", exc_info=True)
+        return jsonify({"success": True, "plans": []})
+
+
 @app.route("/api/auth/telegram", methods=["POST"])
 @csrf.exempt
 @rate_limit(max_req=10, window=60)
