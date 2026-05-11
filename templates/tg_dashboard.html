@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>UzBizness — Telegram</title>
+    <meta name="description" content="Telegram orqali biznes reja yaratish platformasi">
+
+    <!-- Telegram SDK -->
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+
+    <!-- Alohida CSS (asosiy saytga ta'sir qilmaydi) -->
+    <link rel="stylesheet" href="/static/css/tg_app.css">
+</head>
+<body>
+
+<div class="tg-container">
+
+    <!-- Header -->
+    <div class="tg-header">
+        <div class="tg-header-logo">📊</div>
+        <h1>UzBizness</h1>
+        <p>Biznes reja yaratish platformasi</p>
+        <div class="tg-user-greeting" id="tgUserGreeting">👋 Xush kelibsiz!</div>
+    </div>
+
+    <!-- Step Indicator -->
+    <div class="tg-steps-indicator">
+        <div class="tg-step-dot active" id="stepDot1"></div>
+        <div class="tg-step-connector"></div>
+        <div class="tg-step-dot" id="stepDot2"></div>
+        <div class="tg-step-connector"></div>
+        <div class="tg-step-dot" id="stepDot3"></div>
+        <div class="tg-step-connector"></div>
+        <div class="tg-step-dot" id="stepDot4"></div>
+    </div>
+
+    <!-- Alert -->
+    <div class="tg-alert" id="tgAlert"></div>
+
+    <!-- ============================================ -->
+    <!-- STEP 1: Asosiy ma'lumotlar -->
+    <!-- ============================================ -->
+    <div class="tg-step active" id="tgStep1">
+        <div class="tg-card">
+            <div class="tg-card-header">
+                <div class="tg-card-icon green">📋</div>
+                <div>
+                    <div class="tg-card-title">Loyiha ma'lumotlari</div>
+                    <div class="tg-card-subtitle">Asosiy ma'lumotlarni kiriting</div>
+                </div>
+            </div>
+
+            <div class="tg-form-group">
+                <label>Loyiha nomi <span class="required">*</span></label>
+                <input type="text" class="tg-input" id="tgLoyihaNomi"
+                       placeholder="Masalan: Non ishlab chiqarish" autocomplete="off">
+                <!-- Autocomplete dropdown -->
+                <div id="tgAutocomplete" class="hidden"
+                     style="background:#fff;border:1px solid #e2e8f0;border-radius:10px;margin-top:4px;max-height:200px;overflow-y:auto;box-shadow:0 4px 12px rgba(0,0,0,0.1);">
+                </div>
+                <style>
+                    .tg-ac-item {
+                        padding: 10px 14px;
+                        font-size: 14px;
+                        cursor: pointer;
+                        border-bottom: 1px solid #f1f5f9;
+                    }
+                    .tg-ac-item:last-child { border-bottom: none; }
+                    .tg-ac-item:active { background: #f0fdf4; }
+                </style>
+            </div>
+
+            <div class="tg-form-group">
+                <label>Tashabbuskor <span class="required">*</span></label>
+                <input type="text" class="tg-input" id="tgTashabbuskor"
+                       placeholder="Ism va familiya">
+            </div>
+
+            <label style="font-size:13px;font-weight:600;margin-bottom:8px;display:block;">
+                Faoliyat turi <span class="required">*</span>
+            </label>
+            <div class="tg-activity-grid">
+                <div class="tg-activity-btn" data-type="ishlab_chiqarish">
+                    <span class="emoji">🏭</span>
+                    <span class="label">Ishlab chiqarish</span>
+                </div>
+                <div class="tg-activity-btn" data-type="qishloq_xojaligi">
+                    <span class="emoji">🌾</span>
+                    <span class="label">Qishloq xo'jaligi</span>
+                </div>
+                <div class="tg-activity-btn" data-type="savdo">
+                    <span class="emoji">🏪</span>
+                    <span class="label">Savdo</span>
+                </div>
+                <div class="tg-activity-btn" data-type="xizmat">
+                    <span class="emoji">🍽️</span>
+                    <span class="label">Xizmat ko'rsatish</span>
+                </div>
+            </div>
+
+            <button class="tg-btn tg-btn-primary" onclick="TgDashboard.goNext()">
+                Davom etish →
+            </button>
+        </div>
+    </div>
+
+    <!-- ============================================ -->
+    <!-- STEP 2: Moliyaviy ma'lumotlar -->
+    <!-- ============================================ -->
+    <div class="tg-step" id="tgStep2">
+        <div class="tg-card">
+            <div class="tg-card-header">
+                <div class="tg-card-icon blue">💰</div>
+                <div>
+                    <div class="tg-card-title">Moliyaviy ma'lumotlar</div>
+                    <div class="tg-card-subtitle">Loyiha moliyaviy rejalari</div>
+                </div>
+            </div>
+
+            <div class="tg-form-group">
+                <label>Loyiha qiymati (so'm) <span class="required">*</span></label>
+                <input type="text" class="tg-input" id="tgLoyihaQiymati" inputmode="numeric"
+                       placeholder="100 000 000">
+            </div>
+
+            <div class="tg-form-group">
+                <label>O'z mablag'i (so'm)</label>
+                <input type="text" class="tg-input" id="tgOzMablag" inputmode="numeric"
+                       placeholder="50 000 000">
+            </div>
+
+            <div class="tg-form-group">
+                <label>Kredit summasi (so'm)</label>
+                <input type="text" class="tg-input" id="tgKredit" inputmode="numeric"
+                       placeholder="50 000 000">
+            </div>
+
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+                <div class="tg-form-group">
+                    <label>Foiz stavkasi (%)</label>
+                    <input type="number" class="tg-input" id="tgFoiz" value="14"
+                           inputmode="decimal" min="0" max="100">
+                </div>
+                <div class="tg-form-group">
+                    <label>Muddat (oy)</label>
+                    <input type="number" class="tg-input" id="tgMuddat" value="36"
+                           inputmode="numeric" min="1" max="360">
+                </div>
+            </div>
+
+            <div class="tg-form-group">
+                <label>Imtiyozli davr (oy)</label>
+                <input type="number" class="tg-input" id="tgImtiyoz" value="0"
+                       inputmode="numeric" min="0" max="36">
+            </div>
+        </div>
+
+        <div class="tg-card">
+            <div class="tg-card-header">
+                <div class="tg-card-icon orange">📦</div>
+                <div>
+                    <div class="tg-card-title">Mahsulot / Xizmat</div>
+                    <div class="tg-card-subtitle">Sotish rejalari</div>
+                </div>
+            </div>
+
+            <div class="tg-form-group">
+                <label>Mahsulot / Xizmat nomi</label>
+                <input type="text" class="tg-input" id="tgMahsulot"
+                       placeholder="Masalan: Non">
+            </div>
+
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+                <div class="tg-form-group">
+                    <label>Oylik hajm</label>
+                    <input type="text" class="tg-input" id="tgHajm" inputmode="numeric"
+                           placeholder="1000">
+                </div>
+                <div class="tg-form-group">
+                    <label>Narx (so'm)</label>
+                    <input type="text" class="tg-input" id="tgNarx" inputmode="numeric"
+                           placeholder="5000">
+                </div>
+            </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+            <button class="tg-btn tg-btn-secondary" onclick="TgDashboard.goBack()">
+                ← Ortga
+            </button>
+            <button class="tg-btn tg-btn-primary" onclick="TgDashboard.goNext()">
+                Davom →
+            </button>
+        </div>
+    </div>
+
+    <!-- ============================================ -->
+    <!-- STEP 3: Preview + To'lov -->
+    <!-- ============================================ -->
+    <div class="tg-step" id="tgStep3">
+
+        <!-- Preview -->
+        <div class="tg-preview-card" id="tgPreviewContent">
+            <div style="text-align:center;padding:20px;color:var(--tg-hint)">
+                Ma'lumotlar yuklanmoqda...
+            </div>
+        </div>
+
+        <!-- Narx -->
+        <div class="tg-price-badge">
+            <span>💳</span>
+            <span class="price">50 000</span>
+            <span class="currency">so'm</span>
+        </div>
+
+        <!-- To'lov holati -->
+        <div class="tg-status hidden" id="tgPaymentStatus"></div>
+
+        <!-- To'lov usullari -->
+        <div id="tgPayMethods">
+            <div class="tg-card" style="padding:14px">
+                <div class="tg-card-header" style="margin-bottom:10px">
+                    <div class="tg-card-icon purple">💳</div>
+                    <div>
+                        <div class="tg-card-title">To'lov usulini tanlang</div>
+                        <div class="tg-card-subtitle">Avtomatik to'lov tizimlari</div>
+                    </div>
+                </div>
+
+                <div class="tg-pay-methods">
+                    <div class="tg-pay-method" onclick="TgDashboard.startClickPayment()">
+                        <div class="pay-icon click-icon">C</div>
+                        <div class="pay-info">
+                            <div class="pay-name">Click</div>
+                            <div class="pay-desc">Karta orqali onlayn to'lov</div>
+                        </div>
+                        <div class="pay-arrow">→</div>
+                    </div>
+
+                    <div class="tg-pay-method" onclick="TgDashboard.startPaymePayment()">
+                        <div class="pay-icon payme-icon">P</div>
+                        <div class="pay-info">
+                            <div class="pay-name">Payme</div>
+                            <div class="pay-desc">Karta orqali onlayn to'lov</div>
+                        </div>
+                        <div class="pay-arrow">→</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Download Section (to'lovdan keyin) -->
+        <div class="hidden" id="tgDownloadSection">
+            <div class="tg-card" style="text-align:center;padding:24px">
+                <div style="font-size:40px;margin-bottom:12px">🎉</div>
+                <h3 style="margin-bottom:8px">To'lov tasdiqlandi!</h3>
+                <p style="color:var(--tg-hint);margin-bottom:16px;font-size:14px">
+                    Hujjatni yaratish uchun tugmani bosing.
+                    Fayl Telegram chatga yuboriladi.
+                </p>
+                <button class="tg-btn tg-btn-primary" onclick="TgDashboard.generateAndDownload()">
+                    📄 Hujjatni yaratish va olish
+                </button>
+            </div>
+        </div>
+
+        <div style="margin-top:10px">
+            <button class="tg-btn tg-btn-secondary" onclick="TgDashboard.goBack()">
+                ← Ortga
+            </button>
+        </div>
+    </div>
+
+    <!-- ============================================ -->
+    <!-- STEP 4: Yakuniy natija -->
+    <!-- ============================================ -->
+    <div class="tg-step" id="tgStep4">
+        <div class="tg-card" style="text-align:center;padding:30px">
+            <div class="tg-success-anim">
+                <div class="check-circle">✅</div>
+                <h3>Tabriklaymiz!</h3>
+                <p style="color:var(--tg-hint);margin:12px 0 20px">
+                    Biznes rejangiz muvaffaqiyatli yaratildi.
+                </p>
+                <button class="tg-btn tg-btn-primary" onclick="TgDashboard.closeTg()">
+                    📱 Botga qaytish
+                </button>
+            </div>
+        </div>
+    </div>
+
+</div><!-- /tg-container -->
+
+<!-- Loading Overlay -->
+<div class="tg-loading-overlay" id="tgLoadingOverlay">
+    <div class="load-icon">📊</div>
+    <h3 id="tgLoadTitle">Hujjat tayyorlanmoqda...</h3>
+    <p id="tgLoadText">AI tahlillarni jamlamoqda...</p>
+    <div class="tg-progress" style="width:80%;margin-top:20px">
+        <div class="tg-progress-fill" id="tgProgressFill"></div>
+    </div>
+</div>
+
+<!-- Scripts -->
+<script src="/static/js/telegram_webapp.js"></script>
+<script src="/static/js/tg_app.js"></script>
+
+</body>
+</html>

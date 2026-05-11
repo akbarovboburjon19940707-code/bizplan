@@ -381,3 +381,81 @@ def send_test_message(chat_id: str = None):
     else:
         print(f"❌ Test xabar yuborilmadi: {target}")
     return result
+
+
+# ============================================================
+# TELEGRAM DOCUMENT: Fayl yuborish (biznes reja Word/PDF)
+# ============================================================
+
+def send_document(chat_id: str, file_path: str, filename: str = None,
+                  caption: str = None) -> bool:
+    """
+    Faylni Telegram bot orqali yuborish.
+    Biznes reja Word faylini foydalanuvchiga yetkazish uchun.
+
+    Args:
+        chat_id: Telegram user chat ID
+        file_path: Lokal fayl yo'li
+        filename: Foydalanuvchiga ko'rinadigan fayl nomi
+        caption: Fayl ostidagi izoh
+
+    Returns:
+        True — muvaffaqiyatli yuborildi
+    """
+    if not TELEGRAM_BOT_TOKEN:
+        logger.warning("[TG NOTIFY] TELEGRAM_BOT_TOKEN sozlanmagan. Document yuborilmadi.")
+        return False
+
+    if not chat_id:
+        logger.warning("[TG NOTIFY] chat_id bo'sh. Document yuborilmadi.")
+        return False
+
+    if not os.path.exists(file_path):
+        logger.warning(f"[TG NOTIFY] Fayl topilmadi: {file_path}")
+        return False
+
+    try:
+        url = f"{TELEGRAM_API_BASE}/sendDocument"
+        _fn = filename or os.path.basename(file_path)
+        _caption = caption or (
+            f"📄 <b>Biznes rejangiz tayyor!</b>\n\n"
+            f"📁 <b>Fayl:</b> {_fn}\n\n"
+            "✅ Faylni yuklab oling va foydalaning.\n"
+            "📱 UzBizness platformasi"
+        )
+
+        with open(file_path, 'rb') as f:
+            files = {'document': (_fn, f)}
+            data = {
+                'chat_id': chat_id,
+                'caption': _caption,
+                'parse_mode': 'HTML',
+            }
+            response = requests.post(url, data=data, files=files,
+                                     timeout=30)
+
+        result = response.json()
+        if result.get("ok"):
+            logger.info(f"[TG NOTIFY] ✅ Document yuborildi: chat_id={chat_id}, file={_fn}")
+            return True
+        else:
+            logger.warning(f"[TG NOTIFY] Document yuborilmadi: {result.get('description', 'Unknown')}")
+            return False
+
+    except requests.exceptions.Timeout:
+        logger.warning(f"[TG NOTIFY] Document timeout: chat_id={chat_id}")
+        return False
+    except Exception as e:
+        logger.error(f"[TG NOTIFY] send_document xatolik: {e}")
+        return False
+
+
+def send_document_async(chat_id: str, file_path: str, filename: str = None,
+                        caption: str = None):
+    """Documentni alohida thread da yuborish — sayt bloklanmaydi."""
+    thread = threading.Thread(
+        target=send_document,
+        args=(chat_id, file_path, filename, caption),
+        daemon=True,
+    )
+    thread.start()

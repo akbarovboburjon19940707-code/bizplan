@@ -2639,6 +2639,227 @@ def save():
         return jsonify({"success": False, "errors": [f"Xatolik: {str(e)}"]}), 500
 
 
+# ============================================================
+# ROUTES — TELEGRAM MINI APP (Alohida sahifa — asosiy tizimga ta'sir qilmaydi)
+# ============================================================
+
+@app.route("/tg-dashboard")
+def tg_dashboard():
+    """
+    Telegram Mini App uchun alohida dashboard.
+    Asosiy dashboard (/dashboard) ga ta'sir qilmaydi.
+    Click/Payme to'lov va fayl yuklab olish Telegram uchun optimallashtirilgan.
+    """
+    return render_template("tg_dashboard.html")
+
+
+@app.route("/api/tg/save", methods=["POST"])
+@csrf.exempt
+@rate_limit(max_req=10, window=60)
+def api_tg_save():
+    """
+    Telegram Mini App uchun alohida /save endpoint.
+    Asosiy /save ga ta'sir QILMAYDI.
+
+    Qo'shimcha imkoniyatlar:
+      - Word faylni R2 ga yuklash
+      - Telegram bot orqali foydalanuvchiga sendDocument qilish
+      - r2_url va telegram_file_sent qaytarish
+    """
+    session_dir = None
+    try:
+        cleanup_old_sessions(2)
+
+        # 1. Validatsiya (minimal — Telegram uchun)
+        loyiha_nomi = request.form.get("loyiha_nomi", "").strip()
+        tashabbuskor = request.form.get("tashabbuskor", "").strip()
+        faoliyat_turi = request.form.get("faoliyat_turi", "xizmat")
+
+        if not loyiha_nomi:
+            return jsonify({"success": False, "errors": ["Loyiha nomini kiriting"]}), 400
+        if not tashabbuskor:
+            return jsonify({"success": False, "errors": ["Tashabbuskor nomini kiriting"]}), 400
+
+        # 2. User va obuna tekshiruvi
+        _gen_user_id = None
+        _tg_user_telegram_id = None
+        has_active_sub = False
+
+        try:
+            from modules.auth import decode_token
+            from modules.subscription_service import check_ai_usage
+            _auth_h = request.headers.get('Authorization', '')
+            if _auth_h.startswith('Bearer '):
+                _pl = decode_token(_auth_h[7:])
+                if _pl and _pl.get('type') == 'access':
+                    _gen_user_id = _pl['sub']
+                    _usage_check = check_ai_usage(_gen_user_id)
+
+                    if not _usage_check['allowed']:
+                        return jsonify({
+                            "success": False,
+                            "errors": [_usage_check['reason']],
+                            "usage_limit": True,
+                            "upgrade_needed": True,
+                        }), 429
+
+                    if _usage_check.get('usage', {}).get('plan') != 'basic':
+                        has_active_sub = True
+
+                    # Telegram ID olish
+                    from models.user import User as _TgUser
+                    _u = db.session.get(_TgUser, _gen_user_id)
+                    if _u and _u.telegram_id:
+                        _tg_user_telegram_id = _u.telegram_id
+        except Exception as _ue:
+            logger.warning(f"[TG SAVE] Usage check xatolik: {_ue}")
+
+        # 3. To'lov tekshiruvi (agar obuna yo'q bo'lsa)
+        payment_id = request.form.get("payment_id")
+        if not has_active_sub:
+            if not payment_id:
+                return jsonify({
+                    "success": False,
+                    "errors": ["To'lov talab qilinadi. Click yoki Payme orqali to'lang."],
+                    "usage_limit": True,
+                    "upgrade_needed": True,
+                }), 429
+            payment = get_payment(payment_id)
+            if not payment:
+                return jsonify({"success": False, "errors": ["To'lov topilmadi."]}), 403
+
+            # Click/Payme uchun — payment_status=success
+            provider = payment.get("payment_provider", "card")
+            if provider in ("click", "payme"):
+                if payment.get("payment_status") != "success":
+                    return jsonify({"success": False, "errors": ["To'lov hali tasdiqlanmagan."]}), 403
+            else:
+                if payment.get("status") != "approved":
+                    return jsonify({"success": False, "errors": ["To'lov admin tomonidan tasdiqlanmagan."]}), 403
+
+        # 4. Session yaratish
+        session_dir, sid = create_session()
+        logger.info(f"[TG SAVE] Session: {sid}")
+
+        # 5. Moliyaviy Model
+        model = FinancialEngine(request.form)
+        analysis = model.indicators
+
+        # 6. Word Context
+        ai_context = model.get_context()
+        warning_msg = analysis.get("warning", "")
+
+        f_npv = f"{analysis['npv']:,.0f}".replace(",", " ")
+        f_roi = f"{analysis['roi']:.1f}"
+        f_irr = f"{analysis.get('irr', 0):.1f}" if analysis.get('irr') else "—"
+
+        if warning_msg:
+            xulosa_text = f"Tahlillar natijasida ushbu loyiha hozirgi kiritilgan ma'lumotlar bilan tijorat jihatdan yetarli darajada samarali emasligi aniqlandi. {warning_msg} Loyihaning joriy holatida rentabellik ko'rsatkichlari (NPV={f_npv} so'm, ROI={f_roi}%) ekanligi ma'lum bo'ldi."
+        else:
+            xulosa_text = f"Tahlillar natijasida ushbu loyiha tijorat jihatdan yuqori daromad keltirishi aniqlandi. Hisoblangan rentabellik ko'rsatkichlari (NPV={f_npv} so'm, ROI={f_roi}%, IRR={f_irr}%) mustahkam kafolatlangan va ijobiy dinamika namoyon etadi."
+
+        ai_context.update({
+            "extra_doc": "Qo'shimcha hujjat taqdim etilmagan.",
+            "tasdiqlash": False,
+            "mundarija": "1. Mahfiyligini ta`minlash memorandumi\n2. Loyiha tashabbuskori to'g'risida ma'lumot\n3. Loyiha maqsadi va yo'nalishi\n4. Bozor kon'yunkturasi tahlili\n5. Loyihaning SWOT tahlili\n6. Moliyaviy reja va iqtisodiy tahlil\n7. Xulosa\nIlovalar",
+            "mahfiyligini_ta_minlash_memorandumi": "Ushbu biznes reja loyiha tashabbuskori va moliyalashtiruvchi muassasalar o'rtasidagi muzokaralar uchun mo'ljallangan.",
+            "xulosa": xulosa_text
+        })
+
+        # 7. AI Text Generation
+        _ai_start = time.time()
+        _ai_success = False
+        try:
+            logger.info("[TG SAVE] PRO AI: Matnlarni generatsiya qilish boshlandi...")
+            pro_texts = generate_pro_business_text(ai_context)
+            if pro_texts:
+                ai_context.update(pro_texts)
+                _ai_success = True
+                logger.info("[TG SAVE] PRO AI: Matnlar muvaffaqiyatli integratsiya qilindi.")
+        except Exception as ai_err:
+            logger.error(f"[TG SAVE] PRO AI Error: {ai_err}")
+
+        # AI usage yozish
+        try:
+            from modules.subscription_service import record_ai_usage
+            record_ai_usage(
+                user_id=_gen_user_id,
+                provider='groq',
+                request_type='business_plan',
+                response_time_ms=int((time.time() - _ai_start) * 1000),
+                is_success=_ai_success,
+                session_id=sid,
+            )
+        except Exception:
+            pass
+
+        # 8. Professional fayl nomi
+        pro_filename = generate_filename(
+            loyiha_nomi=loyiha_nomi,
+            yil=safe_int(request.form.get("yil"), datetime.now().year),
+            faoliyat_turi=faoliyat_turi,
+            tashabbuskor=tashabbuskor,
+            format="docx"
+        )
+
+        # 9. Word yaratish
+        word_path = os.path.join(session_dir, pro_filename)
+        create_word_document(WORD_TEMPLATE, word_path, ai_context, {}, model=model)
+        logger.info(f"[TG SAVE] Word tayyor: {pro_filename}")
+
+        # 10. Download URL (oddiy fallback)
+        quoted_name = urllib.parse.quote(pro_filename)
+        download_url = f"/api/download_document/{sid}/{quoted_name}"
+
+        # 11. Telegram: R2 ga yuklash + Bot orqali yuborish
+        telegram_file_sent = False
+        r2_url = None
+
+        if _tg_user_telegram_id:
+            # R2 ga yuklash
+            try:
+                from modules.r2_storage import upload_from_path, get_public_url
+                r2_key = f"generated/{sid}/{pro_filename}"
+                if upload_from_path(word_path, r2_key):
+                    r2_url = get_public_url(r2_key)
+                    logger.info(f"[TG SAVE] R2 ga yuklandi: {r2_key}")
+            except Exception as r2e:
+                logger.warning(f"[TG SAVE] R2 yuklash xatolik: {r2e}")
+
+            # Telegram bot orqali fayl yuborish
+            try:
+                from modules.telegram_notifier import send_document
+                telegram_file_sent = send_document(
+                    chat_id=_tg_user_telegram_id,
+                    file_path=word_path,
+                    filename=pro_filename,
+                    caption=(
+                        f"📄 <b>Biznes rejangiz tayyor!</b>\n\n"
+                        f"📋 <b>Loyiha:</b> {loyiha_nomi}\n"
+                        f"👤 <b>Tashabbuskor:</b> {tashabbuskor}\n\n"
+                        "✅ Faylni yuklab oling va foydalaning.\n"
+                        "📱 UzBizness platformasi — @uzbiznesssbot"
+                    )
+                )
+                if telegram_file_sent:
+                    logger.info(f"[TG SAVE] ✅ Fayl Telegram ga yuborildi: {_tg_user_telegram_id}")
+            except Exception as tge:
+                logger.warning(f"[TG SAVE] Telegram yuborish xatolik: {tge}")
+
+        return jsonify({
+            "success": True,
+            "download_url": download_url,
+            "r2_url": r2_url,
+            "telegram_file_sent": telegram_file_sent,
+        })
+
+    except Exception as e:
+        logger.error(f"[TG SAVE] Xatolik: {e}", exc_info=True)
+        if session_dir:
+            cleanup_session(session_dir)
+        return jsonify({"success": False, "errors": [f"Xatolik: {str(e)}"]}), 500
+
+
 @app.errorhandler(413)
 def too_large(e):
     return jsonify({"success": False, "errors": ["Fayl 50MB dan katta"], "error": "Fayl 50MB dan katta"}), 413
