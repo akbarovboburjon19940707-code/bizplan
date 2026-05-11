@@ -11,7 +11,7 @@ Xususiyatlar:
   - Unique order_id generatsiya
   - Backward compatible dict response
 
-Narx: 80,000 so'm
+Narx: 50,000 so'm
 Karta: 9860 0401 0203 1362 (Akbarov B)
 """
 import uuid
@@ -28,7 +28,7 @@ from models.payment import Transaction, PaymentCallback
 logger = logging.getLogger(__name__)
 
 # ── Configuration ──────────────────────────────────────────────
-PLAN_PRICE = 80_000
+PLAN_PRICE = 50_000
 CARD_NUMBER = "9860 0401 0203 1362"
 CARD_HOLDER = "Akbarov B"
 ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "admin2026")

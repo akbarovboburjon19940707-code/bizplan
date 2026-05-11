@@ -9,8 +9,8 @@ Tariflar:
 
 Narxlar:
   - free:       0 so'm
-  - basic:      80,000 so'm (30 kun)
-  - pro:        150,000 so'm (30 kun)
+  - basic:      50,000 so'm (1 ta reja)
+  - pro:        500,000 so'm (30 kun oylik)
   - enterprise: 1,200,000 so'm (365 kun)
 """
 import logging
@@ -38,7 +38,7 @@ PLANS = {
     },
     'basic': {
         'name': 'Standart',
-        'price': 80_000,
+        'price': 50_000,
         'duration_days': 30,
         'max_plans': 10,
         'daily_ai_limit': 20,
@@ -48,7 +48,7 @@ PLANS = {
     },
     'pro': {
         'name': 'Premium',
-        'price': 150_000,
+        'price': 500_000,
         'duration_days': 30,
         'max_plans': -1,  # Cheksiz
         'daily_ai_limit': -1,  # Cheksiz

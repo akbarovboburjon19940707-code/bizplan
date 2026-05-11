@@ -45,8 +45,8 @@ PLAN_CONFIG = {
     'pro': {
         'display_name': 'Standart',
         'display_name_uz': 'Standart',
-        'price': 80000,
-        'price_formatted': "80 000 so'm",
+        'price': 50000,
+        'price_formatted': "50 000 so'm",
         'ai_daily_limit': 5,
         'ai_monthly_limit': 30,
         'can_generate': True,
@@ -68,8 +68,8 @@ PLAN_CONFIG = {
     'enterprise': {
         'display_name': 'Premium',
         'display_name_uz': 'Premium',
-        'price': 150000,
-        'price_formatted': "150 000 so'm",
+        'price': 500000,
+        'price_formatted': "500 000 so'm",
         'ai_daily_limit': 50,
         'ai_monthly_limit': 500,
         'can_generate': True,
