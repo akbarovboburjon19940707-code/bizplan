@@ -1161,7 +1161,7 @@ def api_telegram_webhook():
         # Faqat "Biznes reja yaratish" tugmasi bilan keyboard
         main_keyboard = {
             "keyboard": [
-                [{"text": "📋 Biznes reja yaratish", "web_app": {"url": "https://uzbizness.uz/dashboard"}}]
+                [{"text": "📋 Biznes reja yaratish", "web_app": {"url": "https://bizplanai.uz/register"}}]
             ],
             "resize_keyboard": True,
             "one_time_keyboard": False
