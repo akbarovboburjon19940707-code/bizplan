@@ -1,0 +1,139 @@
+/**
+ * Telegram Mini App UI Adaptatsiya
+ * ==================================
+ * Telegram ichida ochilganda qo'shimcha stil qo'shadi.
+ * .tg-webapp class body ga telegram_webapp.js tomonidan qo'shiladi.
+ * Oddiy browser da hech qanday ta'sir qilmaydi.
+ */
+
+/* ── Telegram muhitida header/footer yashirish ── */
+.tg-webapp .site-header,
+.tg-webapp .cab-header,
+.tg-webapp .dash-topbar,
+.tg-webapp .site-footer,
+.tg-webapp .dash-footer,
+.tg-webapp .back-to-top,
+.tg-webapp .footer-wave {
+    display: none !important;
+}
+
+/* ── Body padding fix (header yo'q) ── */
+.tg-webapp body,
+html.tg-webapp body {
+    padding-top: 0 !important;
+    margin-top: 0 !important;
+}
+
+/* ── Landing hero section — Telegram da kompakt ── */
+.tg-webapp .hero-section {
+    padding-top: 30px !important;
+    min-height: auto !important;
+}
+
+.tg-webapp .hero-title {
+    font-size: 28px !important;
+    line-height: 1.2 !important;
+}
+
+.tg-webapp .hero-subtitle {
+    font-size: 14px !important;
+}
+
+.tg-webapp .hero-visual {
+    display: none !important;
+}
+
+/* ── Telegram tema ranglari ── */
+.tg-webapp {
+    --tg-bg-color: #ffffff;
+    --tg-text-color: #000000;
+    --tg-hint-color: #999999;
+    --tg-link-color: #2481cc;
+    --tg-button-color: #2481cc;
+    --tg-button-text-color: #ffffff;
+    --tg-secondary-bg-color: #f0f0f0;
+}
+
+/* ── Card va container lar — Telegram ranglariga mos ── */
+.tg-webapp .cab-card,
+.tg-webapp .cab-sub-card {
+    background: var(--tg-bg-color, #fff);
+    color: var(--tg-text-color, #000);
+}
+
+/* ── Tugmalar — Telegram rangi ── */
+.tg-webapp .cab-btn-primary,
+.tg-webapp .btn-primary {
+    background: var(--tg-button-color, #2481cc) !important;
+    color: var(--tg-button-text-color, #fff) !important;
+}
+
+/* ── Cabinet layout — Telegram da yuqori padding kamaytirish ── */
+.tg-webapp .cab-layout {
+    padding-top: 16px !important;
+}
+
+.tg-webapp .cab-welcome {
+    margin-top: 0 !important;
+}
+
+/* ── Dashboard (index.html) — kompakt ── */
+.tg-webapp .dashboard-header {
+    padding-top: 16px !important;
+}
+
+/* ── Landing sections — kompakt spacing ── */
+.tg-webapp .knowledge-section,
+.tg-webapp .how-section,
+.tg-webapp .features-section,
+.tg-webapp .pricing-section,
+.tg-webapp .blog-section,
+.tg-webapp .cta-section,
+.tg-webapp .trusted-section {
+    padding: 40px 0 !important;
+}
+
+/* ── Hero buttons — Telegram da kattaroq ── */
+.tg-webapp .hero-buttons .btn {
+    padding: 14px 28px !important;
+    font-size: 16px !important;
+    border-radius: 12px !important;
+}
+
+/* ── Mobile responsive — Telegram da har doim mobile ── */
+.tg-webapp .container {
+    padding-left: 16px !important;
+    padding-right: 16px !important;
+}
+
+/* ── Telegram Mini App safe area ── */
+.tg-webapp {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/* ── Auth modal — Telegram da yashirish (avtomatik login) ── */
+.tg-webapp .auth-overlay,
+.tg-webapp .auth-modal {
+    display: none !important;
+}
+
+/* ── Scrollbar yashirish (Telegram ichida chiroyliroq) ── */
+.tg-webapp::-webkit-scrollbar {
+    width: 0;
+    display: none;
+}
+
+.tg-webapp {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+
+/* ── Telegram dark mode ── */
+@media (prefers-color-scheme: dark) {
+    .tg-webapp {
+        --tg-bg-color: #1c1c1e;
+        --tg-text-color: #ffffff;
+        --tg-hint-color: #8e8e93;
+        --tg-secondary-bg-color: #2c2c2e;
+    }
+}

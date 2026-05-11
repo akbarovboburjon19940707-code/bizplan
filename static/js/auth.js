@@ -368,20 +368,107 @@ const AuthModule = (() => {
         }
     }
 
-    // ── Telegram Login ──
+    // ── Telegram Login (Bot orqali — polling) ──
+    let _tgPollInterval = null;
+    let _tgPollToken = null;
+    let _tgCountdown = null;
+    let _tgSecondsLeft = 300;
+
     function telegramLogin() {
-        const botName = window.__TELEGRAM_BOT_NAME || 'UzBizness_bot';
-        const authUrl = `https://t.me/${botName}?start=login`;
-        window.open(authUrl, '_blank');
-        // Show info
+        // Oldingi polling ni to'xtatish
+        _stopTgPolling();
+
         const loginError = $('#loginError');
-        if (loginError) {
+        const btn = document.querySelector('[onclick="AuthModule.telegramLogin()"]');
+
+        function showTgStatus(msg, type = 'info') {
+            if (!loginError) return;
             loginError.style.display = 'block';
-            loginError.style.background = 'rgba(59,130,246,0.1)';
-            loginError.style.color = '#3b82f6';
-            loginError.style.borderColor = 'rgba(59,130,246,0.2)';
-            loginError.textContent = "Telegram botga /start yuboring. Keyin sahifani yangilang.";
+            loginError.style.background = type === 'info'
+                ? 'rgba(59,130,246,0.1)' : type === 'success'
+                ? 'rgba(34,197,94,0.1)' : 'rgba(239,68,68,0.1)';
+            loginError.style.color = type === 'info' ? '#3b82f6' : type === 'success' ? '#16a34a' : '#dc2626';
+            loginError.style.borderColor = type === 'info'
+                ? 'rgba(59,130,246,0.3)' : type === 'success'
+                ? 'rgba(34,197,94,0.3)' : 'rgba(239,68,68,0.3)';
+            loginError.innerHTML = msg;
+            loginError.classList.add('visible');
         }
+
+        showTgStatus('⏳ Telegram ulanmoqda...');
+        if (btn) { btn.disabled = true; btn.classList.add('loading'); }
+
+        // 1) Temp token olish
+        fetch('/api/auth/telegram-login-init', { method: 'POST' })
+            .then(r => r.json())
+            .then(data => {
+                if (!data.success) throw new Error(data.error || 'Xatolik');
+                _tgPollToken = data.token;
+
+                const botName = window.__TELEGRAM_BOT_NAME || 'uzbiznesssbot';
+                const botUrl = `https://t.me/${botName}?start=login_${_tgPollToken}`;
+
+                // 2) Botni yangi tabda ochish
+                window.open(botUrl, '_blank');
+
+                // 3) Countdown timer
+                _tgSecondsLeft = 300;
+                function updateTimer() {
+                    const m = Math.floor(_tgSecondsLeft / 60);
+                    const s = _tgSecondsLeft % 60;
+                    showTgStatus(
+                        `📱 <b>Telegram bot ochildi!</b><br>` +
+                        `Botda <b>/start</b> yuboring va sahifaga qaytmang — kirish avtomatik bo'ladi.<br>` +
+                        `<small style="opacity:0.7;">Kutish vaqti: ${m}:${String(s).padStart(2,'0')}</small>`
+                    );
+                    _tgSecondsLeft--;
+                    if (_tgSecondsLeft < 0) _stopTgPolling();
+                }
+                updateTimer();
+                _tgCountdown = setInterval(updateTimer, 1000);
+
+                // 4) Polling — har 3 sekundda tekshirish
+                _tgPollInterval = setInterval(() => {
+                    fetch(`/api/auth/telegram-poll?token=${encodeURIComponent(_tgPollToken)}`)
+                        .then(r => r.json())
+                        .then(res => {
+                            if (res.status === 'authenticated' && res.success) {
+                                _stopTgPolling();
+                                // JWT saqlash
+                                localStorage.setItem('auth_token', res.access_token);
+                                if (res.refresh_token) localStorage.setItem('refresh_token', res.refresh_token);
+                                localStorage.setItem('user_data', JSON.stringify(res.user));
+                                currentUser = res.user;
+
+                                // Muvaffaqiyat UI
+                                $$('.auth-form').forEach(f => f.classList.remove('active'));
+                                $('#authSuccessTitle').textContent = `Xush kelibsiz, ${res.user.first_name || 'Foydalanuvchi'}! 🎉`;
+                                $('#authSuccessDesc').textContent = 'Telegram orqali muvaffaqiyatli kirdingiz';
+                                $('#authSuccess').classList.add('visible');
+                                updateHeaderUI(res.user);
+                                setTimeout(() => close(), 2000);
+
+                            } else if (res.status === 'expired') {
+                                _stopTgPolling();
+                                showTgStatus('⏰ Vaqt tugadi. Qaytadan urinib ko\'ring.', 'error');
+                                if (btn) { btn.disabled = false; btn.classList.remove('loading'); }
+                            }
+                            // pending — kutishda davom etish
+                        })
+                        .catch(() => { /* tarmoq xatolik — polling davom etadi */ });
+                }, 3000);
+
+            })
+            .catch(err => {
+                showTgStatus(`❌ Xatolik: ${err.message}. Qaytadan urinib ko'ring.`, 'error');
+                if (btn) { btn.disabled = false; btn.classList.remove('loading'); }
+            });
+    }
+
+    function _stopTgPolling() {
+        if (_tgPollInterval) { clearInterval(_tgPollInterval); _tgPollInterval = null; }
+        if (_tgCountdown) { clearInterval(_tgCountdown); _tgCountdown = null; }
+        _tgPollToken = null;
     }
 
     // ── Logout ──

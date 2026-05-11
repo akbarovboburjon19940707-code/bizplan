@@ -145,6 +145,14 @@ def activate_subscription(user_id: str, plan_name: str,
             db.session.commit()
             logger.info(f"[SUB] Uzaytirildi: user={user_id}, plan={plan_name}, "
                         f"end={existing.end_date}")
+
+            # ── Telegram bildirishnoma ──
+            try:
+                from modules.telegram_notifier import notify_subscription_activated
+                notify_subscription_activated(user_id, plan_name, plan['duration_days'])
+            except Exception:
+                pass  # Telegram xatolik obunaga ta'sir qilmaydi
+
             return {'success': True, 'subscription': existing.to_dict(),
                     'action': 'extended'}
         except Exception as e:
@@ -176,6 +184,14 @@ def activate_subscription(user_id: str, plan_name: str,
         db.session.commit()
         logger.info(f"[SUB] Yaratildi: user={user_id}, plan={plan_name}, "
                     f"end={sub.end_date}")
+
+        # ── Telegram bildirishnoma ──
+        try:
+            from modules.telegram_notifier import notify_subscription_activated
+            notify_subscription_activated(user_id, plan_name, plan['duration_days'])
+        except Exception:
+            pass  # Telegram xatolik obunaga ta'sir qilmaydi
+
         return {'success': True, 'subscription': sub.to_dict(),
                 'action': 'created'}
     except Exception as e:
