@@ -2461,6 +2461,7 @@ def api_download_doc(sid, filename):
 # ROUTES — SAVE (PDF yaratish)
 # ============================================================
 @app.route("/save", methods=["POST"])
+@csrf.exempt
 @rate_limit(max_req=10, window=60)
 def save():
     session_dir = None

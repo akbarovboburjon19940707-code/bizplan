@@ -965,7 +965,13 @@ async function processPaymentAndDownload(format = 'zip') {
         clearInterval(progInterval);
         overlay.classList.remove('active');
         console.error("Download error:", e);
-        showAlert(e.message || "Yuklab olishda xatolik yuz berdi.");
+        
+        // Telegram WebApp uchun yaxshiroq xatolik xabari
+        let errorMsg = e.message || "Yuklab olishda xatolik yuz berdi.";
+        if (errorMsg.toLowerCase().includes('failed to fetch') || errorMsg.toLowerCase().includes('networkerror')) {
+            errorMsg = "Serverga ulanishda xatolik. Internet aloqangizni tekshiring va qaytadan urinib ko'ring.";
+        }
+        showAlert(errorMsg);
     }
 }
 
