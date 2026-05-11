@@ -801,7 +801,7 @@ async function checkPaymentStatus(paymentId) {
         const resp = await fetch('/api/payment/status/' + paymentId);
         const res = await resp.json();
         if (res.success) {
-            if (res.status === 'approved') {
+            if (res.status === 'approved' || res.status === 'success') {
                 clearInterval(paymentStatusInterval);
                 document.getElementById('paymentStatusBox').classList.add('hidden');
                 document.getElementById('downloadSection').classList.remove('hidden');
@@ -929,7 +929,6 @@ async function processPaymentAndDownload(format = 'zip') {
             reqHeaders['Authorization'] = 'Bearer ' + AuthModule.getToken();
         }
 
-        // Fetch (JSON qaytadi, fayl emas)
         const resp = await fetch('/save', {
             method: 'POST',
             headers: reqHeaders,
@@ -946,27 +945,76 @@ async function processPaymentAndDownload(format = 'zip') {
             throw new Error(res.errors ? res.errors[0] : (res.error || "Xatolik yuz berdi"));
         }
 
-        // Muvaffaqiyatli - faylni serverdan URL orqali yuklash
-        if (res.download_url) {
-            window.location.href = res.download_url;
-        }
-
         // Muvaffaqiyatli
-        if (lTitle) lTitle.textContent = "Tayyor! ✅";
-        if (lText) lText.textContent = "Hujjatlar muvaffaqiyatli yuklandi.";
         if (pFill) pFill.style.width = '100%';
-        
-        setTimeout(() => {
-            clearInterval(progInterval);
-            overlay.classList.remove('active');
-        }, 2000);
+
+        // Telegram muhitini aniqlash
+        const isTelegram = !!(window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initData);
+
+        if (res.telegram_file_sent) {
+            // Fayl Telegram chatga yuborildi
+            if (lTitle) lTitle.textContent = "Tayyor! ✅";
+            if (lText) lText.textContent = "Hujjat Telegram chatga yuborildi! Botga qayting.";
+
+            setTimeout(() => {
+                clearInterval(progInterval);
+                overlay.classList.remove('active');
+
+                // Download section ni yangilash
+                const dlSection = document.getElementById('downloadSection');
+                if (dlSection) {
+                    dlSection.innerHTML = `
+                        <div style="margin:20px 0;padding:24px;background:#ecfdf5;border:1px solid #6ee7b7;border-radius:12px;text-align:center;">
+                            <div style="font-size:48px;margin-bottom:12px;">🎉</div>
+                            <h4 style="color:#059669;margin-bottom:8px;">Biznes reja tayyor!</h4>
+                            <p style="font-size:0.9rem;color:#64748b;margin-bottom:16px;">Hujjat Telegram chatga yuborildi.<br>Botga qayting va faylni yuklab oling.</p>
+                            ${isTelegram ? '<button type="button" class="btn btn-primary" style="width:100%;height:50px;font-size:1.1rem;background:#059669;border-color:#059669;" onclick="window.Telegram.WebApp.close()">📱 Botga qaytish</button>' : ''}
+                        </div>
+                    `;
+                    dlSection.classList.remove('hidden');
+                }
+            }, 2000);
+
+        } else if (res.r2_url) {
+            // R2 URL orqali ochish
+            if (lTitle) lTitle.textContent = "Tayyor! ✅";
+            if (lText) lText.textContent = "Hujjat tayyor. Yuklab olish boshlanmoqda...";
+
+            setTimeout(() => {
+                clearInterval(progInterval);
+                overlay.classList.remove('active');
+
+                if (isTelegram && window.Telegram.WebApp.openLink) {
+                    window.Telegram.WebApp.openLink(res.r2_url);
+                } else {
+                    window.open(res.r2_url, '_blank');
+                }
+            }, 2000);
+
+        } else if (res.download_url) {
+            // Oddiy download URL
+            if (lTitle) lTitle.textContent = "Tayyor! ✅";
+            if (lText) lText.textContent = "Hujjatlar muvaffaqiyatli yuklandi.";
+
+            setTimeout(() => {
+                clearInterval(progInterval);
+                overlay.classList.remove('active');
+
+                if (isTelegram && window.Telegram.WebApp.openLink) {
+                    // Telegram ichida — tashqi brauzerda ochish
+                    var fullUrl = window.location.origin + res.download_url;
+                    window.Telegram.WebApp.openLink(fullUrl);
+                } else {
+                    window.location.href = res.download_url;
+                }
+            }, 2000);
+        }
 
     } catch (e) {
         clearInterval(progInterval);
         overlay.classList.remove('active');
         console.error("Download error:", e);
         
-        // Telegram WebApp uchun yaxshiroq xatolik xabari
         let errorMsg = e.message || "Yuklab olishda xatolik yuz berdi.";
         if (errorMsg.toLowerCase().includes('failed to fetch') || errorMsg.toLowerCase().includes('networkerror')) {
             errorMsg = "Serverga ulanishda xatolik. Internet aloqangizni tekshiring va qaytadan urinib ko'ring.";

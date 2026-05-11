@@ -2507,8 +2507,17 @@ def save():
             if not payment_id:
                 return jsonify({"success": False, "errors": ["Ushbu hujjatni yaratish uchun faol obunangiz yo'q. Iltimos obuna xarid qiling yoki alohida to'lov qiling."], "usage_limit": True, "upgrade_needed": True}), 429
             payment = get_payment(payment_id)
-            if not payment or payment.get("status") != "approved":
-                return jsonify({"success": False, "errors": ["Ushbu hujjat uchun to'lov admin tomonidan tasdiqlanmagan."]}), 403
+            if not payment:
+                return jsonify({"success": False, "errors": ["To'lov topilmadi."]}), 403
+            
+            # Click/Payme uchun payment_status=success, card uchun status=approved
+            provider = payment.get("payment_provider", "card")
+            if provider in ("click", "payme"):
+                if payment.get("payment_status") != "success":
+                    return jsonify({"success": False, "errors": ["To'lov hali tasdiqlanmagan. Click/Payme orqali to'lovni yakunlang."]}), 403
+            else:
+                if payment.get("status") != "approved":
+                    return jsonify({"success": False, "errors": ["Ushbu hujjat uchun to'lov admin tomonidan tasdiqlanmagan."]}), 403
                 
             # GENERATSIYA VA KATALOGNI AJRATISH:
             if payment.get("product_id") is not None:
@@ -2617,9 +2626,59 @@ def save():
             quoted_name = urllib.parse.quote(pro_filename)
             download_url = f"/api/download_document/{sid}/{quoted_name}"
             logger.info(f"AJAX Document URL: {download_url}")
+
+            # Telegram foydalanuvchisiga fayl yuborish
+            telegram_file_sent = False
+            r2_url = None
+            _tg_user_telegram_id = None
+
+            try:
+                if _gen_user_id:
+                    from models.user import User as _SaveTgUser
+                    _su = db.session.get(_SaveTgUser, _gen_user_id)
+                    if _su and _su.telegram_id:
+                        _tg_user_telegram_id = _su.telegram_id
+            except Exception as _tge:
+                logger.warning(f"[SAVE] Telegram ID olish xatolik: {_tge}")
+
+            if _tg_user_telegram_id:
+                # R2 ga yuklash
+                try:
+                    from modules.r2_storage import upload_from_path, get_public_url
+                    r2_key = f"generated/{sid}/{pro_filename}"
+                    if upload_from_path(word_path, r2_key):
+                        r2_url = get_public_url(r2_key)
+                        logger.info(f"[SAVE] R2 ga yuklandi: {r2_key}")
+                except Exception as r2e:
+                    logger.warning(f"[SAVE] R2 yuklash xatolik: {r2e}")
+
+                # Telegram bot orqali fayl yuborish
+                try:
+                    from modules.telegram_notifier import send_document
+                    loyiha_nomi = request.form.get('loyiha_nomi', 'Biznes Reja')
+                    tashabbuskor = request.form.get('tashabbuskor', '')
+                    telegram_file_sent = send_document(
+                        chat_id=str(_tg_user_telegram_id),
+                        file_path=word_path,
+                        filename=pro_filename,
+                        caption=(
+                            f"📄 <b>Biznes rejangiz tayyor!</b>\n\n"
+                            f"📋 <b>Loyiha:</b> {loyiha_nomi}\n"
+                            f"👤 <b>Tashabbuskor:</b> {tashabbuskor}\n\n"
+                            "✅ Faylni yuklab oling va foydalaning.\n"
+                            "📱 UzBizness platformasi — @uzbiznesssbot"
+                        )
+                    )
+                    if telegram_file_sent:
+                        logger.info(f"[SAVE] ✅ Fayl Telegram ga yuborildi: {_tg_user_telegram_id}")
+                except Exception as tge:
+                    logger.warning(f"[SAVE] Telegram yuborish xatolik: {tge}")
+
             return jsonify({
                 "success": True,
-                "download_url": download_url
+                "download_url": download_url,
+                "r2_url": r2_url,
+                "telegram_file_sent": telegram_file_sent,
             })
 
         # Eski usul (Fallback)
