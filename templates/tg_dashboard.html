@@ -3,14 +3,28 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <title>UzBizness — Telegram</title>
     <meta name="description" content="Telegram orqali biznes reja yaratish platformasi">
 
-    <!-- Telegram SDK -->
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <!-- Global error handler — WebView crash oldini olish -->
+    <script>
+        window.onerror = function(m,u,l){ return true; };
+        window.addEventListener('unhandledrejection', function(e){ e.preventDefault(); });
+    </script>
+
+    <!-- Telegram SDK (xavfsiz yuklash) -->
+    <script>
+        try {
+            var s = document.createElement('script');
+            s.src = 'https://telegram.org/js/telegram-web-app.js';
+            s.onerror = function() { console.log('TG SDK load failed'); };
+            document.head.appendChild(s);
+        } catch(e) {}
+    </script>
 
     <!-- Alohida CSS (asosiy saytga ta'sir qilmaydi) -->
-    <link rel="stylesheet" href="/static/css/tg_app.css">
+    <link rel="stylesheet" href="/static/css/tg_app.css?v=2">
 </head>
 <body>
 
@@ -303,8 +317,8 @@
 </div>
 
 <!-- Scripts -->
-<script src="/static/js/telegram_webapp.js"></script>
-<script src="/static/js/tg_app.js"></script>
+<script src="/static/js/telegram_webapp.js?v=2"></script>
+<script src="/static/js/tg_app.js?v=2"></script>
 
 </body>
 </html>

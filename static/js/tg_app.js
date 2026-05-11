@@ -11,6 +11,12 @@
 (function () {
     'use strict';
 
+    // Global error protection — WebView crash oldini olish
+    window.onerror = function(msg, url, line) {
+        try { console.log('TG App Error: ' + msg + ' at line ' + line); } catch(e) {}
+        return true; // xatolikni yutib yuborish
+    };
+
     // ── State ──
     var currentStep = 1;
     var totalSteps = 4;
@@ -166,14 +172,16 @@
     // ============================================================
     function setupActivityButtons() {
         var btns = document.querySelectorAll('.tg-activity-btn');
-        btns.forEach(function (btn) {
-            btn.addEventListener('click', function () {
-                btns.forEach(function (b) { b.classList.remove('selected'); });
-                btn.classList.add('selected');
-                selectedFaoliyat = btn.dataset.type;
-                haptic('selection');
-            });
-        });
+        for (var i = 0; i < btns.length; i++) {
+            (function(btn) {
+                btn.addEventListener('click', function () {
+                    for (var j = 0; j < btns.length; j++) { btns[j].classList.remove('selected'); }
+                    btn.classList.add('selected');
+                    selectedFaoliyat = btn.getAttribute('data-type') || btn.dataset.type;
+                    haptic('selection');
+                });
+            })(btns[i]);
+        }
     }
 
     // ============================================================
@@ -226,21 +234,27 @@
                 dropdown.classList.remove('hidden');
 
                 // Click handler
-                dropdown.querySelectorAll('.tg-ac-item').forEach(function (item) {
-                    item.addEventListener('click', function () {
+                var items = dropdown.querySelectorAll('.tg-ac-item');
+                for (var ii = 0; ii < items.length; ii++) {
+                    items[ii].addEventListener('click', function () {
                         input.value = this.textContent;
-                        var type = this.dataset.type;
+                        var type = this.getAttribute('data-type') || this.dataset.type;
                         if (type) selectActivity(type);
                         dropdown.classList.add('hidden');
                         haptic('selection');
                     });
-                });
+                }
             }, 200);
         });
 
         // Tashqariga bosganida yopish
         document.addEventListener('click', function (e) {
-            if (!e.target.closest('#tgLoyihaNomi') && !e.target.closest('#tgAutocomplete')) {
+            try {
+                if (!e.target.closest('#tgLoyihaNomi') && !e.target.closest('#tgAutocomplete')) {
+                    dropdown.classList.add('hidden');
+                }
+            } catch(ex) {
+                // closest() eski WebView da ishlamasa
                 dropdown.classList.add('hidden');
             }
         });
@@ -249,9 +263,14 @@
     function selectActivity(type) {
         selectedFaoliyat = type;
         var btns = document.querySelectorAll('.tg-activity-btn');
-        btns.forEach(function (btn) {
-            btn.classList.toggle('selected', btn.dataset.type === type);
-        });
+        for (var i = 0; i < btns.length; i++) {
+            var btnType = btns[i].getAttribute('data-type') || btns[i].dataset.type;
+            if (btnType === type) {
+                btns[i].classList.add('selected');
+            } else {
+                btns[i].classList.remove('selected');
+            }
+        }
     }
 
     // ============================================================
@@ -620,9 +639,10 @@
     }
 
     function setupInputWatchers() {
-        document.querySelectorAll('.tg-input').forEach(function (inp) {
-            inp.addEventListener('input', function () { hideAlert(); });
-        });
+        var inputs = document.querySelectorAll('.tg-input');
+        for (var i = 0; i < inputs.length; i++) {
+            inputs[i].addEventListener('input', function () { hideAlert(); });
+        }
     }
 
     // ============================================================
