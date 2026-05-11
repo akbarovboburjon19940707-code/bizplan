@@ -2298,3 +2298,45 @@ a {
         gap: 16px;
     }
 }
+
+@media (max-width: 480px) {
+    .product-detail-preview {
+        padding: 16px;
+        max-height: 35vh;
+    }
+    .product-detail-payment {
+        padding: 16px;
+    }
+    .preview-modal-header {
+        padding: 12px 16px;
+    }
+    .preview-modal-header h3 {
+        font-size: 16px;
+    }
+    .preview-modal-body {
+        padding: 16px;
+        gap: 16px;
+    }
+    .catalog-modal-header {
+        padding: 16px 16px 0;
+    }
+    .catalog-modal-body {
+        padding: 16px;
+    }
+    .catalog-pay-tabs {
+        flex-direction: column;
+        gap: 8px;
+    }
+    .catalog-pay-tab {
+        padding: 10px;
+    }
+    .catalog-modal-price {
+        font-size: 24px;
+    }
+    .product-detail-modal-close {
+        top: 8px;
+        right: 8px;
+        width: 30px;
+        height: 30px;
+    }
+}

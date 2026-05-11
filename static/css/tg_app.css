@@ -727,39 +727,43 @@ body {
 
 /* ── Responsive ── */
 @media (max-width: 420px) {
-  .tg-container { padding: 10px; padding-bottom: 60px; }
-  .tg-header { padding: 8px 0; }
-  .tg-header h1 { font-size: 18px; }
-  .tg-header-logo { width: 40px; height: 40px; font-size: 20px; margin-bottom: 8px; }
-  .tg-card { padding: 12px; margin-bottom: 10px; }
-  .tg-card-header { margin-bottom: 10px; gap: 8px; }
-  .tg-card-icon { width: 32px; height: 32px; font-size: 15px; }
-  .tg-card-title { font-size: 13px; }
-  .tg-card-subtitle { font-size: 11px; }
-  .tg-form-group { margin-bottom: 10px; }
-  .tg-form-group label { font-size: 12px; margin-bottom: 4px; }
-  .tg-input { padding: 10px 12px; font-size: 14px; }
-  .tg-btn { padding: 12px 16px; font-size: 14px; }
-  .tg-activity-btn { padding: 12px 8px; }
-  .tg-activity-btn .emoji { font-size: 22px; margin-bottom: 4px; }
-  .tg-activity-btn .label { font-size: 11px; }
-  .tg-preview-card { padding: 10px; }
-  .tg-preview-title { font-size: 13px; margin-bottom: 6px; }
-  .tg-preview-meta { gap: 4px; }
-  .tg-preview-item { padding: 5px 6px; }
+  .tg-container { padding: 8px; padding-bottom: 40px; }
+  .tg-header { padding: 4px 0; }
+  .tg-header h1 { font-size: 16px; margin-bottom: 2px; }
+  .tg-header-logo { width: 36px; height: 36px; font-size: 18px; margin-bottom: 4px; }
+  .tg-card { padding: 10px; margin-bottom: 8px; }
+  .tg-card-header { margin-bottom: 6px; gap: 6px; }
+  .tg-card-icon { width: 28px; height: 28px; font-size: 13px; }
+  .tg-card-title { font-size: 12px; }
+  .tg-card-subtitle { font-size: 10px; }
+  .tg-form-group { margin-bottom: 8px; }
+  .tg-form-group label { font-size: 11px; margin-bottom: 3px; }
+  .tg-input { padding: 8px 10px; font-size: 13px; }
+  .tg-btn { padding: 10px 14px; font-size: 13px; }
+  .tg-activity-btn { padding: 10px 6px; }
+  .tg-activity-btn .emoji { font-size: 20px; margin-bottom: 2px; }
+  .tg-activity-btn .label { font-size: 10px; }
+  .tg-preview-card { padding: 8px; margin-bottom: 8px; }
+  .tg-preview-title { font-size: 12px; margin-bottom: 4px; }
+  .tg-preview-meta { gap: 3px; }
+  .tg-preview-item { padding: 4px 5px; }
   .tg-preview-item .label { font-size: 8px; }
-  .tg-preview-item .value { font-size: 11px; }
-  .tg-kpi-grid { gap: 4px; margin: 6px 0; }
-  .tg-kpi-card { padding: 6px 4px; border-radius: 6px; }
+  .tg-preview-item .value { font-size: 10px; margin-top: 0; }
+  .tg-kpi-grid { gap: 3px; margin: 4px 0; }
+  .tg-kpi-card { padding: 4px 2px; border-radius: 4px; }
   .tg-kpi-card .kpi-label { font-size: 8px; }
-  .tg-kpi-card .kpi-value { font-size: 12px; }
-  .tg-price-badge { padding: 8px; margin-bottom: 8px; }
-  .tg-price-badge .price { font-size: 16px; }
-  .tg-pay-method { padding: 10px; gap: 8px; }
-  .tg-pay-method .pay-icon { width: 32px; height: 32px; font-size: 14px; }
-  .tg-pay-method .pay-name { font-size: 13px; }
-  .tg-pay-method .pay-desc { font-size: 10px; }
-  .tg-steps-indicator { margin-bottom: 12px; }
+  .tg-kpi-card .kpi-value { font-size: 11px; margin-top: 1px; }
+  .tg-price-badge { padding: 6px; margin-bottom: 6px; font-size: 11px; }
+  .tg-price-badge .price { font-size: 14px; }
+  .tg-pay-method { padding: 8px; gap: 6px; margin-bottom: 4px; }
+  .tg-pay-method:last-child { margin-bottom: 0; }
+  .tg-pay-method .pay-icon { width: 28px; height: 28px; font-size: 12px; }
+  .tg-pay-method .pay-name { font-size: 12px; }
+  .tg-pay-method .pay-desc { font-size: 9px; }
+  .tg-steps-indicator { margin-bottom: 8px; }
+  .tg-step-dot { width: 6px; height: 6px; }
+  .tg-step-dot.active { width: 16px; }
+  .tg-step-connector { width: 12px; }
 }
 
 @media (max-width: 340px) {
