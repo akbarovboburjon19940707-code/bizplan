@@ -24,7 +24,7 @@
     </script>
 
     <!-- Alohida CSS (asosiy saytga ta'sir qilmaydi) -->
-    <link rel="stylesheet" href="/static/css/tg_app.css?v=2">
+    <link rel="stylesheet" href="/static/css/tg_app.css?v=3">
 </head>
 <body>
 
@@ -216,7 +216,7 @@
 
         <!-- Preview -->
         <div class="tg-preview-card" id="tgPreviewContent">
-            <div style="text-align:center;padding:20px;color:var(--tg-hint)">
+            <div style="text-align:center;padding:12px;color:var(--tg-hint);font-size:13px">
                 Ma'lumotlar yuklanmoqda...
             </div>
         </div>
@@ -233,12 +233,12 @@
 
         <!-- To'lov usullari -->
         <div id="tgPayMethods">
-            <div class="tg-card" style="padding:14px">
-                <div class="tg-card-header" style="margin-bottom:10px">
+            <div class="tg-card" style="padding:10px">
+                <div class="tg-card-header" style="margin-bottom:8px">
                     <div class="tg-card-icon purple">💳</div>
                     <div>
-                        <div class="tg-card-title">To'lov usulini tanlang</div>
-                        <div class="tg-card-subtitle">Avtomatik to'lov tizimlari</div>
+                        <div class="tg-card-title">To'lov usuli</div>
+                        <div class="tg-card-subtitle">Onlayn to'lov</div>
                     </div>
                 </div>
 
@@ -247,7 +247,7 @@
                         <div class="pay-icon click-icon">C</div>
                         <div class="pay-info">
                             <div class="pay-name">Click</div>
-                            <div class="pay-desc">Karta orqali onlayn to'lov</div>
+                            <div class="pay-desc">Karta orqali</div>
                         </div>
                         <div class="pay-arrow">→</div>
                     </div>
@@ -256,7 +256,7 @@
                         <div class="pay-icon payme-icon">P</div>
                         <div class="pay-info">
                             <div class="pay-name">Payme</div>
-                            <div class="pay-desc">Karta orqali onlayn to'lov</div>
+                            <div class="pay-desc">Karta orqali</div>
                         </div>
                         <div class="pay-arrow">→</div>
                     </div>
@@ -266,20 +266,19 @@
 
         <!-- Download Section (to'lovdan keyin) -->
         <div class="hidden" id="tgDownloadSection">
-            <div class="tg-card" style="text-align:center;padding:24px">
-                <div style="font-size:40px;margin-bottom:12px">🎉</div>
-                <h3 style="margin-bottom:8px">To'lov tasdiqlandi!</h3>
-                <p style="color:var(--tg-hint);margin-bottom:16px;font-size:14px">
-                    Hujjatni yaratish uchun tugmani bosing.
+            <div class="tg-card" style="text-align:center;padding:16px">
+                <div style="font-size:32px;margin-bottom:8px">🎉</div>
+                <h3 style="margin-bottom:6px;font-size:15px">To'lov tasdiqlandi!</h3>
+                <p style="color:var(--tg-hint);margin-bottom:12px;font-size:13px">
                     Fayl Telegram chatga yuboriladi.
                 </p>
                 <button class="tg-btn tg-btn-primary" onclick="TgDashboard.generateAndDownload()">
-                    📄 Hujjatni yaratish va olish
+                    📄 Hujjatni yaratish
                 </button>
             </div>
         </div>
 
-        <div style="margin-top:10px">
+        <div style="margin-top:8px">
             <button class="tg-btn tg-btn-secondary" onclick="TgDashboard.goBack()">
                 ← Ortga
             </button>

@@ -56,14 +56,14 @@ body {
 .tg-container {
   max-width: 480px;
   margin: 0 auto;
-  padding: 16px;
-  padding-bottom: 100px;
+  padding: 12px;
+  padding-bottom: 80px;
 }
 
 /* ── Header ── */
 .tg-header {
   text-align: center;
-  padding: 20px 0 16px;
+  padding: 12px 0 10px;
 }
 
 .tg-header-logo {
@@ -335,15 +335,15 @@ body {
 .tg-pay-methods {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
 }
 
 .tg-pay-method {
   display: flex;
   align-items: center;
-  gap: 14px;
-  padding: 16px;
-  border: 2px solid #e2e8f0;
+  gap: 10px;
+  padding: 12px;
+  border: 1.5px solid #e2e8f0;
   border-radius: var(--radius);
   cursor: pointer;
   transition: all var(--transition);
@@ -355,13 +355,13 @@ body {
 }
 
 .tg-pay-method .pay-icon {
-  width: 44px;
-  height: 44px;
-  border-radius: 12px;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 20px;
+  font-size: 16px;
   font-weight: 800;
   flex-shrink: 0;
 }
@@ -386,18 +386,18 @@ body {
 }
 
 .tg-pay-method .pay-name {
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 700;
 }
 
 .tg-pay-method .pay-desc {
-  font-size: 12px;
+  font-size: 11px;
   color: var(--tg-hint);
 }
 
 .tg-pay-method .pay-arrow {
   color: var(--tg-hint);
-  font-size: 18px;
+  font-size: 16px;
 }
 
 /* ── Price Badge ── */
@@ -405,23 +405,23 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
+  gap: 6px;
   background: linear-gradient(135deg, #f0fdf4, #dcfce7);
   border: 1px solid #bbf7d0;
   border-radius: var(--radius);
-  padding: 14px;
-  margin-bottom: 14px;
+  padding: 10px;
+  margin-bottom: 10px;
   text-align: center;
 }
 
 .tg-price-badge .price {
-  font-size: 22px;
+  font-size: 18px;
   font-weight: 800;
   color: var(--accent-dark);
 }
 
 .tg-price-badge .currency {
-  font-size: 14px;
+  font-size: 12px;
   color: var(--accent);
   font-weight: 600;
 }
@@ -548,72 +548,75 @@ body {
   background: linear-gradient(135deg, #f8fafc, #f1f5f9);
   border: 1px solid #e2e8f0;
   border-radius: var(--radius);
-  padding: 20px;
-  margin-bottom: 14px;
+  padding: 12px;
+  margin-bottom: 10px;
 }
 
 .tg-preview-title {
-  font-size: 16px;
+  font-size: 14px;
   font-weight: 700;
-  margin-bottom: 12px;
+  margin-bottom: 8px;
   color: var(--tg-text);
 }
 
 .tg-preview-meta {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 10px;
+  gap: 6px;
 }
 
 .tg-preview-item {
   background: var(--card-bg);
-  border-radius: 8px;
-  padding: 10px 12px;
+  border-radius: 6px;
+  padding: 6px 8px;
 }
 
 .tg-preview-item .label {
-  font-size: 11px;
+  font-size: 9px;
   color: var(--tg-hint);
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.3px;
   font-weight: 600;
 }
 
 .tg-preview-item .value {
-  font-size: 14px;
+  font-size: 12px;
   font-weight: 700;
   color: var(--tg-text);
-  margin-top: 2px;
+  margin-top: 1px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 /* ── KPI Cards ── */
 .tg-kpi-grid {
   display: grid;
   grid-template-columns: 1fr 1fr 1fr;
-  gap: 8px;
-  margin: 14px 0;
+  gap: 6px;
+  margin: 8px 0;
 }
 
 .tg-kpi-card {
   background: var(--card-bg);
   border: 1px solid var(--card-border);
-  border-radius: var(--radius-sm);
-  padding: 12px;
+  border-radius: 8px;
+  padding: 8px 6px;
   text-align: center;
 }
 
 .tg-kpi-card .kpi-label {
-  font-size: 10px;
+  font-size: 9px;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.3px;
   color: var(--tg-hint);
   font-weight: 600;
 }
 
 .tg-kpi-card .kpi-value {
-  font-size: 16px;
+  font-size: 13px;
   font-weight: 800;
-  margin-top: 4px;
+  margin-top: 2px;
 }
 
 .tg-kpi-card.positive .kpi-value { color: var(--accent); }
@@ -723,8 +726,44 @@ body {
 }
 
 /* ── Responsive ── */
-@media (max-width: 360px) {
-  .tg-container { padding: 12px; }
+@media (max-width: 420px) {
+  .tg-container { padding: 10px; padding-bottom: 60px; }
+  .tg-header { padding: 8px 0; }
+  .tg-header h1 { font-size: 18px; }
+  .tg-header-logo { width: 40px; height: 40px; font-size: 20px; margin-bottom: 8px; }
+  .tg-card { padding: 12px; margin-bottom: 10px; }
+  .tg-card-header { margin-bottom: 10px; gap: 8px; }
+  .tg-card-icon { width: 32px; height: 32px; font-size: 15px; }
+  .tg-card-title { font-size: 13px; }
+  .tg-card-subtitle { font-size: 11px; }
+  .tg-form-group { margin-bottom: 10px; }
+  .tg-form-group label { font-size: 12px; margin-bottom: 4px; }
+  .tg-input { padding: 10px 12px; font-size: 14px; }
+  .tg-btn { padding: 12px 16px; font-size: 14px; }
+  .tg-activity-btn { padding: 12px 8px; }
+  .tg-activity-btn .emoji { font-size: 22px; margin-bottom: 4px; }
+  .tg-activity-btn .label { font-size: 11px; }
+  .tg-preview-card { padding: 10px; }
+  .tg-preview-title { font-size: 13px; margin-bottom: 6px; }
+  .tg-preview-meta { gap: 4px; }
+  .tg-preview-item { padding: 5px 6px; }
+  .tg-preview-item .label { font-size: 8px; }
+  .tg-preview-item .value { font-size: 11px; }
+  .tg-kpi-grid { gap: 4px; margin: 6px 0; }
+  .tg-kpi-card { padding: 6px 4px; border-radius: 6px; }
+  .tg-kpi-card .kpi-label { font-size: 8px; }
+  .tg-kpi-card .kpi-value { font-size: 12px; }
+  .tg-price-badge { padding: 8px; margin-bottom: 8px; }
+  .tg-price-badge .price { font-size: 16px; }
+  .tg-pay-method { padding: 10px; gap: 8px; }
+  .tg-pay-method .pay-icon { width: 32px; height: 32px; font-size: 14px; }
+  .tg-pay-method .pay-name { font-size: 13px; }
+  .tg-pay-method .pay-desc { font-size: 10px; }
+  .tg-steps-indicator { margin-bottom: 12px; }
+}
+
+@media (max-width: 340px) {
   .tg-kpi-grid { grid-template-columns: 1fr; }
   .tg-activity-grid { grid-template-columns: 1fr; }
+  .tg-preview-meta { grid-template-columns: 1fr; }
 }
