@@ -804,9 +804,16 @@ async function checkPaymentStatus(paymentId) {
             if (res.status === 'approved' || res.status === 'success') {
                 clearInterval(paymentStatusInterval);
                 document.getElementById('paymentStatusBox').classList.add('hidden');
-                document.getElementById('downloadSection').classList.remove('hidden');
                 const h = document.getElementById('hidden_payment_id');
                 if (h) h.value = paymentId;
+
+                if (res.status === 'success') {
+                    // Click/Payme avto to'lov — avtomatik hujjat yaratish va chatga yuborish
+                    processPaymentAndDownload('docx');
+                } else {
+                    // Karta (admin tasdiqlagan) — download tugmasini ko'rsatish
+                    document.getElementById('downloadSection').classList.remove('hidden');
+                }
             } else if (res.status === 'rejected') {
                 clearInterval(paymentStatusInterval);
                 document.getElementById('paymentStatusBox').classList.add('hidden');

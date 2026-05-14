@@ -511,6 +511,17 @@ class PaymePaymentProvider(PaymentProvider):
         log_transaction("payme", payment.get("order_id"), "performed",
                         float(payment.get("amount", 0)), trans_id)
 
+        # ── Obuna avtomatik faollashtirish (xavfsiz — xatolik bo'lsa ham davom etadi) ──
+        try:
+            from modules.subscription_service import auto_activate_subscription_from_payment
+            sub_result = auto_activate_subscription_from_payment(payment.get("order_id"))
+            if sub_result.get("activated"):
+                logger.info(f"[PAYME] Obuna faollashtirildi: order={payment.get('order_id')}, "
+                           f"plan={sub_result.get('plan')}")
+        except Exception as sub_err:
+            logger.error(f"[PAYME] Obuna faollashtirish xatolik (to'lov ta'sirlanmaydi): "
+                        f"{sub_err}", exc_info=True)
+
         return self._ok(req_id, {
             "transaction": payment.get("order_id"),
             "perform_time": perform_time,

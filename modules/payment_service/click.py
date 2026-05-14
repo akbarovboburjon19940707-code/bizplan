@@ -516,6 +516,17 @@ class ClickPaymentProvider(PaymentProvider):
         log_transaction("click", merchant_trans_id, "completed",
                         received_amount, click_trans_id)
 
+        # ── Obuna avtomatik faollashtirish (xavfsiz — xatolik bo'lsa ham davom etadi) ──
+        try:
+            from modules.subscription_service import auto_activate_subscription_from_payment
+            sub_result = auto_activate_subscription_from_payment(merchant_trans_id)
+            if sub_result.get("activated"):
+                logger.info(f"[CLICK] Obuna faollashtirildi: order={merchant_trans_id}, "
+                           f"plan={sub_result.get('plan')}")
+        except Exception as sub_err:
+            logger.error(f"[CLICK] Obuna faollashtirish xatolik (to'lov ta'sirlanmaydi): "
+                        f"{sub_err}", exc_info=True)
+
         response = {
             "click_trans_id": int(click_trans_id),
             "merchant_trans_id": merchant_trans_id,

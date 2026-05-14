@@ -390,6 +390,91 @@ def record_ai_usage(user_id: str, provider: str = 'groq',
 
 
 # ============================================================
+# AVTOMATIK OBUNA FAOLLASHTIRISH (Click/Payme to'lovdan keyin)
+# ============================================================
+
+def auto_activate_subscription_from_payment(order_id: str) -> dict:
+    """
+    To'lov muvaffaqiyatli bo'lganda obunani avtomatik faollashtirish.
+    Click va Payme callback lardan chaqiriladi.
+
+    Bu funksiya HECH QACHON xatolik bermaydi — barcha xatolar
+    log qilinadi va payment flowga ta'sir qilmaydi.
+
+    Args:
+        order_id: Payment order_id
+
+    Returns:
+        dict: {'activated': True/False, 'plan': str, 'error': str}
+    """
+    try:
+        from modules.payment import get_payment_by_order_id
+
+        payment = get_payment_by_order_id(order_id)
+        if not payment:
+            return {'activated': False, 'error': 'Payment topilmadi'}
+
+        loyiha_nomi = (payment.get("loyiha_nomi") or "").lower()
+
+        # Faqat obuna to'lovlari uchun
+        if "obuna" not in loyiha_nomi:
+            return {'activated': False, 'error': 'Obuna to\'lovi emas'}
+
+        # Tarif aniqlash (narx bo'yicha)
+        amount = float(payment.get("amount", 0))
+        if amount <= 100000:
+            plan_name = "pro"       # Standart — 50,000
+        else:
+            plan_name = "enterprise"  # Premium — 500,000
+
+        # Foydalanuvchini topish
+        from models.user import User
+        user_name = payment.get("user_name", "")
+        user = User.query.filter(
+            db.or_(User.first_name == user_name, User.phone == user_name)
+        ).first()
+
+        if not user:
+            logger.warning(f"[SUB AUTO] User topilmadi: user_name={user_name}, "
+                          f"order={order_id}")
+            return {'activated': False, 'error': 'User topilmadi'}
+
+        # Allaqachon aktiv obuna bormi?
+        existing_plan = get_user_plan(user.id)
+        if existing_plan == plan_name:
+            logger.info(f"[SUB AUTO] Allaqachon aktiv: user={user.id}, "
+                       f"plan={plan_name}")
+            return {'activated': False, 'error': 'Allaqachon aktiv'}
+
+        # Obuna yaratish
+        payment_id = payment.get("id", "")
+        sub_result = create_subscription(user.id, plan_name, payment_id)
+
+        if sub_result.get("success"):
+            logger.info(f"[SUB AUTO] ✅ Obuna faollashtirildi: user={user.id}, "
+                       f"plan={plan_name}, order={order_id}")
+
+            # Telegram bildirishnoma
+            try:
+                from modules.telegram_notifier import notify_subscription_activated
+                notify_subscription_activated(user.id, plan_name,
+                                             PLAN_CONFIG[plan_name]['duration_days'])
+            except Exception:
+                pass  # Telegram xatolik obunaga ta'sir qilmaydi
+
+            return {'activated': True, 'plan': plan_name, 'user_id': user.id}
+        else:
+            logger.warning(f"[SUB AUTO] Obuna yaratish xatolik: {sub_result}, "
+                          f"order={order_id}")
+            return {'activated': False, 'error': sub_result.get('error', 'Unknown')}
+
+    except Exception as e:
+        logger.error(f"[SUB AUTO] Xatolik (payment flowga ta'sir qilmaydi): {e}",
+                    exc_info=True)
+        return {'activated': False, 'error': str(e)}
+
+
+# ============================================================
 # ADMIN STATISTIKA
 # ============================================================
 
