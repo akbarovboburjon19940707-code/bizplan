@@ -470,7 +470,11 @@ const SubModule = (() => {
             }
         } catch (err) {
             console.error('[SUB] Payment error:', err);
-            alert('Xatolik: ' + err.message);
+            if (typeof window.showAlert === 'function') {
+                window.showAlert('Xatolik: ' + err.message);
+            } else {
+                alert('Xatolik: ' + err.message);
+            }
             resetPayBtn();
         }
     }

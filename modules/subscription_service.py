@@ -505,13 +505,20 @@ def auto_activate_subscription_from_payment(order_id: str) -> dict:
 
         # Foydalanuvchini topish
         from models.user import User
-        user_name = payment.get("user_name", "")
-        user = User.query.filter(
-            db.or_(User.first_name == user_name, User.phone == user_name)
-        ).first()
+        user_id = payment.get("user_id")
+        user = None
+        
+        if user_id:
+            user = db.session.get(User, user_id)
+            
+        if not user:
+            user_name = payment.get("user_name", "")
+            user = User.query.filter(
+                db.or_(User.first_name == user_name, User.phone == user_name)
+            ).first()
 
         if not user:
-            logger.warning(f"[SUB AUTO] User topilmadi: user_name={user_name}, "
+            logger.warning(f"[SUB AUTO] User topilmadi: user_id={user_id}, user_name={payment.get('user_name')}, "
                           f"order={order_id}")
             return {'activated': False, 'error': 'User topilmadi'}
 

@@ -69,6 +69,7 @@ def _payment_to_dict(p: PaymentModel) -> dict:
     return {
         "id": p.id,
         "order_id": p.order_id,
+        "user_id": p.user_id,
         "user_name": p.user_name or "",
         "loyiha_nomi": p.project_name or "",
         "project_name": p.project_name or "",
@@ -111,12 +112,14 @@ def _next_prepare_id() -> int:
 # ============================================================
 
 def create_payment(user_name: str, loyiha_nomi: str = "",
-                   product_id: str = None, custom_amount: int = None) -> dict:
+                   product_id: str = None, custom_amount: int = None,
+                   user_id: str = None) -> dict:
     """Yangi to'lov yaratish (karta orqali)."""
     try:
         payment = PaymentModel(
             id=str(uuid.uuid4())[:12],
             order_id=_generate_order_id(),
+            user_id=user_id,
             user_name=user_name,
             project_name=loyiha_nomi,
             amount=custom_amount or PLAN_PRICE,
@@ -318,12 +321,14 @@ def verify_admin_password(password: str) -> bool:
 
 def create_click_payment(user_name: str, loyiha_nomi: str = "",
                          product_id: str = None,
-                         custom_amount: int = None) -> dict:
+                         custom_amount: int = None,
+                         user_id: str = None) -> dict:
     """Click to'lov uchun yangi buyurtma yaratish."""
     try:
         payment = PaymentModel(
             id=str(uuid.uuid4())[:12],
             order_id=_generate_order_id(),
+            user_id=user_id,
             user_name=user_name,
             project_name=loyiha_nomi,
             product_id=product_id,
@@ -445,12 +450,14 @@ def get_payment_by_click_status(order_id: str) -> dict:
 
 def create_payme_payment(user_name: str, loyiha_nomi: str = "",
                          product_id: str = None,
-                         custom_amount: int = None) -> dict:
+                         custom_amount: int = None,
+                         user_id: str = None) -> dict:
     """Payme to'lov uchun yangi buyurtma yaratish."""
     try:
         payment = PaymentModel(
             id=str(uuid.uuid4())[:12],
             order_id=_generate_order_id(),
+            user_id=user_id,
             user_name=user_name,
             project_name=loyiha_nomi,
             product_id=product_id,

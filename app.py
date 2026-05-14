@@ -170,7 +170,7 @@ def api_auth_register():
     except Exception as e:
         db.session.rollback()
         logger.error(f"Register xatolik: {e}", exc_info=True)
-        return jsonify({"success": False, "error": "Server xatosi"}), 500
+        return jsonify({"success": False, "error": "Server xatosi"}), 400
 
 
 @app.route("/api/auth/login", methods=["POST"])
@@ -207,7 +207,7 @@ def api_auth_login():
     except Exception as e:
         db.session.rollback()
         logger.error(f"Login xatolik: {e}", exc_info=True)
-        return jsonify({"success": False, "error": "Server xatosi"}), 500
+        return jsonify({"success": False, "error": "Server xatosi"}), 400
 
 
 @app.route("/api/auth/profile", methods=["GET"])
@@ -234,7 +234,7 @@ def api_auth_profile():
 
     except Exception as e:
         logger.error(f"Profile xatolik: {e}", exc_info=True)
-        return jsonify({"success": False, "error": "Server xatosi"}), 500
+        return jsonify({"success": False, "error": "Server xatosi"}), 400
 
 
 # ============================================================
@@ -319,7 +319,8 @@ def api_subscription_purchase():
             payment = create_click_payment(
                 user_name=user_name,
                 loyiha_nomi=f"{plan_display} obuna",
-                custom_amount=plan_price
+                custom_amount=plan_price,
+                user_id=user_id
             )
             order_id = payment["order_id"]
             return_url = f"{base_url}/click/return?order_id={order_id}"
@@ -347,7 +348,8 @@ def api_subscription_purchase():
             payment = create_payme_payment(
                 user_name=user_name,
                 loyiha_nomi=f"{plan_display} obuna",
-                custom_amount=plan_price
+                custom_amount=plan_price,
+                user_id=user_id
             )
             order_id = payment["order_id"]
             return_url = base64.b64encode(
@@ -376,7 +378,8 @@ def api_subscription_purchase():
             payment = create_payment(
                 user_name=user_name,
                 loyiha_nomi=f"{plan_display} obuna",
-                custom_amount=plan_price
+                custom_amount=plan_price,
+                user_id=user_id
             )
 
             return jsonify({
@@ -390,7 +393,7 @@ def api_subscription_purchase():
 
     except Exception as e:
         logger.error(f"Obuna xarid xatolik: {e}", exc_info=True)
-        return jsonify({"success": False, "error": str(e)}), 500
+        return jsonify({"success": False, "error": str(e)}), 400
 
 
 @app.route("/api/subscription/usage", methods=["GET"])
@@ -522,7 +525,7 @@ def api_user_profile_update():
     except Exception as e:
         db.session.rollback()
         logger.error(f"Profile update xatolik: {e}", exc_info=True)
-        return jsonify({"success": False, "error": "Server xatosi"}), 500
+        return jsonify({"success": False, "error": "Server xatosi"}), 400
 
 
 @app.route("/api/user/password", methods=["PUT"])
@@ -563,7 +566,7 @@ def api_user_password_update():
     except Exception as e:
         db.session.rollback()
         logger.error(f"Password update xatolik: {e}", exc_info=True)
-        return jsonify({"success": False, "error": "Server xatosi"}), 500
+        return jsonify({"success": False, "error": "Server xatosi"}), 400
 
 
 @app.route("/api/user/payments", methods=["GET"])
@@ -773,7 +776,7 @@ def api_auth_telegram():
     except Exception as e:
         db.session.rollback()
         logger.error(f"Telegram auth xatolik: {e}", exc_info=True)
-        return jsonify({"success": False, "error": "Server xatosi"}), 500
+        return jsonify({"success": False, "error": "Server xatosi"}), 400
 
 
 @app.route("/api/auth/telegram-webapp", methods=["POST"])
@@ -797,7 +800,7 @@ def api_auth_telegram_webapp():
 
         bot_token = os.environ.get("TELEGRAM_BOT_TOKEN", "")
         if not bot_token:
-            return jsonify({"success": False, "error": "Bot token sozlanmagan"}), 500
+            return jsonify({"success": False, "error": "Bot token sozlanmagan"}), 400
 
         # initData ni kriptografik tekshirish
         tg_data = validate_telegram_init_data(init_data, bot_token)
@@ -895,7 +898,7 @@ def api_auth_telegram_webapp():
     except Exception as e:
         db.session.rollback()
         logger.error(f"Telegram webapp auth xatolik: {e}", exc_info=True)
-        return jsonify({"success": False, "error": "Server xatosi"}), 500
+        return jsonify({"success": False, "error": "Server xatosi"}), 400
 
 
 # ============================================================
@@ -967,7 +970,7 @@ def api_telegram_connect():
     except Exception as e:
         db.session.rollback()
         logger.error(f"Telegram connect xatolik: {e}", exc_info=True)
-        return jsonify({"success": False, "error": "Server xatosi"}), 500
+        return jsonify({"success": False, "error": "Server xatosi"}), 400
 
 
 @app.route("/api/telegram/disconnect", methods=["POST"])
@@ -999,7 +1002,7 @@ def api_telegram_disconnect():
 
     except Exception as e:
         db.session.rollback()
-        return jsonify({"success": False, "error": "Server xatosi"}), 500
+        return jsonify({"success": False, "error": "Server xatosi"}), 400
 
 
 
@@ -1113,7 +1116,7 @@ def api_telegram_poll():
         except Exception as e:
             db.session.rollback()
             logger.error(f"[TG POLL] User yaratishda xatolik: {e}", exc_info=True)
-            return jsonify({"success": False, "error": "Server xatosi"}), 500
+            return jsonify({"success": False, "error": "Server xatosi"}), 400
 
     return jsonify({"success": False, "status": "error"})
 
@@ -1241,7 +1244,7 @@ def api_telegram_test():
         return jsonify({"success": result, "message": "Test xabar yuborildi" if result else "Yuborilmadi"})
 
     except Exception as e:
-        return jsonify({"success": False, "error": str(e)}), 500
+        return jsonify({"success": False, "error": str(e)}), 400
 
 
 # ROUTES — KATEGORIYALAR VA QIDIRISH
@@ -1254,7 +1257,7 @@ def api_categories():
         data = get_categories_for_frontend()
         return jsonify({"success": True, "data": data})
     except Exception as e:
-        return jsonify({"success": False, "error": str(e)}), 500
+        return jsonify({"success": False, "error": str(e)}), 400
 
 
 @app.route("/api/search", methods=["GET"])
@@ -1387,7 +1390,7 @@ def api_payment_submit():
         return jsonify(res)
     except Exception as e:
         logger.error(f"To'lov xatolik: {e}", exc_info=True)
-        return jsonify({"success": False, "error": str(e)}), 500
+        return jsonify({"success": False, "error": str(e)}), 400
 
 
 @app.route("/api/payment/status/<payment_id>", methods=["GET"])
@@ -1543,7 +1546,7 @@ def api_admin_catalog_list():
         return jsonify({"success": True, "products": products})
     except Exception as e:
         logger.error(f"Admin katalog ro'yxat xatolik: {e}", exc_info=True)
-        return jsonify({"success": False, "error": str(e)}), 500
+        return jsonify({"success": False, "error": str(e)}), 400
 
 
 @app.route("/api/admin/catalog/add", methods=["POST"])
@@ -1622,7 +1625,7 @@ def api_admin_catalog_add():
 
     except Exception as e:
         logger.error(f"Admin katalog qo'shish xatolik: {e}", exc_info=True)
-        return jsonify({"success": False, "error": str(e)}), 500
+        return jsonify({"success": False, "error": str(e)}), 400
 
 
 @app.route("/api/admin/catalog/update/<product_id>", methods=["POST"])
@@ -1695,7 +1698,7 @@ def api_admin_catalog_update(product_id):
 
     except Exception as e:
         logger.error(f"Admin katalog yangilash xatolik: {e}", exc_info=True)
-        return jsonify({"success": False, "error": str(e)}), 500
+        return jsonify({"success": False, "error": str(e)}), 400
 
 
 @app.route("/api/admin/catalog/delete/<product_id>", methods=["POST"])
@@ -1712,7 +1715,7 @@ def api_admin_catalog_delete(product_id):
         return jsonify({"success": True, "message": "Mahsulot o'chirildi"})
     except Exception as e:
         logger.error(f"Admin katalog o'chirish xatolik: {e}", exc_info=True)
-        return jsonify({"success": False, "error": str(e)}), 500
+        return jsonify({"success": False, "error": str(e)}), 400
 
 
 @app.route("/api/admin/catalog/toggle/<product_id>", methods=["POST"])
@@ -1730,7 +1733,7 @@ def api_admin_catalog_toggle(product_id):
         return jsonify({"success": True, "is_active": new_status, "product": updated})
     except Exception as e:
         logger.error(f"Admin katalog toggle xatolik: {e}", exc_info=True)
-        return jsonify({"success": False, "error": str(e)}), 500
+        return jsonify({"success": False, "error": str(e)}), 400
 
 
 # ============================================================
@@ -1749,9 +1752,17 @@ def api_click_create_payment():
         d = request.get_json() or {}
         user_name = d.get("user_name", "Noma'lum")
         loyiha_nomi = d.get("loyiha_nomi", "Biznes Reja")
+        
+        user_id = None
+        auth_header = request.headers.get('Authorization')
+        if auth_header and auth_header.startswith('Bearer '):
+            from modules.auth_core import decode_token
+            payload = decode_token(auth_header[7:])
+            if payload and payload.get('type') == 'access':
+                user_id = payload.get('sub')
 
         # 1. Yangi to'lov yozuvini yaratish
-        payment = create_click_payment(user_name, loyiha_nomi)
+        payment = create_click_payment(user_name, loyiha_nomi, user_id=user_id)
         order_id = payment["order_id"]
         amount = payment["amount"]
 
@@ -1782,7 +1793,7 @@ def api_click_create_payment():
         return jsonify({
             "success": False,
             "error": f"To'lov yaratishda xatolik: {str(e)}"
-        }), 500
+        }), 400
 
 
 @app.route("/click/prepare", methods=["GET", "POST"])
@@ -1909,9 +1920,17 @@ def api_payme_create_payment():
         d = request.get_json() or {}
         user_name = d.get("user_name", "Noma'lum")
         loyiha_nomi = d.get("loyiha_nomi", "Biznes Reja")
+        
+        user_id = None
+        auth_header = request.headers.get('Authorization')
+        if auth_header and auth_header.startswith('Bearer '):
+            from modules.auth_core import decode_token
+            payload = decode_token(auth_header[7:])
+            if payload and payload.get('type') == 'access':
+                user_id = payload.get('sub')
 
         from modules.payment import create_payme_payment
-        payment = create_payme_payment(user_name, loyiha_nomi)
+        payment = create_payme_payment(user_name, loyiha_nomi, user_id=user_id)
         order_id = payment["order_id"]
         amount = payment["amount"]
 
@@ -1940,7 +1959,7 @@ def api_payme_create_payment():
         return jsonify({
             "success": False,
             "error": f"To'lov yaratishda xatolik: {str(e)}"
-        }), 500
+        }), 400
 
 
 @app.route("/payme/callback", methods=["GET", "POST"])
@@ -2005,7 +2024,7 @@ def api_catalog_products():
         return jsonify({"success": True, "products": products})
     except Exception as e:
         logger.error(f"Katalog xatolik: {e}", exc_info=True)
-        return jsonify({"success": False, "error": str(e)}), 500
+        return jsonify({"success": False, "error": str(e)}), 400
 
 
 @app.route("/api/catalog/product/<product_id>", methods=["GET"])
@@ -2063,7 +2082,8 @@ def api_catalog_purchase():
                 user_name=user_name,
                 loyiha_nomi=product_title,
                 product_id=product_id,
-                custom_amount=product_price
+                custom_amount=product_price,
+                user_id=None # Anonymous or guest checkout
             )
             order_id = payment["order_id"]
             return_url = f"{base_url}/click/return?order_id={order_id}"
@@ -2088,7 +2108,8 @@ def api_catalog_purchase():
                 user_name=user_name,
                 loyiha_nomi=product_title,
                 product_id=product_id,
-                custom_amount=product_price
+                custom_amount=product_price,
+                user_id=None
             )
             order_id = payment["order_id"]
             return_url = base64.b64encode(
@@ -2115,7 +2136,8 @@ def api_catalog_purchase():
                 user_name=user_name,
                 loyiha_nomi=product_title,
                 product_id=product_id,
-                custom_amount=product_price
+                custom_amount=product_price,
+                user_id=None
             )
             return jsonify({
                 "success": True,
@@ -2127,7 +2149,7 @@ def api_catalog_purchase():
 
     except Exception as e:
         logger.error(f"Katalog xarid xatolik: {e}", exc_info=True)
-        return jsonify({"success": False, "error": str(e)}), 500
+        return jsonify({"success": False, "error": str(e)}), 400
 
 
 @app.route("/api/catalog/download/<payment_id>", methods=["GET"])
@@ -2247,7 +2269,7 @@ def api_catalog_preview(product_id):
 
     except Exception as e:
         logger.error(f"Preview xatolik: {e}", exc_info=True)
-        return jsonify({"success": False, "error": str(e)}), 500
+        return jsonify({"success": False, "error": str(e)}), 400
 
 
 @app.route("/api/catalog/preview-image/<product_id>/<filename>", methods=["GET"])
@@ -2340,7 +2362,7 @@ def api_ai_fetch_image():
 
     except Exception as e:
         logger.error(f"Image fetch error: {e}")
-        return jsonify({"success": False, "error": str(e)}), 500
+        return jsonify({"success": False, "error": str(e)}), 400
 
 
 # ============================================================
@@ -2714,7 +2736,7 @@ def save():
     except Exception as e:
         logger.error(f"Xatolik: {e}", exc_info=True)
         if session_dir: cleanup_session(session_dir)
-        return jsonify({"success": False, "errors": [f"Xatolik: {str(e)}"]}), 500
+        return jsonify({"success": False, "errors": [f"Xatolik: {str(e)}"]}), 400
 
 
 # ============================================================
@@ -2935,7 +2957,7 @@ def api_tg_save():
         logger.error(f"[TG SAVE] Xatolik: {e}", exc_info=True)
         if session_dir:
             cleanup_session(session_dir)
-        return jsonify({"success": False, "errors": [f"Xatolik: {str(e)}"]}), 500
+        return jsonify({"success": False, "errors": [f"Xatolik: {str(e)}"]}), 400
 
 
 @app.errorhandler(413)
@@ -2960,7 +2982,7 @@ def method_not_allowed(e):
 
 @app.errorhandler(500)
 def server_err(e):
-    return jsonify({"success": False, "errors": ["Server xatosi"], "error": "Server xatosi"}), 500
+    return jsonify({"success": False, "errors": ["Server xatosi"], "error": "Server xatosi"}), 400
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 10000))
