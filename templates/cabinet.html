@@ -248,6 +248,21 @@
                 </div>
 
                 <div class="cab-usage-grid">
+                    <!-- Eksport kreditlari (Yangi) -->
+                    <div class="cab-usage-item" id="cabUsageExport" style="display:none; grid-column: 1 / -1;">
+                        <div class="cab-usage-label">
+                            <span style="font-weight: 600; color: var(--cab-text);">Professional eksport kreditlari</span>
+                            <span id="subExportUsage" style="font-weight: 600;">0/0</span>
+                        </div>
+                        <div class="cab-usage-bar" style="height: 12px;">
+                            <div class="cab-usage-fill" id="subExportBar" style="width:0%; background: linear-gradient(90deg, #3b82f6, #2563eb);"></div>
+                        </div>
+                        <div style="font-size: 13px; color: var(--cab-text-muted); margin-top: 6px; display: flex; justify-content: space-between;">
+                            <span id="subExportUsed">Ishlatilgan: 0</span>
+                            <span id="subExportRemaining" style="color: var(--cab-primary); font-weight: 500;">Qolgan: 0</span>
+                        </div>
+                    </div>
+                    
                     <div class="cab-usage-item">
                         <div class="cab-usage-label">
                             <span>Kunlik AI so'rovlar</span>
@@ -298,11 +313,11 @@
                             </tr>
                         </thead>
                         <tbody>
-                            <tr><td>Narx</td><td>Bepul</td><td>50 000 so'm</td><td>500 000 so'm/oy</td></tr>
-                            <tr><td>Kunlik AI limit</td><td>1</td><td>5</td><td>50</td></tr>
-                            <tr><td>Oylik AI limit</td><td>3</td><td>30</td><td>500</td></tr>
+                            <tr><td>Narx</td><td>Bepul</td><td>50 000 so'm</td><td>500 000 so'm</td></tr>
+                            <tr><td>Eksport kreditlari</td><td>0</td><td>1 ta</td><td>20 ta</td></tr>
                             <tr><td>PDF/Word yuklab olish</td><td>❌</td><td>✅</td><td>✅</td></tr>
                             <tr><td>To'liq moliyaviy model</td><td>❌</td><td>❌</td><td>✅</td></tr>
+                            <tr><td>Prioritet generatsiya</td><td>❌</td><td>❌</td><td>✅</td></tr>
                             <tr><td>Ustuvor yordam</td><td>❌</td><td>❌</td><td>✅</td></tr>
                         </tbody>
                     </table>

@@ -161,15 +161,19 @@ const CabinetModule = (() => {
         if (!token) return;
 
         try {
-            const resp = await fetch('/api/subscription/status', {
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
-            const data = await resp.json();
+            const [statusResp, creditsResp] = await Promise.all([
+                fetch('/api/subscription/status', { headers: { 'Authorization': `Bearer ${token}` } }),
+                fetch('/api/subscription/credits', { headers: { 'Authorization': `Bearer ${token}` } })
+            ]);
+            
+            const data = await statusResp.json();
+            const creditsData = await creditsResp.json();
 
             if (data.success) {
                 subData = data.subscription;
                 usageData = data.usage;
-                renderSubscription(data.subscription, data.usage);
+                const exportCredits = creditsData.success ? creditsData.credits : null;
+                renderSubscription(data.subscription, data.usage, exportCredits);
             }
         } catch (e) {
             console.error('[CAB] Subscription load error:', e);
@@ -261,6 +265,36 @@ const CabinetModule = (() => {
                 monthlyBar.className = 'cab-usage-fill';
                 if (monthlyPct >= 90) monthlyBar.classList.add('danger');
                 else if (monthlyPct >= 60) monthlyBar.classList.add('warn');
+            }
+        }
+
+        // Export Credits Meter
+        const exportUsageBlock = $('#cabUsageExport');
+        if (exportUsageBlock && arguments[2]) { // arguments[2] is exportCredits
+            const exportCredits = arguments[2];
+            if (sub.plan !== 'basic') {
+                exportUsageBlock.style.display = '';
+                
+                const expPct = Math.round((exportCredits.used / Math.max(1, exportCredits.total)) * 100);
+                
+                const subExportUsage = $('#subExportUsage');
+                if (subExportUsage) subExportUsage.textContent = `${exportCredits.used}/${exportCredits.total}`;
+                
+                const subExportUsed = $('#subExportUsed');
+                if (subExportUsed) subExportUsed.textContent = `Ishlatilgan: ${exportCredits.used}`;
+                
+                const subExportRemaining = $('#subExportRemaining');
+                if (subExportRemaining) subExportRemaining.textContent = `Qolgan: ${exportCredits.remaining}`;
+                
+                const subExportBar = $('#subExportBar');
+                if (subExportBar) {
+                    subExportBar.style.width = `${Math.min(100, expPct)}%`;
+                    subExportBar.className = 'cab-usage-fill';
+                    if (expPct >= 90) subExportBar.classList.add('danger');
+                    else if (expPct >= 60) subExportBar.classList.add('warn');
+                }
+            } else {
+                exportUsageBlock.style.display = 'none';
             }
         }
 

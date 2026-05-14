@@ -945,8 +945,12 @@ async function processPaymentAndDownload(format = 'zip') {
         const res = await resp.json();
 
         if (!resp.ok || !res.success) {
+            if (res.export_limit && res.upgrade_needed && typeof SubModule !== 'undefined') {
+                SubModule.openModal();
+                throw new Error("Eksport kreditlaringiz tugadi. Tarifni yangilang yoki alohida to'lov qiling.");
+            }
             if (res.usage_limit && res.upgrade_needed && typeof SubModule !== 'undefined') {
-                SubModule.showPlans();
+                SubModule.openModal();
                 throw new Error("AI so'rovlar limitiga yetdingiz. Iltimos, obunani yangilang!");
             }
             throw new Error(res.errors ? res.errors[0] : (res.error || "Xatolik yuz berdi"));

@@ -235,6 +235,11 @@ class Subscription(db.Model):
     end_date = db.Column(db.DateTime, nullable=False)
     payment_id = db.Column(db.String(36), db.ForeignKey('payments.id', ondelete='SET NULL'), nullable=True)
     auto_renew = db.Column(db.Boolean, default=False, nullable=False)
+
+    # ── Eksport kredit tizimi ──
+    export_credits_total = db.Column(db.Integer, default=0, nullable=False, server_default='0')
+    export_credits_used = db.Column(db.Integer, default=0, nullable=False, server_default='0')
+
     created_at = db.Column(db.DateTime, default=_utcnow, nullable=False)
 
     # ── Relationship ──
@@ -252,4 +257,7 @@ class Subscription(db.Model):
             'start_date': self.start_date.isoformat() if self.start_date else None,
             'end_date': self.end_date.isoformat() if self.end_date else None,
             'auto_renew': self.auto_renew,
+            'export_credits_total': self.export_credits_total or 0,
+            'export_credits_used': self.export_credits_used or 0,
+            'export_credits_remaining': max(0, (self.export_credits_total or 0) - (self.export_credits_used or 0)),
         }

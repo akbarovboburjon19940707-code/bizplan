@@ -2479,7 +2479,7 @@ def save():
         
         try:
             from modules.auth import decode_token
-            from modules.subscription_service import check_ai_usage
+            from modules.subscription_service import check_ai_usage, get_export_credits
             _auth_h = request.headers.get('Authorization', '')
             if _auth_h.startswith('Bearer '):
                 _pl = decode_token(_auth_h[7:])
@@ -2498,10 +2498,21 @@ def save():
                     # Agar basic bo'lmasa, demak pro/enterprise
                     if _usage_check.get('usage', {}).get('plan') != 'basic':
                         has_active_sub = True
+                        
+                        # ── YANGI: Eksport kredit tekshiruvi ──
+                        _credits = get_export_credits(_gen_user_id)
+                        if _credits['remaining'] <= 0 and not request.form.get("payment_id"):
+                            return jsonify({
+                                "success": False,
+                                "errors": ["Eksport kreditlaringiz tugadi. Tarifni yangilang."],
+                                "export_limit": True,
+                                "upgrade_needed": True,
+                            }), 429
+
         except Exception as _ue:
             logger.warning(f"AI usage check xatolik (davom etiladi): {_ue}")
 
-        # Agar aktiv obuna bo'lmasa, alohida to'lov (payment_id) majburiy
+        # Agar aktiv obuna bo'lmasa yoki kredit tugagan bo'lsa alohida to'lov (payment_id) majburiy
         payment_id = request.form.get("payment_id")
         if not has_active_sub:
             if not payment_id:
@@ -2673,6 +2684,14 @@ def save():
                         logger.info(f"[SAVE] ✅ Fayl Telegram ga yuborildi: {_tg_user_telegram_id}")
                 except Exception as tge:
                     logger.warning(f"[SAVE] Telegram yuborish xatolik: {tge}")
+
+            # ── YANGI: Eksport kreditini kamaytirish ──
+            if has_active_sub and not request.form.get("payment_id") and _gen_user_id:
+                try:
+                    from modules.subscription_service import use_export_credit
+                    use_export_credit(_gen_user_id)
+                except Exception as ce:
+                    logger.warning(f"[SAVE] Kredit kamaytirishda xatolik: {ce}")
 
             return jsonify({
                 "success": True,

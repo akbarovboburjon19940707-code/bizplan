@@ -26,11 +26,15 @@ PLAN_CONFIG = {
         'price_formatted': "Bepul",
         'ai_daily_limit': 1,
         'ai_monthly_limit': 3,
+        'export_credits': 0,
         'can_generate': True,
         'can_download': False,
         'can_preview': True,
         'priority_support': False,
         'full_financial_model': False,
+        'has_priority': False,
+        'has_excel': False,
+        'watermark_free': False,
         'duration_days': 0,
         'badge_emoji': '🆓',
         'badge_color': '#94a3b8',
@@ -38,54 +42,62 @@ PLAN_CONFIG = {
             {'text': 'Biznes reja preview ko\'rish', 'enabled': True},
             {'text': 'Moliyaviy ko\'rsatkichlar tahlili', 'enabled': True},
             {'text': 'Kredit grafigi hisoblash', 'enabled': True},
-            {'text': 'PDF yuklab olish', 'enabled': False},
-            {'text': 'Word yuklab olish', 'enabled': False},
+            {'text': 'Professional eksport', 'enabled': False},
+            {'text': 'PDF/Word yuklab olish', 'enabled': False},
         ],
     },
     'pro': {
-        'display_name': 'Standart',
+        'display_name': 'STANDARD',
         'display_name_uz': 'Standart',
         'price': 50000,
         'price_formatted': "50 000 so'm",
         'ai_daily_limit': 5,
         'ai_monthly_limit': 30,
+        'export_credits': 1,
         'can_generate': True,
         'can_download': True,
         'can_preview': True,
         'priority_support': False,
         'full_financial_model': False,
+        'has_priority': False,
+        'has_excel': False,
+        'watermark_free': False,
         'duration_days': 30,
         'badge_emoji': '⭐',
         'badge_color': '#3b82f6',
         'features': [
-            {'text': 'To\'liq biznes reja generatsiyasi', 'enabled': True},
-            {'text': 'Moliyaviy hisob-kitoblar', 'enabled': True},
+            {'text': '1 professional eksport krediti', 'enabled': True},
             {'text': 'PDF formatda yuklab olish', 'enabled': True},
             {'text': 'Word formatda yuklab olish', 'enabled': True},
-            {'text': 'To\'liq moliyaviy model', 'enabled': False},
+            {'text': 'Moliyaviy hisob-kitoblar', 'enabled': True},
+            {'text': 'Advanced moliyaviy model', 'enabled': False},
         ],
     },
     'enterprise': {
-        'display_name': 'Premium',
+        'display_name': 'PREMIUM',
         'display_name_uz': 'Premium',
         'price': 500000,
         'price_formatted': "500 000 so'm",
         'ai_daily_limit': 50,
         'ai_monthly_limit': 500,
+        'export_credits': 20,
         'can_generate': True,
         'can_download': True,
         'can_preview': True,
         'priority_support': True,
         'full_financial_model': True,
+        'has_priority': True,
+        'has_excel': True,
+        'watermark_free': True,
         'duration_days': 30,
         'badge_emoji': '💎',
         'badge_color': '#8b5cf6',
         'features': [
-            {'text': 'Barcha Standart imkoniyatlar', 'enabled': True},
-            {'text': 'To\'liq moliyaviy model', 'enabled': True},
-            {'text': 'NPV, IRR, ROI tahlili', 'enabled': True},
-            {'text': 'Investitsiya tahlili', 'enabled': True},
-            {'text': 'Ustuvor texnik yordam', 'enabled': True},
+            {'text': '20 professional eksport krediti', 'enabled': True},
+            {'text': 'PDF/Word/Excel yuklab olish', 'enabled': True},
+            {'text': 'Advanced moliyaviy jadval', 'enabled': True},
+            {'text': 'Prioritet generatsiya', 'enabled': True},
+            {'text': 'Watermarksiz eksport', 'enabled': True},
         ],
     }
 }
@@ -175,6 +187,9 @@ def get_user_subscription(user_id: str) -> dict:
     plan_cfg = get_plan_config(sub.plan_name)
     days_left = max(0, (sub.end_date - _utcnow()).days)
 
+    _credits_total = sub.export_credits_total or 0
+    _credits_used = sub.export_credits_used or 0
+
     return {
         'subscription_id': sub.id,
         'plan': sub.plan_name,
@@ -188,6 +203,9 @@ def get_user_subscription(user_id: str) -> dict:
         'auto_renew': sub.auto_renew,
         'can_download': plan_cfg['can_download'],
         'full_financial_model': plan_cfg['full_financial_model'],
+        'export_credits_total': _credits_total,
+        'export_credits_used': _credits_used,
+        'export_credits_remaining': max(0, _credits_total - _credits_used),
     }
 
 
@@ -207,6 +225,9 @@ def _basic_subscription_info():
         'auto_renew': False,
         'can_download': cfg['can_download'],
         'full_financial_model': cfg['full_financial_model'],
+        'export_credits_total': 0,
+        'export_credits_used': 0,
+        'export_credits_remaining': 0,
     }
 
 
@@ -247,6 +268,8 @@ def create_subscription(user_id: str, plan_name: str, payment_id: str = None) ->
         end_date=now + timedelta(days=plan_cfg['duration_days']),
         payment_id=payment_id,
         auto_renew=False,
+        export_credits_total=plan_cfg.get('export_credits', 0),
+        export_credits_used=0,
     )
     db.session.add(sub)
 
@@ -387,6 +410,59 @@ def record_ai_usage(user_id: str, provider: str = 'groq',
                 f"type={request_type}, success={is_success}")
 
     return ai_req
+
+
+# ============================================================
+# EKSPORT KREDITLARINI BOSHQARISH
+# ============================================================
+
+def get_export_credits(user_id: str) -> dict:
+    """Foydalanuvchining eksport kreditlarini qaytaradi."""
+    if not user_id:
+        return {'total': 0, 'used': 0, 'remaining': 0}
+
+    from models.payment import Subscription
+    sub = Subscription.query.filter_by(
+        user_id=user_id,
+        status='active'
+    ).order_by(Subscription.end_date.desc()).first()
+
+    if not sub or sub.is_expired():
+        return {'total': 0, 'used': 0, 'remaining': 0}
+
+    total = sub.export_credits_total or 0
+    used = sub.export_credits_used or 0
+    return {
+        'total': total,
+        'used': used,
+        'remaining': max(0, total - used)
+    }
+
+def use_export_credit(user_id: str) -> bool:
+    """1 ta eksport kredit ishlatish. Muvaffaqiyatli bo'lsa True, aks holda False."""
+    if not user_id:
+        return False
+
+    from models.payment import Subscription
+    sub = Subscription.query.filter_by(
+        user_id=user_id,
+        status='active'
+    ).order_by(Subscription.end_date.desc()).first()
+
+    if not sub or sub.is_expired():
+        return False
+
+    total = sub.export_credits_total or 0
+    used = sub.export_credits_used or 0
+    
+    if used < total:
+        sub.export_credits_used = used + 1
+        db.session.commit()
+        logger.info(f"[CREDIT] Eksport krediti ishlatildi: user={user_id}, "
+                   f"qoldi={total - (used + 1)}")
+        return True
+        
+    return False
 
 
 # ============================================================
