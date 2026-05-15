@@ -11,7 +11,7 @@ from database import db
 
 
 def _utcnow():
-    return datetime.now(timezone.utc)
+    return datetime.now(timezone.utc).replace(tzinfo=None)
 
 
 class Payment(db.Model):

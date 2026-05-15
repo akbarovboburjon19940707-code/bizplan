@@ -56,7 +56,11 @@ def _generate_order_id() -> str:
 
 def _now() -> str:
     """Hozirgi vaqtni formatted string sifatida qaytarish."""
-    return datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
+    return _utcnow().strftime("%Y-%m-%d %H:%M:%S")
+
+
+def _utcnow():
+    return datetime.now(timezone.utc).replace(tzinfo=None)
 
 
 def _payment_to_dict(p: PaymentModel) -> dict:
@@ -151,8 +155,8 @@ def submit_receipt(payment_id: str, receipt_filename: str) -> dict:
 
     payment.receipt_file = receipt_filename
     payment.admin_status = "reviewing"
-    payment.submitted_at = datetime.now(timezone.utc)
-    payment.updated_at = datetime.now(timezone.utc)
+    payment.submitted_at = _utcnow()
+    payment.updated_at = _utcnow()
 
     try:
         db.session.commit()
@@ -173,8 +177,8 @@ def admin_approve(payment_id: str, admin_note: str = "") -> dict:
 
     payment.admin_status = "approved"
     payment.payment_status = "success"
-    payment.reviewed_at = datetime.now(timezone.utc)
-    payment.updated_at = datetime.now(timezone.utc)
+    payment.reviewed_at = _utcnow()
+    payment.updated_at = _utcnow()
     payment.admin_note = admin_note
 
     try:
@@ -196,8 +200,8 @@ def admin_reject(payment_id: str, reason: str = "") -> dict:
 
     payment.admin_status = "rejected"
     payment.payment_status = "failed"
-    payment.reviewed_at = datetime.now(timezone.utc)
-    payment.updated_at = datetime.now(timezone.utc)
+    payment.reviewed_at = _utcnow()
+    payment.updated_at = _utcnow()
     payment.admin_note = reason
 
     try:
@@ -371,7 +375,7 @@ def update_click_payment_status(order_id: str, status: str,
         return None
 
     payment.payment_status = status
-    payment.updated_at = datetime.now(timezone.utc)
+    payment.updated_at = _utcnow()
 
     if click_trans_id:
         payment.click_trans_id = click_trans_id
@@ -379,10 +383,10 @@ def update_click_payment_status(order_id: str, status: str,
     # Umumiy status sync
     if status == "success":
         payment.admin_status = "approved"
-        payment.reviewed_at = datetime.now(timezone.utc)
+        payment.reviewed_at = _utcnow()
     elif status in ("failed", "cancelled"):
         payment.admin_status = "rejected"
-        payment.reviewed_at = datetime.now(timezone.utc)
+        payment.reviewed_at = _utcnow()
     elif status == "preparing":
         payment.admin_status = "reviewing"
 
@@ -494,7 +498,7 @@ def update_payme_payment_status(order_id: str, status: str,
         return None
 
     payment.payment_status = status
-    payment.updated_at = datetime.now(timezone.utc)
+    payment.updated_at = _utcnow()
 
     if payme_trans_id:
         payment.payme_trans_id = payme_trans_id
@@ -510,10 +514,10 @@ def update_payme_payment_status(order_id: str, status: str,
     # Umumiy status sync
     if status == "success":
         payment.admin_status = "approved"
-        payment.reviewed_at = datetime.now(timezone.utc)
+        payment.reviewed_at = _utcnow()
     elif status in ("failed", "cancelled"):
         payment.admin_status = "rejected"
-        payment.reviewed_at = datetime.now(timezone.utc)
+        payment.reviewed_at = _utcnow()
     elif status == "preparing":
         payment.admin_status = "reviewing"
 
