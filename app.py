@@ -1431,6 +1431,23 @@ def admin_logout():
     session.pop("admin_logged_in", None)
     return redirect(url_for("admin_payments"))
 
+@app.route("/admin/clear-all-payments-danger", methods=["GET"])
+def admin_clear_all_payments_danger():
+    if not session.get("admin_logged_in"):
+        return redirect(url_for("admin_payments"))
+    
+    from models.payment import Payment, Transaction, PaymentCallback
+    from database import db
+    try:
+        PaymentCallback.query.delete()
+        Transaction.query.delete()
+        Payment.query.delete()
+        db.session.commit()
+        return "Barcha to'lovlar muvaffaqiyatli tozalandi! <a href='/admin/payments'>Orqaga qaytish</a>"
+    except Exception as e:
+        db.session.rollback()
+        return f"Xatolik yuz berdi: {e}"
+
 @app.route("/api/admin/approve", methods=["POST"])
 @csrf.exempt
 def api_admin_approve():
