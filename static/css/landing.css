@@ -1287,6 +1287,91 @@ a {
     padding-left: 4px;
 }
 
+/* ── Vibrant Contact Links ── */
+.footer-contact-links li {
+    margin-bottom: 16px;
+}
+
+.contact-link {
+    font-size: 14px;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    padding: 10px 14px;
+    border-radius: 12px;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.06);
+}
+.contact-link:hover {
+    transform: translateX(4px);
+    padding-left: 14px;
+    background: rgba(255,255,255,0.08);
+}
+
+.contact-icon {
+    width: 34px;
+    height: 34px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: all 0.3s ease;
+}
+
+/* Phone - green */
+.contact-phone {
+    color: #6ee7b7 !important;
+}
+.contact-phone .contact-icon {
+    background: linear-gradient(135deg, #059669, #10b981);
+    color: #fff;
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+.contact-phone:hover {
+    color: #a7f3d0 !important;
+    box-shadow: 0 0 20px rgba(16, 185, 129, 0.15);
+}
+.contact-phone:hover .contact-icon {
+    box-shadow: 0 6px 18px rgba(16, 185, 129, 0.5);
+}
+
+/* Telegram - blue */
+.contact-telegram {
+    color: #7dd3fc !important;
+}
+.contact-telegram .contact-icon {
+    background: linear-gradient(135deg, #0088cc, #00b4e6);
+    color: #fff;
+    box-shadow: 0 4px 12px rgba(0, 136, 204, 0.3);
+}
+.contact-telegram:hover {
+    color: #bae6fd !important;
+    box-shadow: 0 0 20px rgba(0, 136, 204, 0.15);
+}
+.contact-telegram:hover .contact-icon {
+    box-shadow: 0 6px 18px rgba(0, 136, 204, 0.5);
+}
+
+/* Email - orange/red */
+.contact-email {
+    color: #fdba74 !important;
+}
+.contact-email .contact-icon {
+    background: linear-gradient(135deg, #ea580c, #f97316);
+    color: #fff;
+    box-shadow: 0 4px 12px rgba(249, 115, 22, 0.3);
+}
+.contact-email:hover {
+    color: #fed7aa !important;
+    box-shadow: 0 0 20px rgba(249, 115, 22, 0.15);
+}
+.contact-email:hover .contact-icon {
+    box-shadow: 0 6px 18px rgba(249, 115, 22, 0.5);
+}
+
 .footer-bottom {
     border-top: 1px solid rgba(255,255,255,0.08);
     padding-top: 24px;
