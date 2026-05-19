@@ -1196,7 +1196,7 @@ a {
 .footer-about {
     font-size: 14px;
     line-height: 1.8;
-    color: var(--gray-400);
+    color: rgba(255,255,255,0.7);
     margin-bottom: 24px;
     max-width: 360px;
 }
@@ -1276,7 +1276,7 @@ a {
 .footer-links li { margin-bottom: 12px; }
 .footer-links a {
     font-size: 14px;
-    color: var(--gray-400);
+    color: rgba(255,255,255,0.65);
     transition: var(--transition);
     display: flex;
     align-items: center;
@@ -1384,7 +1384,7 @@ a {
 
 .footer-bottom p {
     font-size: 13px;
-    color: var(--gray-500);
+    color: rgba(255,255,255,0.5);
 }
 
 .footer-bottom-links {
@@ -1393,7 +1393,7 @@ a {
 }
 .footer-bottom-links a {
     font-size: 13px;
-    color: var(--gray-500);
+    color: rgba(255,255,255,0.5);
     transition: var(--transition);
 }
 .footer-bottom-links a:hover { color: #fff; }
